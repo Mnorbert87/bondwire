@@ -116,6 +116,12 @@
     background: linear-gradient(120deg, #fff, var(--c2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   .live-grid small { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .7px; }
 
+  .rec { display: flex; align-items: center; gap: 11px; text-decoration: none; font-size: 13px; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px 13px; background: var(--glass); transition: .16s; }
+  .rec:hover { border-color: var(--line-2); color: var(--ink); }
+  .rec .rn { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center;
+    font-family: "Space Grotesk"; font-weight: 700; font-size: 12px; color: #04111f; background: linear-gradient(135deg, var(--c2), var(--c1)); }
+  .rec .rh { margin-left: auto; color: var(--c2); font-size: 12px; white-space: nowrap; }
   .run { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 13px; background: #04060d; border: 1px solid var(--line-2);
     border-radius: 12px; padding: 16px 18px; color: #cfe0ff; overflow-x: auto; white-space: pre; line-height: 1.7; }
   .run .pr { color: var(--faint); } .run .cm { color: var(--c2); } .run .fl { color: var(--gold); }
@@ -214,7 +220,19 @@
       <div class="cell"><b id="lStreams">—</b><small>streams opened</small></div>
       <div class="cell"><b id="lUsdc">—</b><small>USDC in the stack</small></div>
     </div>
-    <p style="font-size:12.5px; color:var(--faint); margin:16px 0 0;">Run the exact scenario above yourself — it seeds a fresh buyer wallet and plays all six steps with real USDC transactions:</p>
+    <div style="margin-top:22px; padding-top:20px; border-top:1px solid var(--line);">
+      <h4 style="font-family:'Space Grotesk'; font-size:15px; margin:0 0 4px; letter-spacing:-.2px;">This exact scenario, recorded on-chain</h4>
+      <p style="font-size:12.5px; color:var(--faint); margin:0 0 14px;">A real run of the script below — Acme <code style="color:var(--c2);font-family:ui-monospace,monospace;">0x24Bb…E5C4</code> hiring Aiden, settled as obligation <b style="color:var(--gold);">#6</b> and stream <b style="color:var(--good);">#15</b>. Every step is a verifiable testnet transaction:</p>
+      <div style="display:grid; gap:7px;">
+        <a class="rec" href="https://testnet.arcscan.app/tx/0xad1f3b08bc036706755bea0da4adb75aeb023ff5208d64c9b70af3d77e677e90" target="_blank" rel="noopener"><span class="rn">0</span> Acme funded with 1.40 USDC (gas + budget) <span class="rh">view tx ↗</span></a>
+        <a class="rec" href="https://testnet.arcscan.app/tx/0xbff1507bd5ab0cca76b8f4e3eaaae2f5b6983deea21ec8a03fb85042702689b4" target="_blank" rel="noopener"><span class="rn">2</span> Aiden grants Acme slashing rights <span class="rh">view tx ↗</span></a>
+        <a class="rec" href="https://testnet.arcscan.app/tx/0x7a21fd9ca82e93502b38d296e3f266029c05545d9af0697ed1b6f39db9172cd8" target="_blank" rel="noopener"><span class="rn">3</span> Acme locks the 0.50 USDC guarantee → obligation #6 <span class="rh">view tx ↗</span></a>
+        <a class="rec" href="https://testnet.arcscan.app/tx/0x57c90d0f06fb2d6bfcd9b1181a6db2332f6db438bc6f836627d7b3b0f9a1780e" target="_blank" rel="noopener"><span class="rn">4</span> Acme opens the 0.60 USDC pay-per-second stream → stream #15 <span class="rh">view tx ↗</span></a>
+        <a class="rec" href="https://testnet.arcscan.app/tx/0xd358ff4b39752e239e775523f52196220ce9b715b38778530c8efbfdf3420f0f" target="_blank" rel="noopener"><span class="rn">5</span> Aiden withdraws ~0.30 USDC of streamed earnings <span class="rh">view tx ↗</span></a>
+        <a class="rec" href="https://testnet.arcscan.app/tx/0xf42c5d8131f785dad04156f6f67b0279150afe4a5dffedbe81d9273e42f4f44b" target="_blank" rel="noopener"><span class="rn">6</span> Acme releases obligation #6 — report accepted, settled <span class="rh">view tx ↗</span></a>
+      </div>
+    </div>
+    <p style="font-size:12.5px; color:var(--faint); margin:20px 0 0;">Run it yourself — it seeds a fresh buyer wallet and plays all six steps with real USDC transactions:</p>
     <div class="run" style="margin-top:12px;"><span class="cm"># dry run — print the script of the demo, no transactions</span>
 node demo/commerce-scenario.js
 
