@@ -1,6 +1,6 @@
 # Security Audit — Arc Agentic Stack
 
-Adversarial self-audit of the two contracts (`AgentBond`, `StreamPay`) using Foundry. Method: full unit + adversarial suites, reentrancy attacker tokens, fee-on-transfer tokens, and a stateful solvency **invariant** (random multi-actor call sequences). All amounts are micro-USDC (6 decimals).
+Adversarial self-audit of the two contracts (`AgentBond`, `StreamPay`) using Foundry. Method: full unit + adversarial suites, reentrancy attacker tokens, fee-on-transfer tokens, and a stateful solvency **invariant** (random multi-actor call sequences). All amounts are micro-USDC (6 decimals). (`CommitStake` is audited separately — see its project README and [TEST_AUDIT.md](TEST_AUDIT.md), the independent test-suite audit covering all three contracts.)
 
 **Verdict: no critical or high-severity findings.** Both contracts are solvent under fuzzing, reentrancy-safe, and access-controlled. One low-severity view-correctness bug was found and fixed; one medium design gap (indefinite-lock griefing) was found, fixed, and the fix is deployed.
 
@@ -15,8 +15,9 @@ Adversarial self-audit of the two contracts (`AgentBond`, `StreamPay`) using Fou
 ## Test results
 
 ```
-AgentBond:  22 passed / 0 failed   (incl. solvency invariant: 256 runs · 128,000 calls · 0 reverts)
-StreamPay:  18 passed / 0 failed   (incl. fee-on-transfer, reentrancy, solvent-split fuzz, terminal-view regression)
+AgentBond:    32 passed / 0 failed   (incl. solvency invariant: 256 runs · 128,000 calls · 0 reverts; fee-on-transfer + no-return units)
+StreamPay:    25 passed / 0 failed   (incl. fee-on-transfer, reentrancy, solvent-split fuzz, terminal-view regression)
+CommitStake:  28 passed / 0 failed   (own suite, incl. fee-token solvency invariant — audited separately, see TEST_AUDIT.md)
 ```
 
 ### Crown proof — solvency invariant (AgentBond)
@@ -32,7 +33,7 @@ StreamPay carries an equivalent per-stream solvency property (`withdrawn + recip
 
 - **Checks-Effects-Interactions.** Every fund-moving path sets terminal state and updates accounting *before* the external token transfer (`slash`, `withdraw`, `cancel`).
 - **Reentrancy guard.** Single-slot `nonReentrant` mutex on all state-changing entry points (belt-and-suspenders alongside CEI). Proven by attacker-token tests: a malicious token re-entering during payout cannot double-pay; the end state shows exactly one payout.
-- **Balance-delta custody.** Deposits/streams record `balanceOf(after) − balanceOf(before)`, so fee-on-transfer or rebasing tokens can never let one position drain another's escrow.
+- **Balance-delta custody.** Deposits/streams record `balanceOf(after) − balanceOf(before)` — the contract books what actually arrived, not what was requested, so a transfer that delivers less than face value can never let one position drain another's escrow. Unit-tested with fee-on-transfer and no-return tokens (CommitStake additionally carries a fee-token solvency invariant). The production token is Arc USDC, a standard 1:1 ERC-20; other exotic ERC-20 behaviours (e.g. rebasing) are out of scope.
 - **Safe ERC-20.** Low-level call with `require(ok && (data.length == 0 || abi.decode(data,(bool))))` — tolerates non-standard no-return tokens (e.g. USDT-style).
 - **Access control.** `release`/`slash` restricted to the opening enforcer; `withdraw` to the recipient; `cancel` to either party. No owner, no admin, no upgrade key — nothing privileged to compromise.
 - **No cross-actor theft.** Slash allowance is keyed `[agent][enforcer]`; an enforcer can only ever touch the bond of agents that explicitly granted *it*.

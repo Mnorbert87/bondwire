@@ -125,9 +125,9 @@ stream-pay:    25 passed / 0 failed  (5 suites)
 
 ## Phase 3 backlog
 
-- `SECURITY_AUDIT.md` still carries the old wording ("fee-on-transfer **or rebasing** tokens can
-  never…", line 35) and stale per-project test counts — rewrite when it becomes the final
-  AUDIT.md.
+- ~~`SECURITY_AUDIT.md` old wording + stale per-project test counts~~ — **resolved**: claims
+  narrowed to the same evidence-scoped principle as the NatSpec, counts updated to the post-fix
+  values above.
 - Fee-token invariant runs for **StreamPay** and **AgentBond** (same own-book ghost pattern as
   `CommitStakeFeeInvariant.t.sol`); the unit evidence exists for both, the stateful campaign is
   the remaining nice-to-have.
