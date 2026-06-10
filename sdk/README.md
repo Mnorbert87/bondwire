@@ -10,8 +10,12 @@ Addresses, chain id, and USDC's 6 decimals are baked in. You pass human USDC amo
 
 ```bash
 npm i ethers
-# drop arc-agentic-stack.js next to your code, or `npm i arc-agentic-stack-sdk`
+# then copy sdk/arc-agentic-stack.js from this repo next to your code
+git clone https://github.com/Mnorbert87/arc-agentic-stack.git
+cp arc-agentic-stack/sdk/arc-agentic-stack.js .
 ```
+
+> Not on npm (yet) — the SDK is a single dependency-free ESM file; vendoring it is the supported install.
 
 ## 10-line integration
 
@@ -19,7 +23,7 @@ An agent posts a bond, then gets streamed paid by the second:
 
 ```js
 import { ethers } from "ethers";
-import { ArcAgenticStack } from "arc-agentic-stack-sdk";
+import { ArcAgenticStack } from "./arc-agentic-stack.js";
 
 const agent  = new ethers.Wallet(process.env.AGENT_KEY, ArcAgenticStack.provider());
 const arc    = new ArcAgenticStack(agent);

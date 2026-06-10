@@ -50,7 +50,7 @@ An autonomous agent lifecycle, settled end-to-end in USDC:
 
 1. **Bond up** — the agent deposits USDC into `AgentBond`. Its *free* bond becomes a public, slashable credit score. *(AgentBond)*
 2. **Get hired** — a counterparty reads the bond and decides the agent is trustworthy enough for the job. *(off-chain)*
-3. **Lock collateral** — the counterparty locks a slice of the agent's bond behind the job as an *obligation*. *(AgentBond)*
+3. **Lock collateral** — an agent-authorized *enforcer* locks a slice of the agent's bond behind the job as an *obligation*, payable to the counterparty if defaulted. *(AgentBond)*
 4. **Stream pay** — it opens a `StreamPay` stream; the agent earns USDC by the second as it works. *(StreamPay)*
 5. **Settle** — performed → bond released & stream withdrawn; defaulted → bond slashed to the creditor, stream cancelled. *(both)*
 
@@ -79,6 +79,19 @@ Concrete fits from the Track 4 brief: **pay-per-inference agents**, **per-API-ca
 
 ---
 
+## Design FAQ — anticipated questions
+
+**Who can slash a bond? Can a counterparty just take the money and run?**
+No. A creditor *cannot* slash — they are only the address a slash pays out to. Slashing is gated to a single `enforcer` contract that **the agent itself authorized** via `setSlashAllowance(enforcer, amount)`, capped at a chosen amount and revocable to `0` at any time (`slash` requires `msg.sender == enforcer`). And if that enforcer goes silent, a non-zero `deadline` lets the **agent** self-`release` and reclaim its bond — so no one can lock collateral forever. Dispute resolution is deliberately *not* hardcoded: the enforcer is pluggable (a co-signed attestation, a multisig, an optimistic oracle, a Kleros-style court). `AgentBond` ships the slashing *primitive*; the policy is yours to choose. This is the composability thesis, not a missing piece.
+
+**Doesn't per-second streaming + pay-per-call flood the chain with transactions?**
+For streaming, no — and it's a common misconception. `StreamPay` does **not** transact per second. A stream is ~2–3 on-chain transactions *total*: one to open, one (or a few) `withdraw`s whenever the recipient chooses, and an optional `cancel`. Accrual is a pure `view` computation (`deposit × elapsed ÷ duration`) — zero transactions while it runs, whether the stream lasts a minute or a month. Pay-per-call (x402) *is* one transaction per paid call by design; that high-frequency path is exactly what Arc's USDC-denominated, fast-finality settlement is built for, and it composes with `StreamPay` so repeated calls to one provider can settle as a single stream instead of N discrete payments.
+
+**Does the bond punish an agent for an honest LLM mistake, not just malice?**
+Yes — by design, because on-chain you can only verify *outcomes*, not *intent*. A bond is an SLA, not a morality test: a contractor who underdelivers through incompetence still forfeits their deposit, same as one who defrauds. Two things soften this in the stack: (1) `StreamPay` makes failure **non-binary** — an agent that fails mid-job has already been paid for the seconds it actually worked; only the remainder is at risk, so a stumble isn't a total loss; and (2) what counts as "performed" is decided at the *enforcer / verification* layer you plug in, not in the bond primitive — so domain-appropriate fairness (retries, partial credit, human review) lives where it belongs. Reliability remains the agent's responsibility: better models, self-checks, or a shared insurance pool.
+
+---
+
 ## How Circle products are used on Arc
 
 | Product | Role | Status |
@@ -86,9 +99,9 @@ Concrete fits from the Track 4 brief: **pay-per-inference agents**, **per-API-ca
 | **USDC** | The settlement rail for *both* bonds and streams. All value in the stack is USDC. | ✅ Live on testnet |
 | **Arc** | Deterministic finality + USDC-denominated fees let an agent budget, pay gas, post bond and settle in one unit. | ✅ Live on testnet |
 | **Circle Wallets** | Agent-held key management: the agent (Aiden) signs its Arc transactions through a Circle Developer-Controlled Wallet — no private key on disk ever touches the chain. | ✅ Live on testnet |
-| **Nanopayments** | Natural fit for sub-cent, high-frequency stream withdrawals at scale. | 🧩 Architecture-level |
+| **Nanopayments** | Pattern demonstrated: `x402` charges per API call and `StreamPay` accrues USDC per second — sub-cent, high-frequency USDC settlement on Arc. (We demo the settlement *pattern*; the Circle Nanopayments product itself is not integrated.) | 🧪 Pattern demonstrated |
 
-🧩 = integrated at the architecture level for this testnet demo; the live contracts transact USDC on Arc directly.
+USDC, Arc and Circle Wallets transact USDC on Arc directly — there is no off-chain ledger or batching intermediary in the trust-and-pay path.
 
 ### Circle Wallets — live agent-signed transactions
 
@@ -178,7 +191,7 @@ three calls, reclaimed 0.13) is in [`x402-demo/SAMPLE_RUN.md`](./x402-demo/SAMPL
 
 ### Why we chose these products
 
-We deliberately built on **USDC + Arc only** for the trust path, and reserved **Circle Wallets** and **Nanopayments** for the layers where they're the obvious fit. Arc's *USDC-as-gas* model is what makes an agent economy actually clean: an autonomous agent can hold one balance and use it to pay fees, post collateral, and receive streamed income without ever touching a separate native gas token or an FX hop. That single-unit accounting is the difference between a demo and something an agent could really operate inside.
+We deliberately built on **USDC + Arc** for the trust path, used **Circle Wallets** so the agent holds its own key, and let the **Nanopayments** pattern fall out naturally — per-call (x402) and per-second (StreamPay) settlement *are* sub-cent, high-frequency USDC transfers on Arc. Arc's *USDC-as-gas* model is what makes an agent economy actually clean: an autonomous agent can hold one balance and use it to pay fees, post collateral, and receive streamed income without ever touching a separate native gas token or an FX hop. That single-unit accounting is the difference between a demo and something an agent could really operate inside.
 
 ### What worked well
 
