@@ -12,8 +12,10 @@ Every "agentic" demo quietly assumes two things that don't actually exist on-cha
 |---|---|---|---|
 | 🛡️ | **Trust** | [`AgentBond`](#agentbond--trust-layer) | *"Can I trust this agent before it acts?"* |
 | 💧 | **Settlement** | [`StreamPay`](#streampay--settlement-layer) | *"Can I pay it per second of work, not per invoice?"* |
+| 🔥 | **Mechanism** | [`CommitStakeV2`](#commitstakev2--who-pays-when-the-verifier-lies) | *"Who pays when the verifier lies?"* |
 
-Each works standalone. Together they form a complete trust-and-pay rail for autonomous agents.
+The two primitives each work standalone. `CommitStakeV2` composes both into a complete, ownerless
+trust-and-pay rail for autonomous agents.
 
 ---
 
@@ -37,6 +39,7 @@ No backend. The frontends read live state straight from the public Arc RPC and w
 |---|---|
 | AgentBond | [`0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0`](https://testnet.arcscan.app/address/0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0) |
 | StreamPay | [`0x505739d33D85AD85D0f9eeE64856309782382450`](https://testnet.arcscan.app/address/0x505739d33D85AD85D0f9eeE64856309782382450) |
+| CommitStakeV2 | [`0x1f1CA31bC36a95a3909628F1bA97970E20698CA9`](https://testnet.arcscan.app/address/0x1f1CA31bC36a95a3909628F1bA97970E20698CA9) · exact-match verified |
 
 - **RPC:** `https://rpc.testnet.arc.network`
 - **Explorer:** `https://testnet.arcscan.app`
@@ -81,6 +84,48 @@ Concrete fits from the Track 4 brief: **pay-per-inference agents**, **per-API-ca
 
 ---
 
+## CommitStakeV2 — who pays when the verifier lies?
+
+The two primitives answer *"can I trust the agent?"* and *"can I pay it continuously?"*. They leave one
+question open: when a **verifier** vouches for an agent's work and is wrong — by laziness or by
+collusion — who eats the cost? `CommitStakeV2` is the mechanism that answers it, and it writes **zero
+new custody code**: it drives `AgentBond`'s slash allowance and opens a `StreamPay` fee stream itself.
+It is the composability thesis made executable — a mechanism built *on* the two primitives, not beside them.
+
+Three claims, each backed by something you can re-run:
+
+1. **Bonded verifier, recursive trust.** The verifier posts its own `AgentBond` bond and grants
+   CommitStakeV2 a revocable slash allowance. Trusting the agent's result reduces to trusting a party
+   with skin in the game — and that skin is enforced on-chain, not promised.
+2. **The raid finding, closed by full accounting — not patched over.** A 4th-gate cold adversarial
+   audit found that an uncapped `arbiterFee` could feed `damage` until it equalled the slice, zeroing
+   the §7a **surplus-burn** — the anti-collusion device at the core of the mechanism. The fix folds
+   `arbiterFee` into the slice-sizing rule so `surplus = slice − damage` stays **strictly positive**
+   by construction: a colluding arbiter can never recapture the slice. Found by counting it through,
+   closed by counting it through. ([TEST_AUDIT.md](./contracts/commit-stake-v2/TEST_AUDIT.md))
+3. **Symbolically-verified surplus-burn, proven live.** Halmos proves solvency, surplus-positivity,
+   no-double-pay and the fee-residue bound **for all inputs**; two on-chain artifacts show the burn
+   actually happening: an overturn burn of **1.45 USDC**
+   ([tx](https://testnet.arcscan.app/tx/0x97f31e7a590af4ecc2f88c8f34943fe95be41391c9c3a4e3895d9a3d13c45435))
+   and a liveness burn of the **whole 1.50 USDC slice**
+   ([tx](https://testnet.arcscan.app/tx/0x7bf59845abadf3847061b5997e96e303a959d722c8a7283b160b3c82b14aa6bd))
+   to `0x…dEaD`.
+
+The spec ([VERIFIER_ECONOMICS.md](./VERIFIER_ECONOMICS.md)) was already public; with this the
+**implementation, the source-verified deploy, and a four-layer audit trail now sit in one repo beside it**:
+
+| Layer | Document | What it proves |
+|---|---|---|
+| Symbolic | [HALMOS_VERIFICATION.md](./contracts/commit-stake-v2/HALMOS_VERIFICATION.md) | solvency / surplus-positivity / no-double-pay, all inputs |
+| Static | [STATIC_ANALYSIS.md](./contracts/commit-stake-v2/STATIC_ANALYSIS.md) | zero new vulns; every flag triaged, by-design items annotated in-source |
+| Mutation | [MUTATION_TESTING.md](./contracts/commit-stake-v2/MUTATION_TESTING.md) | 100% revert-class kill; survivors triaged equivalent / invariant-caught |
+| Gas | [GAS_PROFILE.md](./contracts/commit-stake-v2/GAS_PROFILE.md) | the full slash+burn path costs ~0.008 USDC over a plain finalize |
+
+`CommitStakeV2` `0x1f1CA31bC36a95a3909628F1bA97970E20698CA9` — Blockscout exact-match verified, 79-test
+suite (unit + adversarial + cold-audit + edge + fuzz + 10k-run invariants + symbolic spec) green.
+
+---
+
 ## Design FAQ — anticipated questions
 
 **Who can slash a bond? Can a counterparty just take the money and run?**
@@ -103,6 +148,12 @@ Every contract in the stack ships with a unit + adversarial + fuzz + **invariant
 | [`contracts/agent-bond`](contracts/agent-bond/README.md) | 29 | 5 × 10,000 runs | 4 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 | [`contracts/stream-pay`](contracts/stream-pay/README.md) | 25 | 5 × 10,000 runs | 3 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 | [`contracts/commit-stake`](contracts/commit-stake/README.md) | 25 | 6 × 10,000 runs | 3 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
+| [`contracts/commit-stake-v2`](contracts/commit-stake-v2/TEST_AUDIT.md) | 79 | 6 × 10,000 runs | 5 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
+
+`commit-stake-v2` carries three layers the others don't: **6 Halmos symbolic proofs** (all-inputs
+solvency / surplus-positivity / no-double-pay), a **Slither + Aderyn** pass with by-design findings
+annotated in-source and `--fail-pedantic` in CI, and a **mutation campaign** (100% revert-class kill).
+The full trail is in [its audit docs](#commitstakev2--who-pays-when-the-verifier-lies).
 
 Headline invariants (full statements in the per-project READMEs):
 
@@ -250,6 +301,10 @@ arc-agentic-stack/
 ├── demo/                   # commerce-scenario.js — runnable end-to-end flow
 ├── x402-demo/              # x402 pay-per-call API, settled per second on StreamPay
 └── contracts/              # Foundry projects (src, test, script)
+    ├── agent-bond/         # AgentBond — trust primitive
+    ├── stream-pay/         # StreamPay — settlement primitive
+    ├── commit-stake/       # CommitStake v1 — baseline mechanism
+    └── commit-stake-v2/    # CommitStakeV2 — hardened mechanism + 4-layer audit trail
 ```
 
 MIT licensed. Built for the Circle Stablecoin Commerce Stack Challenge.
