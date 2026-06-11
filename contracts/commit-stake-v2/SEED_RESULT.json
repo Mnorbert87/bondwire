@@ -1,0 +1,59 @@
+{
+  "network": { "chain": "arc-testnet", "chainId": 5042002, "explorer": "https://testnet.arcscan.app" },
+  "contract": {
+    "CommitStakeV2": "0x1f1CA31bC36a95a3909628F1bA97970E20698CA9",
+    "verified": "exact-match (Blockscout is_fully_verified=true)",
+    "agentBond_reused": "0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0",
+    "streamPay_reused": "0x505739d33D85AD85D0f9eeE64856309782382450",
+    "usdc": "0x3600000000000000000000000000000000000000"
+  },
+  "BURN_TX_PRIMARY_ARTIFACT": [
+    { "branch": "C_overturn", "tx": "0x97f31e7a590af4ecc2f88c8f34943fe95be41391c9c3a4e3895d9a3d13c45435", "event": "SliceRouted(id=3, to=0x..dEaD, amount=1450000)", "burned_usdc": "1.45", "note": "damage=0.05 (small arbiterFee) to harmed staker, surplus 1.45 burned" },
+    { "branch": "B_liveness", "tx": "0x7bf59845abadf3847061b5997e96e303a959d722c8a7283b160b3c82b14aa6bd", "event": "SliceRouted(id=2, to=0x..dEaD, amount=1500000)", "burned_usdc": "1.50", "note": "no fee -> damage=0, ENTIRE slice burned; stake returned to staker" }
+  ],
+  "deploy": { "tx": "0xe066071a93a47dd4a1b35c897a68dfed88727fbc34eb5185a8dae3cb3047dfdb", "block": 46592950 },
+  "verify": "https://testnet.arcscan.app/address/0x1f1CA31bC36a95a3909628F1bA97970E20698CA9",
+  "prestep_verifier_bond": {
+    "approve_agentbond": "0x6546e3402e0cbc802c018f91ed59c447b8c1ce34650ef000c2c3b6fae6b6ea11",
+    "deposit_5usdc": "0x57e1d45d33e012d6806d9d95752368f92ea24370e1f5242c99295fcaab8feee3",
+    "setSlashAllowance": "0x52bd3aacdcc0ed01df97c5145458f0bf863312e3cbdefd533982ac420ff85292"
+  },
+  "prestep_funding_native": {
+    "verifier_probe": "0x7ec86ac28e8badfc9faa0271baafcc7e7938772f0526f5b8a0031b4112c05837",
+    "staker": "0x5ac805d458552d37746397e82d1dd81c9457cdffe047de1cd2e38ce27ff36160",
+    "verifier": "0x11e73c832a3a39c2227d909eea50235db7f3b8d586545926b903596bf60be2c4",
+    "beneficiary": "0x0c9f236e56bd28cddcda97240c702d8195785d56c59eef3830eb4cb09595b5e9",
+    "arbiter": "0x4873ae584a750426b93f093da49a9af2288ae493c1448e0c5345d86f7764cb1e"
+  },
+  "branchA_positive": {
+    "id": 1, "outcome": "CleanPass(1)", "status": "Finalized(4)",
+    "create": "0xe98820e0290f483708e15b30f1139852548738341da5d8685d7a3db6d9c07ebc",
+    "staker_approve_v2": "0xd064ab9ea49218852cb04d2dde2d0f6982070a3baa0cfcb16c1af89fab96a006",
+    "resolve_true": "0xa415cc6c59ce5233bf5372423b55f15c0f0bf9f518e3058bf91f98f808d5fa27",
+    "finalize": "0xb527eee462ce25f4043352da8e8ce5c4aec1ce5aafb7cbaba9e22863df966e29",
+    "result": "stake 1.0 -> staker (reclaimed), slice released to verifier bond, fee stream stays Active (earned), no burn"
+  },
+  "branchB_liveness": {
+    "id": 2, "outcome": "LivenessSlash(9)", "status": "Expired(5)",
+    "create": "0xf37ccad6db28a858874bc4a47e06d19fce4f5cfdc9f88407b7f8ebf862e7e80b",
+    "slashVerifierExpired": "0x7bf59845abadf3847061b5997e96e303a959d722c8a7283b160b3c82b14aa6bd",
+    "result": "stake 1.0 RETURNED to staker (bug-fix), whole 1.5 slice burned -> 0x..dEaD"
+  },
+  "branchC_overturn": {
+    "id": 3, "outcome": "OverturnedToPass(5)", "status": "Finalized(4)",
+    "create": "0x2ae5b324f4b47343dd99dd12902ddf09dd657d651acf0e964d6da076e1c8db08",
+    "resolve_false": "0x8ad46893ab71f04dce12c37cb47d4f0d4eb21b714870d811139d427aa0695692",
+    "staker_approve_bond": "0x1664dbe731b72067058c86c2b97a08d349e6a6f6b9324fecc95967ebe29b8c77",
+    "challenge": "0x0eab5b82beb96233d2da95488ae84e9b6a36d4be2866aa304aeb19837892d999",
+    "arbitrate_overturn": "0x97f31e7a590af4ecc2f88c8f34943fe95be41391c9c3a4e3895d9a3d13c45435",
+    "result": "corrected verdict, damage 0.05 -> staker, surplus 1.45 burned, bond refunded minus arbiter fee, arbiter paid 0.05"
+  },
+  "actors": {
+    "staker": "0x0EB662CC309ed7D1511F87BCb578eE96D79693E9",
+    "verifier": "0xE0c982F247A5c56D6A99BAAf4182413395a6Fb66",
+    "beneficiary": "0xfB6954AEA13a933E7bA8d5902dc32Fb5A55D9B3e",
+    "arbiter": "0xFda5B3074B1c9613934c11a4001574aeA005131b",
+    "deployer_funder": "0x2e36F4037E711e1d4c853BBCBF7F526B3714A08a"
+  },
+  "bookkeeping": { "deployer_nonce": 114, "verifier_freeBond_after": "2.0 USDC", "v2_residual": "0", "params": "amount=1.0, slice=1.5, arbiterFee=0.05, challengeBond=0.3, window=arbiterDeadline=180s" }
+}

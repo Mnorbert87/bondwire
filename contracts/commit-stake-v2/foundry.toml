@@ -1,0 +1,26 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+solc = "0.8.24"
+optimizer = true
+optimizer_runs = 200
+# Integration tests compile the REAL sibling primitives (no vendored copies, no drift).
+allow_paths = ["../agent-bond", "../stream-pay"]
+remappings = [
+    "agent-bond/=../agent-bond/src/",
+    "stream-pay/=../stream-pay/src/",
+]
+
+[rpc_endpoints]
+arc_testnet = "${ARC_RPC_URL}"
+
+[fuzz]
+runs = 10000
+
+[invariant]
+runs = 10000
+depth = 15
+fail_on_revert = true
