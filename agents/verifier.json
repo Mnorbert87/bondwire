@@ -1,0 +1,22 @@
+{
+  "name": "Arc Stack Verifier",
+  "description": "Bonded verifier agent for CommitStakeV2. Attests pass/fail on staked commitments and posts its own AgentBond bond — if it lies or goes silent, its slice is slashed and the §7a surplus is burned. The accountable judge in the Arc Agentic Stack: trusting its verdict reduces to trusting a slashable on-chain bond.",
+  "agent_type": "verifier",
+  "version": "1.0.0",
+  "capabilities": [
+    "attestation",
+    "bonded-verification",
+    "commit-stake-v2",
+    "slashable"
+  ],
+  "endpoints": {
+    "homepage": "https://mnorbert87.github.io/arc-agentic-stack/commit-stake/#v2"
+  },
+  "arc": {
+    "chainId": 5042002,
+    "commitStakeV2": "0x1f1CA31bC36a95a3909628F1bA97970E20698CA9",
+    "agentBond": "0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0",
+    "settlementToken": "USDC"
+  },
+  "standard": "ERC-8004"
+}
