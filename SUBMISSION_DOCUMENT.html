@@ -39,7 +39,7 @@
 
 <h1>Arc Agentic Stack</h1>
 <p class="sub">Trust and settlement primitives for autonomous agents, settled in USDC on Arc.</p>
-<span class="track-pill">CIRCLE STABLECOIN COMMERCE STACK CHALLENGE · TRACK 4, BEST AGENTIC ECONOMY EXPERIENCE ON ARC</span>
+<span class="track-pill">CIRCLE STABLECOIN COMMERCE STACK CHALLENGE · ESCROW AND COMMERCE TRACK</span>
 
 <h2>1. Project Title</h2>
 <p><strong>Arc Agentic Stack.</strong> Three small, ownerless contracts that let an autonomous agent be trusted before it acts and paid while it works, all settled in USDC on Circle's Arc L1.</p>
@@ -56,7 +56,7 @@
 <p>It also plugs into the wider Arc agent ecosystem instead of sitting off to the side. The demo agents carry on-chain ERC-8004 identities in Arc's official registry, and an agent's bond capital can arrive cross-chain through Circle CCTP V2 before it ever posts a bond. ERC-8004 gives you identity and jobs. This stack adds the economic-assurance layer that is missing next to it.</p>
 
 <h2>3. Track</h2>
-<p><strong>Track 4, Best Agentic Economy Experience on Arc.</strong> The stack is built for agent-to-agent commerce: identity by stake, continuous settlement, and verification you can hold accountable. Every state change is a real USDC transaction on Arc.</p>
+<p><strong>Escrow and Commerce.</strong> CommitStakeV2 is the centerpiece. It is a commitment escrow where the verifier itself puts up a bond and can be slashed, so a buyer and a seller can put real money behind a deliverable and trust the outcome without trusting a privileged operator who presses "release." The stake, the slashed slice, and the burned surplus are all routed on chain in USDC, with no admin in the loop. It sits inside a small agent stack (AgentBond for trust, StreamPay for streaming pay), which is where the cross-chain onboarding and the ERC-8004 identity come from.</p>
 
 <h2>4. Circle Account Email</h2>
 <p><span class="todo">TO FILL: Főnök Circle-fiók email címe</span></p>
@@ -111,6 +111,8 @@
   <li><strong>USDC-as-gas is a real simplification.</strong> An agent's working capital and its gas budget are the same asset, so there is one balance to manage instead of two. For agent treasury logic that is a genuine ergonomic win, and it deserves to be a headline.</li>
   <li><strong>Block timestamps are not strictly monotonic on the testnet.</strong> That matters for per-second streaming accrual, and StreamPay defends against it. Worth saying out loud in the docs for anyone building time-based settlement.</li>
   <li><strong>arcscan exact-match verification worked cleanly</strong> once I pinned <span class="mono">evm_version</span> to <span class="mono">cancun</span>. A one-line note in the docs would have saved me the trial and error.</li>
+  <li><strong>Bridge Kit already knew about Arc, and that surprised me.</strong> I expected to have to add a custom chain. Instead <span class="mono">ArcTestnet</span> was right there in the chain list with CCTP domain 26, so bridging Base Sepolia to Arc was a single <span class="mono">kit.bridge()</span> call. Having Arc as a first-class chain in the App Kit SDK on day one is a big deal for anyone building cross-chain agent flows.</li>
+  <li><strong>The ERC-8004 ReputationRegistry feedback index is 1-based, not 0-based.</strong> My first <span class="mono">readFeedback(agentId, client, 0)</span> reverted with "index must be > 0", which cost me a re-run before I clocked it. A line in the docs, or a 0-based convention to match every other array in the EVM, would avoid it.</li>
 </ul>
 
 </body>
