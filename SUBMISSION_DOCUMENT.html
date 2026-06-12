@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Inter", "Helvetica Neue", Arial, sans-serif;
+    color: #14181f; font-size: 10.5pt; line-height: 1.5; margin: 0;
+  }
+  h1 { font-size: 21pt; margin: 0 0 2px; letter-spacing: -0.5px; }
+  .sub { color: #4a5568; font-size: 11pt; margin: 0 0 14px; font-weight: 500; }
+  .track-pill {
+    display: inline-block; background: #0a2540; color: #4fd1ff;
+    padding: 4px 12px; border-radius: 999px; font-size: 9pt;
+    font-weight: 600; letter-spacing: 0.3px; margin-bottom: 18px;
+  }
+  h2 {
+    font-size: 12pt; margin: 20px 0 6px; padding-bottom: 4px;
+    border-bottom: 2px solid #e2e8f0; color: #0a2540;
+  }
+  p { margin: 0 0 8px; }
+  ul { margin: 4px 0 8px; padding-left: 18px; }
+  li { margin-bottom: 3px; }
+  code, .mono { font-family: "SF Mono", Menlo, monospace; font-size: 9pt; background: #f1f5f9; padding: 1px 4px; border-radius: 3px; }
+  a { color: #1a73e8; text-decoration: none; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 9.5pt; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 600; color: #0a2540; }
+  .arch { width: 100%; border: 1px solid #d8dee6; border-radius: 8px; margin: 6px 0; }
+  .todo { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 3px 7px; border-radius: 4px; font-weight: 600; font-size: 9pt; }
+  .lead { font-size: 11pt; color: #2d3748; }
+  .meta-row { display: flex; gap: 28px; margin: 2px 0 12px; font-size: 9.5pt; color: #4a5568; }
+  .small { font-size: 9pt; color: #64748b; }
+</style>
+</head>
+<body>
+
+<h1>Arc Agentic Stack</h1>
+<p class="sub">Trust + settlement primitives for autonomous agents — settled in USDC on Arc.</p>
+<span class="track-pill">CIRCLE STABLECOIN COMMERCE STACK CHALLENGE · TRACK 4 — BEST AGENTIC ECONOMY EXPERIENCE ON ARC</span>
+
+<h2>1. Project Title</h2>
+<p><strong>Arc Agentic Stack</strong> — three composable, ownerless contracts that let autonomous agents be <em>trusted before they act</em> and <em>paid as they work</em>, all settled in USDC on Circle's Arc L1.</p>
+
+<h2>2. Description</h2>
+<p class="lead">Every "agentic payment" demo quietly assumes two things that don't exist on-chain yet: that you can <strong>trust an agent before it touches your money</strong>, and that you can <strong>pay it continuously as it works</strong> instead of after the fact. The Arc Agentic Stack ships both as small, composable, ownerless primitives.</p>
+<table>
+  <tr><th>Layer</th><th>Contract</th><th>Answers</th></tr>
+  <tr><td>🛡️ Trust</td><td><strong>AgentBond</strong></td><td>"Can I trust this agent before it acts?" — USDC bond becomes a public, slashable credit score.</td></tr>
+  <tr><td>💧 Settlement</td><td><strong>StreamPay</strong></td><td>"Can I pay it per second of work, not per invoice?" — linear per-second USDC streaming, cancellable by either side.</td></tr>
+  <tr><td>🔥 Mechanism</td><td><strong>CommitStakeV2</strong></td><td>"Who pays when the verifier lies?" — bonded verifier; on overturn the harmed party is paid its exact damage and the <em>surplus is burned</em> to <span class="mono">0x…dEaD</span>, so collusion is never profitable.</td></tr>
+</table>
+<p>The two primitives work standalone; CommitStakeV2 composes both into a complete trust-and-pay rail. No contract has an owner, admin, proxy or pause — immutability is the trust model.</p>
+<p>The stack plugs into the wider Arc agent ecosystem rather than standing apart: the demo agents carry on-chain <strong>ERC-8004</strong> identities (Arc's official registry), and an agent's bond capital can arrive <strong>cross-chain via Circle CCTP V2</strong> before it ever posts a bond — ERC-8004 supplies identity and jobs, this stack supplies the missing economic-assurance layer.</p>
+
+<h2>3. Track</h2>
+<p><strong>Track 4 — Best Agentic Economy Experience on Arc.</strong> The stack is purpose-built for autonomous agent-to-agent commerce: identity-by-stake, continuous settlement, and accountable verification, every state transition a real USDC transaction on Arc.</p>
+
+<h2>4. Circle Account Email</h2>
+<p><span class="todo">TO FILL — Főnök Circle-fiók email címe</span></p>
+
+<h2>5. Products Used</h2>
+<ul>
+  <li><strong>Circle Arc L1 (testnet, chain 5042002)</strong> — EVM L1 with USDC as native gas; deterministic finality, dollar-denominated fees.</li>
+  <li><strong>USDC</strong> — both the gas asset (18-decimal native) and the value/settlement asset (6-decimal ERC-20 at <span class="mono">0x3600…0000</span>). All three contracts settle exclusively in USDC.</li>
+  <li><strong>CCTP V2 + Bridge Kit (Circle App Kit)</strong> — runnable cross-chain capital onboarding: <span class="mono">1 USDC</span> bridged Base Sepolia → Arc and deposited into AgentBond. Arc is a native Bridge-Kit chain (<span class="mono">ArcTestnet</span>, CCTP domain 26); the cross-chain leg is one <span class="mono">kit.bridge()</span> call.</li>
+  <li><strong>ERC-8004 Identity &amp; Reputation Registry (Arc-native)</strong> — both demo agents hold on-chain identity NFTs; full surface exercised: <span class="mono">register</span>, <span class="mono">ReputationRegistry.giveFeedback</span>, <span class="mono">IdentityRegistry.setAgentWallet</span>.</li>
+  <li><strong>Circle Wallets (Developer-Controlled)</strong> — the agent signs a full Arc lifecycle through a Circle wallet; no private key on disk touches the chain.</li>
+  <li><strong>x402 over EIP-3009</strong> — runnable demo: an agent pays an HTTP <span class="mono">402</span>-gated API, settled per second on StreamPay.</li>
+  <li><strong>Foundry</strong> — full adversarial test + symbolic verification (Halmos) + mutation + static-analysis (Slither) audit pipeline.</li>
+</ul>
+
+<h2>6. Working MVP</h2>
+<p>Live and verifiable on Arc Testnet today — no backend, frontends read live state straight from the public Arc RPC:</p>
+<table>
+  <tr><th>Contract</th><th>Address</th><th>Verified</th></tr>
+  <tr><td>CommitStakeV2</td><td class="mono">0x1f1CA31bC36a95a3909628F1bA97970E20698CA9</td><td>exact-match ✅</td></tr>
+  <tr><td>AgentBond</td><td class="mono">0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0</td><td>✅</td></tr>
+  <tr><td>StreamPay</td><td class="mono">0x505739d33D85AD85D0f9eeE64856309782382450</td><td>✅</td></tr>
+</table>
+<ul>
+  <li><strong>Live hub (browse, no wallet):</strong> <a href="https://mnorbert87.github.io/arc-agentic-stack/">mnorbert87.github.io/arc-agentic-stack</a></li>
+  <li><strong>Two on-chain burns prove the anti-collusion mechanism fired:</strong> overturn-surplus burn <strong>1.45 USDC</strong> and liveness burn <strong>1.50 USDC</strong>, each a real <span class="mono">Transfer</span> to <span class="mono">0x…dEaD</span> on the explorer.</li>
+  <li><strong>79 tests</strong> (unit + adversarial + cold-audit + fuzz + 10k-run invariants + Halmos symbolic), all green, reproducible with one command. Solvency invariant fuzzed with zero reverts.</li>
+  <li><strong>Cross-chain capital onboarding (CCTP V2 + Bridge Kit):</strong> 1 USDC bridged Base Sepolia → Arc → AgentBond — all three txs <span class="mono">status 1</span> (depositForBurn / receiveMessage / deposit); AgentBond bond <span class="mono">36 → 37 USDC</span>. Runnable: <span class="mono">cctp-demo/</span> with a verified transcript.</li>
+  <li><strong>On-chain agent identity (ERC-8004):</strong> Aiden (tokenId <span class="mono">471762</span>) and the Arc Stack Verifier (<span class="mono">471763</span>) registered in Arc's official <span class="mono">IdentityRegistry</span>; plus a real 5/5 counterparty <span class="mono">giveFeedback</span> and an EIP-712 <span class="mono">setAgentWallet</span> binding — all on-chain.</li>
+</ul>
+
+<h2>7. Architecture Diagram</h2>
+<img class="arch" src="file:///Users/aisszisztens/marveen/contracts/arc-agentic-stack-pub/architecture.png" alt="Architecture">
+<p class="small">An autonomous-agent lifecycle settled end-to-end in USDC: bond up → get hired → lock collateral → stream pay → settle (release on success, slash on default). Full walkthrough in the README.</p>
+
+<h2>8. Video Demo</h2>
+<p><strong>URL:</strong> <span class="todo">[ DEMO VIDEO URL — inserted after final QC ]</span></p>
+<p class="small">The pitch-cut walks the full agent lifecycle plus the new CCTP onboarding and ERC-8004 identity steps. The hosted link (YouTube/Loom) drops into this field before submission.</p>
+
+<h2>9. Documentation</h2>
+<ul>
+  <li><strong>GitHub:</strong> <a href="https://github.com/Mnorbert87/arc-agentic-stack">github.com/Mnorbert87/arc-agentic-stack</a> (public, CI green)</li>
+  <li><strong>For Judges (verify in 2 min):</strong> <span class="mono">JUDGES.md</span> — direct explorer + reproducible-test links (burns, CCTP onboarding, ERC-8004 identity)</li>
+  <li><strong>Runnable demos:</strong> <span class="mono">cctp-demo/</span> (cross-chain onboarding, Bridge Kit) and <span class="mono">x402-demo/</span> (pay-per-call) — each with a verified tx transcript</li>
+  <li><strong>Four-layer audit trail:</strong> Halmos (symbolic) · Slither (static) · mutation (100% revert-class kill) · gas profile</li>
+  <li><strong>Design depth:</strong> README.md, VERIFIER_ECONOMICS.md, THREAT_MODEL.md, COLD_ECONOMIC_REVIEW.md</li>
+</ul>
+
+<h2>10. Product Feedback (building on Arc + Circle)</h2>
+<ul>
+  <li><strong>USDC dual-decimals is the #1 footgun.</strong> Native gas is 18-decimal while the ERC-20 is 6-decimal; mixing them silently produces amounts off by 10¹². Clear, prominent docs (or a helper that surfaces the active denomination) would save every builder this class of bug. We handle all accounting in micro-USDC against the ERC-20 and gas separately in native units.</li>
+  <li><strong>USDC-as-gas is genuinely simplifying.</strong> An agent's working capital and its gas budget are the same asset — one balance to manage instead of two. This is a real ergonomic win for autonomous agent treasury logic and deserves to be a headline selling point.</li>
+  <li><strong>Block timestamps are not strictly monotonic on the testnet,</strong> which matters for per-second streaming accrual; we defend against it in StreamPay. Worth documenting explicitly for anyone building time-based settlement.</li>
+  <li><strong>arcscan exact-match verification worked cleanly</strong> once <span class="mono">evm_version</span> was pinned to <span class="mono">cancun</span> — a one-line note in the docs would shorten the trial-and-error.</li>
+</ul>
+
+</body>
+</html>
