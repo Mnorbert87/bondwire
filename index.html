@@ -200,11 +200,12 @@
   </section>
 
   <div class="stat-row rise d1">
-    <div class="stat"><b id="sBond">—</b><small>USDC bonded</small></div>
-    <div class="stat"><b id="sObl">—</b><small>Obligations</small></div>
-    <div class="stat"><b id="sStreams">—</b><small>Streams opened</small></div>
-    <div class="stat"><b id="sFlow">—</b><small>USDC in streams</small></div>
+    <div class="stat"><b id="sBond">52.03</b><small>USDC bonded</small></div>
+    <div class="stat"><b id="sObl">16</b><small>Obligations</small></div>
+    <div class="stat"><b id="sStreams">20</b><small>Streams opened</small></div>
+    <div class="stat"><b id="sFlow">44.83</b><small>USDC in streams</small></div>
   </div>
+  <p class="section-sub rise d1" style="font-size:11px; color:var(--faint); margin:6px 0 0;">● Live on-chain figures from Arc testnet, refreshed on load; static snapshot shown if the RPC is cold.</p>
 
   <!-- PRODUCTS -->
   <h3 class="section-h rise d2" id="products">Two layers, one stack</h3>
@@ -218,8 +219,8 @@
       <div class="role">"Can I trust this agent before it touches my money?"</div>
       <p>An agent posts a USDC bond as collateral behind its on-chain reputation, then grants specific protocols the right to lock and slash it. Performs → released. Defaults → slashed to the counterparty. The free bond is the credit score anyone can read.</p>
       <div class="pstat">
-        <div><b id="pBondTvl">—</b>USDC bonded</div>
-        <div><b id="pBondObl">—</b>obligations</div>
+        <div><b id="pBondTvl">52.03</b>USDC bonded</div>
+        <div><b id="pBondObl">16</b>obligations</div>
       </div>
       <span class="open">Open AgentBond <span class="arr">→</span></span>
     </a>
@@ -229,10 +230,10 @@
       <div class="ptag">Settlement layer</div>
       <h3>StreamPay</h3>
       <div class="role">"Pay the agent per second of work, not per invoice."</div>
-      <p>Lock USDC into a stream that accrues to the recipient linearly, by the second. Pay-per-inference, per-API-call, per-second subscriptions — the recipient withdraws what has vested at any moment; the sender cancels and reclaims the rest. No trust, no invoices, no chargebacks.</p>
+      <p>Lock USDC into a stream that accrues to the recipient linearly, by the second. Pay-per-inference, per-API-call, per-second subscriptions — the recipient withdraws what has vested at any moment; the sender cancels and reclaims the rest. The stream solves the <i>shape</i> of payment — continuous, by the second, no invoices. Trust in the work itself is backstopped by AgentBond's slashable bond.</p>
       <div class="pstat">
-        <div><b id="pStreamN">—</b>streams</div>
-        <div><b id="pStreamFlow">—</b>USDC streaming</div>
+        <div><b id="pStreamN">20</b>streams</div>
+        <div><b id="pStreamFlow">44.83</b>USDC streaming</div>
       </div>
       <span class="open">Open StreamPay <span class="arr">→</span></span>
     </a>
@@ -299,7 +300,6 @@
       <p style="margin-top:0;"><b style="color:var(--c2);">Bonded verifier:</b> the verifier's bond slice is locked in AgentBond and slashed on a lie or no-show, with §7a routing (damage to the harmed party, surplus <b>burned</b>) proven on-chain across three seeded branches.</p>
       <div class="pstat">
         <div><b id="pCsV2Addr">0x1f1C…8CA9</b>contract</div>
-        <div><b id="pCsAddr">0xc307…A9a2</b>legacy</div>
         <div><b>3</b>seeded commitments</div>
       </div>
       <span class="open">Open CommitStake <span class="arr">→</span></span>
@@ -326,16 +326,14 @@
         <span>Arc L1 (USDC gas)</span>
         <span>Circle Wallets</span>
         <span>CCTP V2 · Bridge Kit</span>
-        <span class="muted">Nanopayments *</span>
       </div>
       <ul>
         <li><span class="ck">◆</span><span><b>USDC</b> — the settlement rail for both bonds and streams. All value in the stack is USDC.</span></li>
         <li><span class="ck">◆</span><span><b>Arc</b> — deterministic finality and USDC-denominated fees let an agent budget, pay gas, and settle in one unit.</span></li>
         <li><span class="ck">◆</span><span><b>Circle Wallets</b> — <b>live.</b> The agent signs its Arc transactions through a Circle Developer-Controlled Wallet — no private key on disk touches the chain. A full lifecycle (<a href="https://testnet.arcscan.app/tx/0x05349563271e35e9b79d66116cd5d84ca65cff8032bce41fa937ff29dca8be03" style="color:var(--muted);">approve</a> → <a href="https://testnet.arcscan.app/tx/0x59a8a0d095ca745ee2f37f0abfcdc631852707ced7d8e8a1128ebd42f09220ab" style="color:var(--muted);">bond</a> → <a href="https://testnet.arcscan.app/tx/0x2f96d176d5904278806259cd4b96a38d1f0550e078fc953878028bb7b55d7302" style="color:var(--muted);">stream</a>) was signed by Circle wallet <code>0xdFDa…F46b</code> on Arc Testnet.</span></li>
         <li><span class="ck">◆</span><span><b>CCTP V2 + Bridge Kit</b> — <b>live.</b> An agent's bond capital is bridged <b>Base Sepolia → Arc</b> with Circle's Bridge Kit (App Kit, CCTP V2) and deposited into AgentBond — Arc is a native Bridge-Kit chain (domain 26). Verified: <a href="https://sepolia.basescan.org/tx/0x6232b181d8f3234162f8d617ba5a5215b62eb9c902e5f70b0f6312cb0e8725d8" style="color:var(--muted);">burn</a> → <a href="https://testnet.arcscan.app/tx/0xcae2649abaee2544144a7cedc73b38915ef62d2fce545b566168f30735326d2b" style="color:var(--muted);">mint</a> → <a href="https://testnet.arcscan.app/tx/0xf17ca3a4004b8b969cdb633d1d7f42703a7618f34a56092fc1e9b82eba5f96bc" style="color:var(--muted);">bond</a>.</span></li>
-        <li><span class="ck">◆</span><span><b>Nanopayments *</b> — a natural fit for sub-cent, high-frequency stream withdrawals at scale (architecture-level).</span></li>
       </ul>
-      <p style="font-size:11.5px; color:var(--faint); margin:14px 0 0;">* Integrated at the architecture level for this testnet demo; the live contracts use USDC on Arc directly.</p>
+      <p style="font-size:11.5px; color:var(--faint); margin:14px 0 0;"><b>Future work:</b> Circle Nanopayments are a natural fit for sub-cent, high-frequency stream withdrawals at scale — not integrated in this testnet demo; the live contracts settle in USDC on Arc directly.</p>
     </div>
   </div>
 
@@ -344,7 +342,6 @@
     <a id="abLink" href="https://testnet.arcscan.app/address/0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0" target="_blank" rel="noopener">AgentBond <code id="abAddr">0xB9b4…f8e0</code> ↗</a>
     <a id="spLink" href="https://testnet.arcscan.app/address/0x505739d33D85AD85D0f9eeE64856309782382450" target="_blank" rel="noopener">StreamPay <code id="spAddr">0x5057…2450</code> ↗</a>
     <a id="csV2Link" href="https://testnet.arcscan.app/address/0x1f1CA31bC36a95a3909628F1bA97970E20698CA9" target="_blank" rel="noopener">CommitStake <code id="csV2Addr">0x1f1C…8CA9</code> ↗</a>
-    <a id="csLink" href="https://testnet.arcscan.app/address/0xc307d9287707Ba04c03Dd653b4457E949129A9a2" target="_blank" rel="noopener">CommitStake (legacy) <code id="csAddr">0xc307…A9a2</code> ↗</a>
     <a href="https://testnet.arcscan.app/token/0x8004A818BFB912233c491871b3d84c89A494BD9e/instance/471762" target="_blank" rel="noopener">Aiden · ERC-8004 <code>#471762</code> ↗</a>
     <a href="https://testnet.arcscan.app/token/0x8004A818BFB912233c491871b3d84c89A494BD9e/instance/471763" target="_blank" rel="noopener">Verifier · ERC-8004 <code>#471763</code> ↗</a>
     <a id="repoLink" href="https://github.com/Mnorbert87/arc-agentic-stack" target="_blank" rel="noopener">GitHub ↗</a>
@@ -417,7 +414,7 @@ async function loadAgentBond() {
     let dec = 6; try { dec = Number(await erc.decimals()); } catch {}
     const tvl = Number(ethers.formatUnits(await erc.balanceOf(AB_ADDR), dec));
     countTo($("sBond"), tvl, 2); countTo($("pBondTvl"), tvl, 2);
-  } catch (e) { setBoth(["sBond","sObl","pBondTvl","pBondObl"], "n/a"); }
+  } catch (e) { /* keep static snapshot values if RPC is cold/rate-limited */ }
 }
 
 async function loadStreamPay() {
@@ -430,7 +427,7 @@ async function loadStreamPay() {
     let dec = 6; try { dec = Number(await erc.decimals()); } catch {}
     const flow = Number(ethers.formatUnits(await erc.balanceOf(SP_ADDR), dec));
     countTo($("sFlow"), flow, 2); countTo($("pStreamFlow"), flow, 2);
-  } catch (e) { setBoth(["sStreams","sFlow","pStreamN","pStreamFlow"], "n/a"); }
+  } catch (e) { /* keep static snapshot values if RPC is cold/rate-limited */ }
 }
 
 loadAgentBond();
