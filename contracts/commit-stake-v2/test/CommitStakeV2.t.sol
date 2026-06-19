@@ -186,9 +186,12 @@ contract CommitStakeV2Test is V2TestBase {
     }
 
     /// @dev AgentBond enforces capacity: a verifier cannot back commitments beyond its free bond.
+    ///      Amount is raised so the bond-exceeding slice still sits within the leverage cap
+    ///      (`slice <= 3 × (amount + fee + arbiterFee)`), isolating the INSUFFICIENT_BOND path.
     function test_Create_RevertInsufficientVerifierBond() public {
         CommitStakeV2.CreateParams memory p = defaultParams();
-        p.verifierSlice = VERIFIER_BOND + 1;
+        p.amount = 4_000e6; // cap = 3 × (4_000e6 + ARB_FEE) ≈ 12_015e6 > VERIFIER_BOND
+        p.verifierSlice = VERIFIER_BOND + 1; // > free bond, but within the leverage cap
         p.challengeBond = cs.challengeBondFloor(p.verifierSlice, p.arbiterFee);
         vm.expectRevert(bytes("INSUFFICIENT_BOND"));
         vm.prank(staker);

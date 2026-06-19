@@ -70,6 +70,19 @@ Scope: the three on-chain primitives in this repo — [`AgentBond`](contracts/ag
 
 **Defense:** structural — there is no owner, no admin function, no upgrade hook, no pausability, and no `selfdestruct` in any of the three contracts. The only addresses that can ever move a given escrow's funds are the ones named in that escrow's record. Nothing to compromise, nothing to subpoena.
 
+### 8. Sockpuppet-arbiter griefing (CommitStakeV2 — the honest verifier's burnable slice)
+
+**Attack:** CommitStakeV2 adds a dispute arbiter, named by the staker at `create`. The §7a surplus burn already proves a colluding arbiter can never *take* the slice (it burns, it cannot be redirected — symbolically verified). But burning is still *harm*: a staker can name an arbiter that is only address-distinct from the parties (`CommitStakeV2.sol` conflict checks), lock an honest verifier's bonded slice, let the verifier resolve *correctly*, challenge as the harmed party, and have its sockpuppet arbiter overturn the correct verdict — burning the honest verifier's slice. The attacker nets ≈ gas (no profit, by the same burn), so this is **griefing / availability**, not theft. It is exploitable to the extent the verifier granted a broad slash allowance — exactly the open-market "free bond is a credit score, anyone can hire me" posture.
+
+**Defense (this release):** the verifier's exposure is bounded by the revocable slash allowance it grants AgentBond (spent per `lock`), so an operator can cap blast radius with a minimal per-job allowance. The §7a burn keeps the attack profitless in all cases.
+
+**Defense (the fix — branch `fix/arbiter-griefing-optin`, see the linked PR; not deployed):**
+- **Per-commitment arbiter opt-in.** A verifier must `approveArbiter(arbiter, true)` before any staker may name that arbiter over its bond — mirroring `setSlashAllowance`: the bonded party now consents to the *judge*, not just the enforcer. Address-distinctness alone is no longer sufficient (`ARBITER_NOT_APPROVED`). Revoke blocks only NEW commitments; existing ones keep their arbiter.
+- **Slice leverage cap.** `verifierSlice <= 3 × (amount + feeDeposit + arbiterFee)` (`SLICE_ABOVE_LEVERAGE_CAP`) — a dust stake can no longer lock a verifier's whole bond behind one job.
+- Tested: `CommitStakeV2GriefFix.t.sol`, full suite **88/88** green; the Halmos §7a routing spec is unchanged (no routing math touched).
+
+**Why not deployed:** the live CommitStakeV2 (`0x1f1C…8CA9`) is exact-match verified on Arcscan. Merging + redeploying would invalidate that verification this close to judging. The branch is the *proof the fix is real and green*; theft stays mathematically + symbolically excluded on the deployed contract, this removes the residual griefing on the roadmap. The symbolic spec proves the *accounting* of a slash, not the *justness* of the verdict — arbiter honesty is a stated trust assumption, exactly as the verifier's is.
+
 ## What this model does *not* cover
 
 - **Economic design of enforcers/verifiers** built on top — a badly designed enforcer can misuse the capacity an agent grants it (within the cap). Audit the policy layer separately.

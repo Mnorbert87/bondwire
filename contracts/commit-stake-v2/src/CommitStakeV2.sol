@@ -252,6 +252,13 @@ contract CommitStakeV2 is ReentrancyGuard {
     ///         hostage. In the normal flow CommitStakeV2 always resolves the obligation first.
     uint64 public constant BOND_DEADLINE_BUFFER = 7 days;
 
+    /// @notice Slice leverage cap: `verifierSlice <= MAX_SLICE_LEVERAGE × (amount + feeDeposit +
+    ///         arbiterFee)`. Bounds how much of a verifier's bond a single commitment can lock
+    ///         relative to the value actually at stake, so a dust stake can never lock a verifier's
+    ///         whole bond behind one job. Defense-in-depth alongside the per-commitment arbiter
+    ///         opt-in: even an approved arbiter cannot be paired with disproportionate leverage.
+    uint256 public constant MAX_SLICE_LEVERAGE = 3;
+
     IERC20 public immutable usdc;
     IAgentBond public immutable agentBond;
     IStreamPay public immutable streamPay;
@@ -266,6 +273,15 @@ contract CommitStakeV2 is ReentrancyGuard {
     /// @dev Not public: the auto-generated flat-tuple getter for a struct this wide does not
     ///      compile (stack depth). Read through `get(id)` instead.
     mapping(uint256 => Commitment) internal commitments;
+
+    /// @notice Per-commitment arbiter opt-in: a verifier must explicitly approve an arbiter
+    ///         address before a staker may name it on a commitment that locks the verifier's bond.
+    ///         Closes the sockpuppet-arbiter griefing path — a staker can no longer pair the
+    ///         verifier's slice with an arbiter the verifier never consented to and have that
+    ///         arbiter overturn a correct verdict to burn an honest verifier's slice. The §7a burn
+    ///         already makes such an attack profitless (symbolically proven); this makes it
+    ///         impossible without the verifier's own consent to the judge.
+    mapping(address => mapping(address => bool)) public arbiterApproved;
 
     event Created(
         uint256 indexed id,
@@ -287,6 +303,7 @@ contract CommitStakeV2 is ReentrancyGuard {
     ///      `feeAccrued` is the total the verifier actually received (read from StreamPay state,
     ///      the on-chain damage input), `refundedToStaker` the unstreamed remainder returned.
     event FeeStreamSettled(uint256 indexed id, uint256 feeAccrued, uint256 refundedToStaker);
+    event ArbiterApproved(address indexed verifier, address indexed arbiter, bool approved);
 
     constructor(IERC20 _usdc, IAgentBond _agentBond, IStreamPay _streamPay) {
         require(address(_usdc) != address(0), "USDC_ZERO");
@@ -335,6 +352,11 @@ contract CommitStakeV2 is ReentrancyGuard {
         require(p.arbiter != p.verifier, "ARBITER_IS_VERIFIER");
         require(p.arbiter != msg.sender, "ARBITER_IS_STAKER");
         require(p.arbiter != p.beneficiary, "ARBITER_IS_BENEFICIARY");
+        // Per-commitment arbiter opt-in: the verifier whose bond is about to be locked must have
+        // approved this exact arbiter. Address-distinctness alone is not enough — a staker could
+        // otherwise name a sockpuppet arbiter and overturn a correct verdict to burn an honest
+        // verifier's slice (griefing). The verifier consents to the judge, not just the enforcer.
+        require(arbiterApproved[p.verifier][p.arbiter], "ARBITER_NOT_APPROVED");
         require(p.deadline > block.timestamp, "DEADLINE_PAST");
         require(p.challengeWindow > 0, "WINDOW_ZERO");
         require(p.arbiterDeadline > 0, "ARBITER_DEADLINE_ZERO");
@@ -373,6 +395,12 @@ contract CommitStakeV2 is ReentrancyGuard {
         // inequality subsumes the old `slice > amount + feeDeposit` rule.
         require(
             p.verifierSlice > p.amount + p.feeDeposit + p.arbiterFee, "SLICE_TOO_SMALL"
+        );
+        // Leverage cap (defense-in-depth): the slice locked behind a job is bounded relative to the
+        // value at stake, so a dust stake cannot lock a verifier's whole bond. See MAX_SLICE_LEVERAGE.
+        require(
+            p.verifierSlice <= MAX_SLICE_LEVERAGE * (p.amount + p.feeDeposit + p.arbiterFee),
+            "SLICE_ABOVE_LEVERAGE_CAP"
         );
 
         id = nextId++;
@@ -428,6 +456,18 @@ contract CommitStakeV2 is ReentrancyGuard {
         // challengeBondPaid, resolvedAt, challengedAt, resolvedPass, outcome stay zero/false.
 
         emit Created(id, msg.sender, p.verifier, received, p.verifierSlice, obligationId, p.goal);
+    }
+
+    /// @notice Verifier opts in to (or revokes) a specific arbiter as the dispute judge for any
+    ///         future commitment that locks the caller's bond. Mirrors `AgentBond.setSlashAllowance`:
+    ///         the bonded party consents to who may rule over its slice, per address. Revoking
+    ///         (`ok == false`) only blocks NEW commitments; existing ones keep the arbiter they were
+    ///         created with. Granting an open-market verifier service is a deliberate act, not a
+    ///         default — this is the per-commitment opt-in that closes sockpuppet-arbiter griefing.
+    function approveArbiter(address arbiter, bool ok) external {
+        require(arbiter != address(0), "ARBITER_ZERO");
+        arbiterApproved[msg.sender][arbiter] = ok;
+        emit ArbiterApproved(msg.sender, arbiter, ok);
     }
 
     /// @notice Verifier records the verdict on or before the deadline. This only OPENS the
