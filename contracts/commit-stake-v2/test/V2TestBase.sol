@@ -59,6 +59,8 @@ abstract contract V2TestBase is Test {
         usdc.approve(address(agentBond), type(uint256).max);
         agentBond.deposit(VERIFIER_BOND);
         agentBond.setSlashAllowance(address(cs), type(uint256).max);
+        // Per-commitment arbiter opt-in: the verifier consents to the default test arbiter.
+        cs.approveArbiter(arbiter, true);
         vm.stopPrank();
     }
 
