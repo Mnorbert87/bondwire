@@ -112,6 +112,19 @@ Three claims, each backed by something you can re-run:
    ([tx](https://testnet.arcscan.app/tx/0x7bf59845abadf3847061b5997e96e303a959d722c8a7283b160b3c82b14aa6bd))
    to `0x…dEaD`.
 
+**Trust boundary — what the burn buys, stated up front.** Closing the recapture path means a
+colluding arbiter can never *take* the slice (claim 2, symbolically proven). It does **not** make
+the arbiter *honest*. A staker can name an arbiter that is only address-distinct from the parties
+(`CommitStakeV2.sol:335-337`) and, on a *correct* verdict, have it overturn — burning an honest
+verifier's slice. This is **griefing, not theft**: the attacker nets ≈ gas and never a profit, by
+the same §7a burn that the spec proves. The verifier's exposure is bounded today by the **revocable
+slash allowance** it grants AgentBond (spent per `lock`), so the operational defense is a minimal
+per-job allowance. Removing the residual griefing is on the **roadmap**: per-commitment verifier
+opt-in to the named arbiter (or an AgentBond arbiter allowlist), plus a stake-proportional slice cap
+`verifierSlice ≤ k·(amount + feeDeposit + arbiterFee)`. We state this because a careful reviewer
+reaches it: the symbolic spec proves the *accounting* of a slash, not the *justness* of the verdict
+— arbiter honesty is an assumption, exactly as the verifier's is.
+
 The spec ([VERIFIER_ECONOMICS.md](./VERIFIER_ECONOMICS.md)) was already public; with this the
 **implementation, the source-verified deploy, and a four-layer audit trail now sit in one repo beside it**:
 
