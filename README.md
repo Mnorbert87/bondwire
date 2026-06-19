@@ -123,7 +123,9 @@ per-job allowance. Removing the residual griefing is on the **roadmap**: per-com
 opt-in to the named arbiter (or an AgentBond arbiter allowlist), plus a stake-proportional slice cap
 `verifierSlice ≤ k·(amount + feeDeposit + arbiterFee)`. We state this because a careful reviewer
 reaches it: the symbolic spec proves the *accounting* of a slash, not the *justness* of the verdict
-— arbiter honesty is an assumption, exactly as the verifier's is.
+— arbiter honesty is an assumption, exactly as the verifier's is. The fix is implemented, tested
+(88/88 green), and not deployed (to preserve the on-chain exact-match verification): see
+[THREAT_MODEL §8](./THREAT_MODEL.md) and Draft [PR #1](https://github.com/Mnorbert87/arc-agentic-stack/pull/1).
 
 The spec ([VERIFIER_ECONOMICS.md](./VERIFIER_ECONOMICS.md)) was already public; with this the
 **implementation, the source-verified deploy, and a four-layer audit trail now sit in one repo beside it**:
