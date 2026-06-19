@@ -63,6 +63,7 @@ contract CommitStakeV2EdgeMutationTest is V2TestBase {
         tok.approve(address(ab), type(uint256).max);
         ab.deposit(VERIFIER_BOND);
         ab.setSlashAllowance(address(csx), type(uint256).max);
+        csx.approveArbiter(arbiter, true);
         vm.stopPrank();
 
         // create (no fee stream, so only the USDC + AgentBond legs are touched) -> resolve pass

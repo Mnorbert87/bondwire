@@ -152,6 +152,7 @@ contract CommitStakeV2AdversarialTest is V2TestBase {
         evil.approve(address(ab), type(uint256).max);
         ab.deposit(500e6);
         ab.setSlashAllowance(address(v2), type(uint256).max);
+        v2.approveArbiter(arbiter, true);
         vm.stopPrank();
 
         CommitStakeV2.CreateParams memory p = defaultParams();
@@ -189,6 +190,7 @@ contract CommitStakeV2AdversarialTest is V2TestBase {
         evil.approve(address(ab), type(uint256).max);
         ab.deposit(500e6);
         ab.setSlashAllowance(address(v2), type(uint256).max);
+        v2.approveArbiter(arbiter, true);
         vm.stopPrank();
 
         vm.prank(staker);
@@ -227,6 +229,7 @@ contract CommitStakeV2AdversarialTest is V2TestBase {
         feeUsdc.approve(address(ab), type(uint256).max);
         ab.deposit(500e6); // books 450e6 after skim
         ab.setSlashAllowance(address(v2), type(uint256).max);
+        v2.approveArbiter(arbiter, true);
         vm.stopPrank();
 
         vm.prank(staker);
@@ -263,6 +266,7 @@ contract CommitStakeV2AdversarialTest is V2TestBase {
         nrt.approve(address(ab), type(uint256).max);
         ab.deposit(500e6);
         ab.setSlashAllowance(address(v2), type(uint256).max);
+        v2.approveArbiter(arbiter, true);
         vm.stopPrank();
 
         vm.prank(staker);
