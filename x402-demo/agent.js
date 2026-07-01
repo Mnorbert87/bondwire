@@ -46,6 +46,7 @@ const SP = [
   "function get(uint256) view returns (tuple(address sender,address recipient,uint256 deposit,uint256 withdrawn,uint64 start,uint64 stop,uint8 status))",
   "function nextId() view returns (uint256)",
   "function cancel(uint256)",
+  "event Created(uint256 indexed id, address indexed sender, address indexed recipient, uint256 deposit, uint64 start, uint64 stop, string memo)",
 ];
 
 const usd = (v) => (Number(v) / 1e6).toFixed(6);
@@ -88,8 +89,17 @@ async function main() {
   log(`\n[2/4] PAY — opening a StreamPay stream: $${usd(DEPOSIT)} over ${STREAM_SECS}s -> ${payTo}`);
   if ((await usdc.allowance(me, STREAM_PAY)) < DEPOSIT) await send("approve USDC → StreamPay", usdc.approve(STREAM_PAY, ethers.MaxUint256));
   const now = BigInt(Math.floor(Date.now() / 1000));
-  await send(`createStream`, sp.createStream(payTo, DEPOSIT, now, now + BigInt(STREAM_SECS), "x402 pay-per-inference"));
-  const streamId = (await sp.nextId()) - 1n;
+  const createRc = await send(`createStream`, sp.createStream(payTo, DEPOSIT, now, now + BigInt(STREAM_SECS), "x402 pay-per-inference"));
+  // Take OUR stream's id from the Created event of this receipt — never nextId()-1,
+  // which races if anyone else creates a stream in the same window.
+  let streamId;
+  for (const l of createRc.logs) {
+    try {
+      const ev = sp.interface.parseLog(l);
+      if (ev?.name === "Created" && ev.args.sender.toLowerCase() === me.toLowerCase()) streamId = ev.args.id;
+    } catch {}
+  }
+  if (streamId === undefined) throw new Error("Created event not found in createStream receipt");
   log(`   stream #${streamId} flowing at $${usd(DEPOSIT / BigInt(STREAM_SECS))}/s`);
 
   // 3) Poll the paid endpoint; each 200 = server pulled the seconds vested since last call.
@@ -99,7 +109,13 @@ async function main() {
   const gap = Number(process.env.POLL_MS || 5000);
   for (let i = 1; i <= CALLS; i++) {
     await sleep(gap);
-    const r = await fetch(`${SERVER_URL}/inference?prompt=${encodeURIComponent(`call ${i}: summarize x402`)}&stream=${streamId}`);
+    // Payer binding: sign this call as the stream's sender so a third party who merely
+    // observes our public stream id cannot spend our vested balance.
+    const prompt = `call ${i}: summarize x402`;
+    const ts = Math.floor(Date.now() / 1000);
+    const msg = `x402-inference:${CHAIN_ID}:${STREAM_PAY}:${streamId}:${ethers.id(prompt)}:${ts}`;
+    const sig = await wallet.signMessage(msg);
+    const r = await fetch(`${SERVER_URL}/inference?prompt=${encodeURIComponent(prompt)}&stream=${streamId}&ts=${ts}&sig=${sig}`);
     const body = await r.json();
     if (r.status === 200) {
       log(`   call ${i}: 200 — settled $${body.payment.settledUSDC}  ${body.payment.explorer}`);

@@ -98,3 +98,13 @@ See a verified end-to-end transcript with live arcscan links in **[SAMPLE_RUN.md
 - Use dedicated burner wallets only — never a real-money key.
 - StreamPay is the audited primitive in [`../stream-pay`](../stream-pay); this demo adds
   no custody of its own (the server only ever pulls what has vested to it).
+- **Payer binding.** The stream id is public and sequential, so it must not act as a bearer
+  token. Each call carries `ts` + `sig`, where `sig` is the stream **sender's** `personal_sign`
+  over `x402-inference:<chainId>:<settlementContract>:<streamId>:<keccak256(prompt)>:<ts>`.
+  The server serves only when the recovered signer equals the on-chain stream sender, the
+  timestamp is within `SIG_MAX_AGE_S` (default 120s), and the signature has not been seen
+  before (single-use, anti-replay). A third party observing an open stream on-chain cannot
+  spend its vested balance.
+- **Concurrency-safe settlement.** Per-stream serialization plus gating the 200 on the amount
+  the `withdraw` **actually** pulled (parsed from the `Withdrawn` event, not the pre-tx read)
+  means concurrent calls on one stream cannot each be served off a single vested minimum.

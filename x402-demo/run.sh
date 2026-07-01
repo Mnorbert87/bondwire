@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Runs the full x402 pay-per-inference demo end-to-end against Arc Testnet.
 #
-#   AGENT_PRIVATE_KEY  read at runtime from contracts/commit-stake/.env (the burner) —
-#                      it is NEVER written into this folder.
+#   AGENT_PRIVATE_KEY  read from this folder's .env; if unset there, falls back to
+#                      contracts/commit-stake/.env (DEPLOYER_PRIVATE_KEY burner).
 #   SERVER_PRIVATE_KEY read from this folder's .env (a dedicated demo burner; gitignored).
 #
 # Output is teed to demo-run.log for the README / screen recording.
@@ -12,9 +12,12 @@ cd "$(dirname "$0")"
 # 1) server (payee) key + demo params from local .env.
 set -a; . ./.env; set +a
 
-# 2) agent (payer) key from the existing gitignored location — not copied here.
-#    Read last so it wins over any placeholder line in .env.
-AGENT_PRIVATE_KEY="$(grep -E '^DEPLOYER_PRIVATE_KEY=' ../commit-stake/.env | cut -d= -f2-)"
+# 2) agent (payer) key: prefer local .env (README's documented flow); ignore the
+#    0x... placeholder. Fall back to the sibling burner key if available.
+case "${AGENT_PRIVATE_KEY:-}" in ""|"0x...") AGENT_PRIVATE_KEY="" ;; esac
+if [ -z "$AGENT_PRIVATE_KEY" ] && [ -f ../commit-stake/.env ]; then
+  AGENT_PRIVATE_KEY="$(grep -E '^DEPLOYER_PRIVATE_KEY=' ../commit-stake/.env | cut -d= -f2-)"
+fi
 export AGENT_PRIVATE_KEY
 
 [ -z "${AGENT_PRIVATE_KEY:-}" ]  && { echo "missing AGENT_PRIVATE_KEY"; exit 1; }

@@ -1,4 +1,4 @@
-# Recording note (for Rendező — optional)
+# Recording note (optional)
 
 A 15–20s clip for the submission video. Nothing to host: it is a local Node server +
 the buyer agent, captured as a terminal recording.

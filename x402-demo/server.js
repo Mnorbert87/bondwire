@@ -41,7 +41,9 @@ const SP_ABI = [
   "function get(uint256) view returns (tuple(address sender,address recipient,uint256 deposit,uint256 withdrawn,uint64 start,uint64 stop,uint8 status))",
   "function recipientBalance(uint256) view returns (uint256)",
   "function withdraw(uint256,uint256)",
+  "event Withdrawn(uint256 indexed id, address indexed recipient, uint256 amount)",
 ];
+const SIG_MAX_AGE_S = Number(process.env.SIG_MAX_AGE_S || 120);
 
 const usd = (v) => (Number(v) / 1e6).toFixed(6);
 
@@ -79,9 +81,41 @@ function paymentTerms() {
       payTo: SERVER_ADDR,
       pricing: `pay-per-second: server pulls vested USDC each call (min ${usd(MIN_CALL)} USDC vested to serve)`,
       suggestedDeposit: "0.30 USDC over 60s",
-      instructions: `Open a StreamPay stream with recipient=${SERVER_ADDR}, then resend with ?stream=<id>.`,
+      instructions:
+        `Open a StreamPay stream with recipient=${SERVER_ADDR}, then resend with ` +
+        `?stream=<id>&ts=<unix seconds>&sig=<signature>. sig = the stream SENDER's ` +
+        `personal_sign over "x402-inference:<chainId>:<settlementContract>:<streamId>:<keccak256(prompt)>:<ts>" ` +
+        `(binds the call to the payer; ts must be within ${SIG_MAX_AGE_S}s).`,
     },
   };
+}
+
+// The exact message the stream's sender must sign for one call.
+function authMessage(streamId, prompt, ts) {
+  return `x402-inference:${CHAIN_ID}:${STREAM_PAY}:${streamId}:${ethers.id(prompt || "")}:${ts}`;
+}
+
+// Anti-replay: a presented signature is single-use. Entries expire with the freshness window.
+const seenSigs = new Map(); // sigLowercase -> expiry epoch seconds
+function sigReplayed(sig) {
+  const now = Math.floor(Date.now() / 1000);
+  for (const [k, exp] of seenSigs) if (exp < now) seenSigs.delete(k);
+  const key = sig.toLowerCase();
+  if (seenSigs.has(key)) return true;
+  seenSigs.set(key, now + SIG_MAX_AGE_S + 60);
+  return false;
+}
+
+// Per-stream mutex: serializes check→withdraw per stream so concurrent requests
+// cannot all pass the vested check before the first withdraw lands (TOCTOU).
+const streamLocks = new Map(); // id -> tail promise
+function withStreamLock(id, fn) {
+  const prev = streamLocks.get(id) || Promise.resolve();
+  const run = prev.then(fn, fn);
+  const tail = run.catch(() => {});
+  streamLocks.set(id, tail);
+  tail.finally(() => { if (streamLocks.get(id) === tail) streamLocks.delete(id); });
+  return run;
 }
 
 function send(res, code, obj, extraHeaders = {}) {
@@ -95,11 +129,14 @@ async function handle(req, res) {
   if (url.pathname !== "/inference") return send(res, 404, { error: "not_found" });
 
   const prompt = url.searchParams.get("prompt") || "";
+  const promptLog = prompt.slice(0, 40).replace(/[\r\n]/g, " ");
   const streamId = url.searchParams.get("stream");
+  const sig = url.searchParams.get("sig");
+  const ts = url.searchParams.get("ts");
 
   // No payment presented -> 402 with terms.
   if (!streamId) {
-    console.log(`402  no stream  prompt="${prompt.slice(0, 40)}"`);
+    console.log(`402  no stream  prompt="${promptLog}"`);
     return send(res, 402, paymentTerms(), {
       "WWW-Authenticate": `x402 settlementContract="${STREAM_PAY}", payTo="${SERVER_ADDR}", asset="USDC"`,
     });
@@ -118,41 +155,85 @@ async function handle(req, res) {
     return send(res, 402, { ...paymentTerms(), reason: "stream_not_active_or_wrong_recipient" });
   }
 
-  const vested = await sp.recipientBalance(streamId);
-  if (vested < MIN_CALL) {
-    console.log(`402  stream #${streamId} underfunded vested=$${usd(vested)} < $${usd(MIN_CALL)}`);
+  // Payer binding: the stream ID is public and sequential — it must not act as a bearer
+  // token. Only the stream's SENDER (the payer) may spend its vested balance on calls.
+  if (!sig || !ts) {
+    return send(res, 402, { ...paymentTerms(), reason: "missing_payer_signature" });
+  }
+  const now = Math.floor(Date.now() / 1000);
+  if (!/^\d+$/.test(ts) || Math.abs(now - Number(ts)) > SIG_MAX_AGE_S) {
+    return send(res, 402, { ...paymentTerms(), reason: "signature_expired" });
+  }
+  let signer;
+  try {
+    signer = ethers.verifyMessage(authMessage(streamId, prompt, ts), sig);
+  } catch {
+    return send(res, 402, { ...paymentTerms(), reason: "bad_signature" });
+  }
+  if (signer.toLowerCase() !== st.sender.toLowerCase()) {
+    console.log(`402  stream #${streamId} signer ${signer} is not the stream sender`);
+    return send(res, 402, { ...paymentTerms(), reason: "signer_not_stream_sender" });
+  }
+  if (sigReplayed(sig)) {
+    return send(res, 402, { ...paymentTerms(), reason: "signature_replayed" });
+  }
+
+  // Check→settle under a per-stream mutex, and gate the 200 on the amount the withdraw
+  // ACTUALLY pulled (from the Withdrawn event) — never on the pre-tx read. Concurrent
+  // requests on one stream therefore serialize, and each 200 is individually paid for.
+  const settled = await withStreamLock(String(streamId), async () => {
+    const vested = await sp.recipientBalance(streamId);
+    if (vested < MIN_CALL) return { code: 402, reason: "insufficient_vested_balance", vested };
+
+    // Settle: pull everything vested since the last call (pay-per-second). Real Arc tx.
+    // On Arc, block.timestamp is non-monotonic, so the amount that has actually vested at
+    // mining time can dip below what we just read — making withdraw revert. That is a
+    // transient, not a fault: answer 402 and let the agent retry on its next call.
+    let rc;
+    try {
+      const tx = await sp.withdraw(streamId, 0n);
+      rc = await tx.wait();
+      if (rc.status !== 1) throw new Error("withdraw reverted");
+    } catch (e) {
+      console.log(`402  stream #${streamId} settle failed (${e.shortMessage || e.message}) — retry next call`);
+      return { code: 402, reason: "settlement_reverted_retry" };
+    }
+
+    let pulled = 0n;
+    for (const l of rc.logs) {
+      try {
+        const ev = sp.interface.parseLog(l);
+        if (ev?.name === "Withdrawn" && BigInt(ev.args.id) === BigInt(streamId)) pulled = ev.args.amount;
+      } catch {}
+    }
+    if (pulled < MIN_CALL) {
+      console.log(`402  stream #${streamId} withdraw pulled only $${usd(pulled)} < $${usd(MIN_CALL)} — not serving`);
+      return { code: 402, reason: "insufficient_settled_amount", pulled };
+    }
+    return { code: 200, rc, pulled };
+  });
+
+  if (settled.code !== 200) {
+    if (settled.reason === "insufficient_vested_balance") {
+      console.log(`402  stream #${streamId} underfunded vested=$${usd(settled.vested)} < $${usd(MIN_CALL)}`);
+    }
     return send(res, 402, {
       ...paymentTerms(),
-      reason: "insufficient_vested_balance",
-      vested: usd(vested),
-      minPerCall: usd(MIN_CALL),
+      reason: settled.reason,
+      ...(settled.vested !== undefined ? { vested: usd(settled.vested), minPerCall: usd(MIN_CALL) } : {}),
     });
   }
 
-  // Settle: pull everything vested since the last call (pay-per-second). Real Arc tx.
-  // On Arc, block.timestamp is non-monotonic, so the amount that has actually vested at
-  // mining time can dip below what we just read — making withdraw revert. That is a
-  // transient, not a fault: answer 402 and let the agent retry on its next call.
-  let rc;
-  try {
-    const tx = await sp.withdraw(streamId, 0n);
-    rc = await tx.wait();
-    if (rc.status !== 1) throw new Error("withdraw reverted");
-  } catch (e) {
-    console.log(`402  stream #${streamId} settle failed (${e.shortMessage || e.message}) — retry next call`);
-    return send(res, 402, { ...paymentTerms(), reason: "settlement_reverted_retry" });
-  }
-
   const result = runInference(prompt);
-  console.log(`200  stream #${streamId} served, settled $${usd(vested)}  tx ${rc.hash}`);
+  console.log(`200  stream #${streamId} served, settled $${usd(settled.pulled)}  tx ${settled.rc.hash}`);
   return send(res, 200, {
     ok: true,
     result,
     payment: {
       stream: Number(streamId),
-      settledUSDC: usd(vested),
-      settlementTx: rc.hash,
-      explorer: `${EXPLORER}/tx/${rc.hash}`,
+      settledUSDC: usd(settled.pulled),
+      settlementTx: settled.rc.hash,
+      explorer: `${EXPLORER}/tx/${settled.rc.hash}`,
     },
   });
 }
@@ -161,7 +242,7 @@ const server = http.createServer((req, res) => {
   // A failed settlement must never take the server down — always answer something.
   handle(req, res).catch((e) => {
     console.error(`500  ${e.shortMessage || e.message}`);
-    try { send(res, 500, { error: "server_error", detail: e.shortMessage || e.message }); } catch {}
+    try { send(res, 500, { error: "server_error" }); } catch {}
   });
 });
 
