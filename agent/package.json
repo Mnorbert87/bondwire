@@ -1,9 +1,9 @@
 {
-  "name": "arc-agentic-stack-agent",
+  "name": "bondwire-agent",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "A minimal autonomous agent that bonds, gets hired, streams-earns and settles on the Arc Agentic Stack.",
+  "description": "A minimal autonomous agent that bonds, gets hired, streams-earns and settles on the Bondwire.",
   "scripts": {
     "start": "node demo-agent.js"
   },

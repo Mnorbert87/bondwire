@@ -1,15 +1,15 @@
 {
-  "name": "arc-agentic-stack-sdk",
+  "name": "bondwire-sdk",
   "version": "0.1.0",
-  "description": "Tiny ethers v6 SDK for the Arc Agentic Stack — AgentBond (reputation-backed trust) + StreamPay (continuous USDC settlement) on Arc testnet.",
+  "description": "Tiny ethers v6 SDK for the Bondwire — AgentBond (reputation-backed trust) + StreamPay (continuous USDC settlement) on Arc testnet.",
   "type": "module",
-  "main": "arc-agentic-stack.js",
-  "module": "arc-agentic-stack.js",
+  "main": "bondwire.js",
+  "module": "bondwire.js",
   "exports": {
-    ".": "./arc-agentic-stack.js"
+    ".": "./bondwire.js"
   },
   "files": [
-    "arc-agentic-stack.js",
+    "bondwire.js",
     "README.md"
   ],
   "scripts": {
@@ -27,10 +27,10 @@
     "agentic"
   ],
   "license": "MIT",
-  "homepage": "https://mnorbert87.github.io/arc-agentic-stack/",
+  "homepage": "https://mnorbert87.github.io/bondwire/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Mnorbert87/arc-agentic-stack"
+    "url": "https://github.com/Mnorbert87/bondwire"
   },
   "peerDependencies": {
     "ethers": "^6.13.0"

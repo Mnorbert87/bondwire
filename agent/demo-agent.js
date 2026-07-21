@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Aiden — a minimal autonomous agent on the Arc Agentic Stack.
+ * Aiden — a minimal autonomous agent on the Bondwire.
  *
  * It runs one full lifecycle, entirely on-chain, in USDC on Arc Testnet:
  *   1. BOND      — tops its AgentBond up to a target so it has a public, slashable credit score.
@@ -89,7 +89,7 @@ async function main() {
   const ab = new ethers.Contract(AGENT_BOND, AB, wallet);
   const sp = new ethers.Contract(STREAM_PAY, SP, wallet);
 
-  log(`\n🤖 Aiden — autonomous agent on Arc Agentic Stack`);
+  log(`\n🤖 Aiden — autonomous agent on Bondwire`);
   log(`   address ${me}`);
   log(`   USDC balance: $${usd(await usdc.balanceOf(me))}\n`);
 

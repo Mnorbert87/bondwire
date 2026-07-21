@@ -1,21 +1,21 @@
-# arc-agentic-stack-sdk
+# bondwire-sdk
 
-A tiny [ethers v6](https://docs.ethers.org/v6/) wrapper over the **Arc Agentic Stack** —
-[`AgentBond`](https://mnorbert87.github.io/arc-agentic-stack/agent-bond/) (reputation-backed
-trust) and [`StreamPay`](https://mnorbert87.github.io/arc-agentic-stack/stream-pay/)
-(continuous USDC settlement) — deployed on **Arc testnet** (chain `5042002`).
+A tiny [ethers v6](https://docs.ethers.org/v6/) wrapper over the **Bondwire** , 
+[`AgentBond`](https://mnorbert87.github.io/bondwire/agent-bond/) (reputation-backed
+trust) and [`StreamPay`](https://mnorbert87.github.io/bondwire/stream-pay/)
+(continuous USDC settlement), deployed on **Arc testnet** (chain `5042002`).
 
 Addresses, chain id, and USDC's 6 decimals are baked in. You pass human USDC amounts
 (`"10"` = 10 USDC); the SDK handles micro-USDC conversion and approvals.
 
 ```bash
 npm i ethers
-# then copy sdk/arc-agentic-stack.js from this repo next to your code
-git clone https://github.com/Mnorbert87/arc-agentic-stack.git
-cp arc-agentic-stack/sdk/arc-agentic-stack.js .
+# then copy sdk/bondwire.js from this repo next to your code
+git clone https://github.com/Mnorbert87/bondwire.git
+cp bondwire/sdk/bondwire.js .
 ```
 
-> Not on npm (yet) — the SDK is a single dependency-free ESM file; vendoring it is the supported install.
+> Not on npm (yet), the SDK is a single dependency-free ESM file; vendoring it is the supported install.
 
 ## 10-line integration
 
@@ -23,10 +23,10 @@ An agent posts a bond, then gets streamed paid by the second:
 
 ```js
 import { ethers } from "ethers";
-import { ArcAgenticStack } from "./arc-agentic-stack.js";
+import { Bondwire } from "./bondwire.js";
 
-const agent  = new ethers.Wallet(process.env.AGENT_KEY, ArcAgenticStack.provider());
-const arc    = new ArcAgenticStack(agent);
+const agent  = new ethers.Wallet(process.env.AGENT_KEY, Bondwire.provider());
+const arc    = new Bondwire(agent);
 
 await arc.bond("5");                                  // post 5 USDC of skin-in-the-game
 const { id } = await arc.createStream(CLIENT_ADDR, "2", { durationSeconds: 3600, memo: "api work" });
@@ -34,18 +34,18 @@ console.log("free bond:", (await arc.freeBondOf(agent.address)).usdc);
 console.log("stream", id, (await arc.getStream(id)).streamedPct + "% streamed");
 ```
 
-That's the whole "is there an SDK?" answer: **yes** — bond + stream in a few lines.
+That's the whole "is there an SDK?" answer: **yes**, bond + stream in a few lines.
 
 ## API
 
 Construct with a **Signer** (to send transactions) or a **Provider** (read-only views):
 
 ```js
-const arc = new ArcAgenticStack(signerOrProvider);   // writes need a Signer
-const ro  = ArcAgenticStack.readOnly();              // read straight off the public RPC
+const arc = new Bondwire(signerOrProvider);   // writes need a Signer
+const ro  = Bondwire.readOnly();              // read straight off the public RPC
 ```
 
-### AgentBond — trust layer
+### AgentBond, trust layer
 
 | Method | What it does |
 |---|---|
@@ -53,12 +53,12 @@ const ro  = ArcAgenticStack.readOnly();              // read straight off the pu
 | `unbond(amount)` | Withdraw free (unlocked) bond. |
 | `setSlashAllowance(enforcer, amount)` | Let an enforcer contract lock/slash up to `amount` of your bond. |
 | `lock(agent, creditor, amount, deadline?)` | *(enforcer)* Lock bond behind an obligation → `{ id, receipt }`. |
-| `release(id)` | Obligation performed — bond unlocks, capacity returns. |
-| `slash(id)` | Agent defaulted — bond pays the creditor. |
+| `release(id)` | Obligation performed, bond unlocks, capacity returns. |
+| `slash(id)` | Agent defaulted, bond pays the creditor. |
 | `freeBondOf(agent)` · `bondOf(agent)` | Read the public "credit score" / full breakdown. |
 | `slashAllowanceOf(agent, enforcer)` · `getObligation(id)` | Allowance + decoded obligation. |
 
-### StreamPay — settlement layer
+### StreamPay, settlement layer
 
 | Method | What it does |
 |---|---|
@@ -69,10 +69,10 @@ const ro  = ArcAgenticStack.readOnly();              // read straight off the pu
 
 ### Helpers
 
-`ArcAgenticStack.provider()` · `ArcAgenticStack.readOnly()` · `arc.usdcBalanceOf(addr)` ·
-`arc.approveUsdc(spender, amount)` · `arc.stats()` · `arc.explorerTx(hash)` · `ARC` (network constants).
+`Bondwire.provider()` · `Bondwire.readOnly()` · `arc.usdcBalanceOf(addr)` ·
+`arc.approveUsdc(spender, amount)` · `arc.stats()` · `arc.explorerTx(hash)` · `BONDWIRE` (network constants).
 
-Every amount view returns `{ raw, usdc }` — `raw` is the micro-USDC bigint, `usdc` is the
+Every amount view returns `{ raw, usdc }`, `raw` is the micro-USDC bigint, `usdc` is the
 formatted string. You never touch decimals.
 
 ## Network

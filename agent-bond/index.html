@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AgentBond — Arc Testnet</title>
+<title>AgentBond, Arc Testnet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -282,18 +282,18 @@
   <div class="hero rise">
     <div class="eyebrow">Arc Testnet · USDC-native · Agentic</div>
     <h2>Skin in the game<br>for autonomous agents</h2>
-    <p>An AI agent posts a USDC bond — collateral backing its on-chain reputation — then grants specific protocols the right to slash it. A credit line, a marketplace, an insurer can lock against the bond, release it when the agent performs, or slash it on default. The free bond is the number anyone reads to decide how far to trust the agent.</p>
+    <p>An AI agent posts a USDC bond, collateral backing its on-chain reputation, then grants specific protocols the right to slash it. A credit line, a marketplace, an insurer can lock against the bond, release it when the agent performs, or slash it on default. The free bond is the number anyone reads to decide how far to trust the agent.</p>
   </div>
 
   <div class="stat-row rise d1">
-    <div class="stat"><b id="sTvl">—</b><small>USDC bonded (TVL)</small></div>
-    <div class="stat"><b id="sObl">—</b><small>Obligations opened</small></div>
-    <div class="stat"><b id="sMine">—</b><small>Your USDC</small></div>
+    <div class="stat"><b id="sTvl">, </b><small>USDC bonded (TVL)</small></div>
+    <div class="stat"><b id="sObl">, </b><small>Obligations opened</small></div>
+    <div class="stat"><b id="sMine">, </b><small>Your USDC</small></div>
   </div>
 
   <div class="settings-bar rise d2">
-    <span class="chip">Contract <code id="abChip">—</code></span>
-    <span class="chip">USDC <code id="usdcChip">—</code></span>
+    <span class="chip">Contract <code id="abChip">, </code></span>
+    <span class="chip">USDC <code id="usdcChip">, </code></span>
     <button id="editAddrBtn" class="mini">Change</button>
     <a id="explorer" class="chip" target="_blank" rel="noopener" style="text-decoration:none;color:var(--c2)">arcscan ↗</a>
   </div>
@@ -313,13 +313,13 @@
     <div class="panel">
       <h3>Your bond</h3>
       <p class="hint">Deposit USDC to back your reputation. <b>Free</b> bond is withdrawable and is what counterparties trust; <b>locked</b> bond is held behind an open obligation.</p>
-      <div class="big-bond" id="bondTotal">—</div>
+      <div class="big-bond" id="bondTotal">, </div>
       <div class="big-cap">total bond</div>
       <div class="meter">
         <div class="meter-bar"><div class="meter-free" id="mFree" style="width:0%"></div><div class="meter-locked" id="mLocked" style="width:0%"></div></div>
         <div class="meter-legend">
-          <span><span class="sw" style="background:#5be3b0"></span>free <b id="lFree">—</b></span>
-          <span><span class="sw" style="background:#ffc266"></span>locked <b id="lLocked">—</b></span>
+          <span><span class="sw" style="background:#5be3b0"></span>free <b id="lFree">, </b></span>
+          <span><span class="sw" style="background:#ffc266"></span>locked <b id="lLocked">, </b></span>
         </div>
       </div>
       <div class="row" style="margin-top:18px;">
@@ -333,7 +333,7 @@
 
     <div class="panel">
       <h3>Grant slashing allowance</h3>
-      <p class="hint">Authorize a protocol contract (an <code>enforcer</code>) to lock and slash up to a set amount of your bond — like ERC-20 <code>approve</code>. Set <code>0</code> to revoke. Only ever trust audited enforcer code.</p>
+      <p class="hint">Authorize a protocol contract (an <code>enforcer</code>) to lock and slash up to a set amount of your bond, like ERC-20 <code>approve</code>. Set <code>0</code> to revoke. Only ever trust audited enforcer code.</p>
       <div class="row">
         <div><label>Enforcer contract</label><input id="gEnforcer" spellcheck="false" placeholder="0x… the protocol you trust" /></div>
         <div><label>Allowance (USDC)</label><input id="gAmount" type="number" min="0" step="0.000001" placeholder="50" /></div>
@@ -361,7 +361,7 @@
       <div class="row">
         <div><label>Deadline (hours, 0 = none)</label><input id="eDeadline" type="number" min="0" step="1" placeholder="0" /></div>
       </div>
-      <p class="hint" style="margin-top:10px;">Set a deadline and the <b>agent</b> can self-release this obligation if you never resolve it — no bond can be locked forever. <code>0</code> = no expiry (only you can resolve).</p>
+      <p class="hint" style="margin-top:10px;">Set a deadline and the <b>agent</b> can self-release this obligation if you never resolve it, no bond can be locked forever. <code>0</code> = no expiry (only you can resolve).</p>
       <div class="actions">
         <button id="useMeCreditor" class="mini">Me as creditor</button>
         <button id="lockBtn" class="primary" style="margin-left:auto;">Lock bond</button>
@@ -398,7 +398,7 @@
         <h3 style="margin:0;">All obligations <span class="count-pill" id="countPill">0</span></h3>
         <button id="browseBtn" class="mini">↻ Refresh</button>
       </div>
-      <p class="hint" style="margin-top:10px;">Read straight from the public Arc RPC — no wallet needed.</p>
+      <p class="hint" style="margin-top:10px;">Read straight from the public Arc RPC, no wallet needed.</p>
       <div id="list" class="grid"></div>
     </div>
   </section>
@@ -407,10 +407,10 @@
   <section id="tab-about" style="display:none;">
     <div class="panel about">
       <h3>How AgentBond works</h3>
-      <div class="step"><div class="num">1</div><div><b>Bond.</b> An agent deposits USDC. The free balance is its public credit score — the bigger the bond, the more counterparties will trust it.</div></div>
+      <div class="step"><div class="num">1</div><div><b>Bond.</b> An agent deposits USDC. The free balance is its public credit score, the bigger the bond, the more counterparties will trust it.</div></div>
       <div class="step"><div class="num">2</div><div><b>Grant.</b> The agent approves specific protocols to lock and slash its bond, exactly like an ERC-20 allowance. Nothing can touch the bond without an explicit grant.</div></div>
       <div class="step"><div class="num">3</div><div><b>Lock → release or slash.</b> A protocol locks a slice behind an obligation. Performed → release (capacity revolves back). Defaulted → slash (the bond pays the creditor, that capacity is burned forever).</div></div>
-      <p style="margin-top:18px;">No owner, no admin, no upgrade key — the contract only ever custodies bonds, tracked by real balance delta so it stays solvent against any token. The shared enforcement layer beneath uncollateralized agent credit, agent marketplaces, and on-chain insurance on Arc.</p>
+      <p style="margin-top:18px;">No owner, no admin, no upgrade key, the contract only ever custodies bonds, tracked by real balance delta so it stays solvent against any token. The shared enforcement layer beneath uncollateralized agent credit, agent marketplaces, and on-chain insurance on Arc.</p>
     </div>
   </section>
   </div>
@@ -459,7 +459,7 @@ let provider, signer, account, usdcAddr, usdcDecimals = 6;
 
 const $ = (id) => document.getElementById(id);
 const abAddress = () => (localStorage.getItem("ab_addr") || DEFAULT_AB);
-const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : "—";
+const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : ", ";
 const fmt = (v) => ethers.formatUnits(v, usdcDecimals);
 
 function countTo(el, target, decimals) {
@@ -502,7 +502,7 @@ document.querySelectorAll(".tab").forEach((b) => b.onclick = () => {
 
 function syncChips() {
   $("abChip").textContent = short(abAddress());
-  $("usdcChip").textContent = usdcAddr ? short(usdcAddr) : "—";
+  $("usdcChip").textContent = usdcAddr ? short(usdcAddr) : ", ";
   $("explorer").href = `${EXPLORER}/address/${abAddress()}`;
   $("footExplorer").href = `${EXPLORER}/address/${abAddress()}`;
 }
@@ -548,7 +548,7 @@ async function connect() {
     if (!window.ethereum) return toast("No wallet found. Install MetaMask.", "bad");
     provider = new ethers.BrowserProvider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
-    // Show connected as soon as the account is authorized — never block the UI on the network step.
+    // Show connected as soon as the account is authorized, never block the UI on the network step.
     signer = await provider.getSigner();
     account = await signer.getAddress();
     $("connectBtn").textContent = short(account);
@@ -562,7 +562,7 @@ async function connect() {
           nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
           rpcUrls: [RPC], blockExplorerUrls: [EXPLORER] }] });
       } else if (e.code !== 4001) {
-        toast("Connected — now switch to Arc Testnet in MetaMask to transact.", "bad");
+        toast("Connected, now switch to Arc Testnet in MetaMask to transact.", "bad");
       }
     }
     const net = await provider.getNetwork();
@@ -583,7 +583,7 @@ async function ensureChain() {
   signer = await provider.getSigner();
   account = await signer.getAddress();
   const after = await provider.getNetwork();
-  if (Number(after.chainId) !== CHAIN_ID) throw new Error("Wrong network — switch to Arc Testnet (chain " + CHAIN_ID + ")");
+  if (Number(after.chainId) !== CHAIN_ID) throw new Error("Wrong network, switch to Arc Testnet (chain " + CHAIN_ID + ")");
 }
 
 $("editAddrBtn").onclick = () => {
@@ -697,8 +697,8 @@ function renderObligation(id, o) {
   const h = [];
   if (!account) h.push("Connect your wallet to act.");
   else if (!active) h.push("This obligation is already resolved (" + st + ").");
-  else if (isEnforcer) h.push("You are the enforcer — release if performed, slash on default.");
-  else if (agentCanRelease) h.push("Deadline passed and the enforcer hasn't resolved — you may self-release to reclaim your bond.");
+  else if (isEnforcer) h.push("You are the enforcer, release if performed, slash on default.");
+  else if (agentCanRelease) h.push("Deadline passed and the enforcer hasn't resolved, you may self-release to reclaim your bond.");
   else if (isAgent && dl !== 0) h.push("You are the agent. If the enforcer abandons this, you can self-release after the deadline.");
   else h.push("Only the enforcer that opened this can resolve it.");
   $("roleHint").textContent = h.join(" ");

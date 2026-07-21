@@ -1,4 +1,4 @@
-# Sample run — cross-chain capital onboarding (real transactions)
+# Sample run, cross-chain capital onboarding (real transactions)
 
 `PRIVATE_KEY=0x… npm run onboard` · burner `0x2e36F4037E711e1d4c853BBCBF7F526B3714A08a`
 (same EOA on both chains) · amount **1.0 USDC** · Circle **Bridge Kit** (App Kit, CCTP V2, Fast
@@ -6,7 +6,7 @@ Transfer). Every tx below is confirmed (`status 1`).
 
 ## What happened
 
-`1 USDC` left Base Sepolia and arrived on Arc as AgentBond collateral — the agent's bond capital
+`1 USDC` left Base Sepolia and arrived on Arc as AgentBond collateral, the agent's bond capital
 was onboarded cross-chain in one flow:
 
 | Step | Chain | Tx | Block | Status |
@@ -18,7 +18,7 @@ was onboarded cross-chain in one flow:
 
 **On-chain effect (verified):**
 - Base Sepolia USDC balance: `20 → 19` (1 USDC burned).
-- AgentBond bond for the agent: `36 → 37 USDC` — the bridged dollar is now slashable collateral.
+- AgentBond bond for the agent: `36 → 37 USDC`, the bridged dollar is now slashable collateral.
 
 ## Console transcript
 
@@ -35,9 +35,9 @@ was onboarded cross-chain in one flow:
 » bridged. source burn=0x6232b1…25d8  dest mint=0xcae264…26d2b
 » AgentBond approve + deposit on Arc …
 » AgentBond bond 36000000 → 37000000
-» DONE — bridged capital deposited into AgentBond. result.json written.
+» DONE, bridged capital deposited into AgentBond. result.json written.
 ```
 
 Total cost: a few **micro-USDC** of CCTP provider fee (`0.000143`) + a fraction of a cent of gas.
 Fast Transfer cleared in well under a minute on testnet. The agent's capital crossed chains and
-became a slashable bond with no bridge in the trust path — just Circle CCTP V2 and USDC.
+became a slashable bond with no bridge in the trust path, just Circle CCTP V2 and USDC.

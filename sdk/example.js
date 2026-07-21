@@ -1,11 +1,11 @@
 // Read-only example — no key required. Reads live Arc testnet state through the SDK.
 //   npm i ethers && node example.js
-import { ArcAgenticStack, ARC } from "./arc-agentic-stack.js";
+import { Bondwire, BONDWIRE } from "./bondwire.js";
 
-const arc = ArcAgenticStack.readOnly();
+const arc = Bondwire.readOnly();
 
 const stats = await arc.stats();
-console.log(`Arc Agentic Stack — chain ${ARC.chainId}`);
+console.log(`Bondwire — chain ${BONDWIRE.chainId}`);
 console.log(`  obligations opened: ${stats.obligations}`);
 console.log(`  streams opened:     ${stats.streams}`);
 
@@ -18,7 +18,7 @@ if (stats.streams > 0) {
 
 // To send transactions, construct with a Signer instead:
 //   import { ethers } from "ethers";
-//   const wallet = new ethers.Wallet(process.env.AGENT_KEY, ArcAgenticStack.provider());
-//   const arc = new ArcAgenticStack(wallet);
+//   const wallet = new ethers.Wallet(process.env.AGENT_KEY, Bondwire.provider());
+//   const arc = new Bondwire(wallet);
 //   await arc.bond("5");
 //   const { id } = await arc.createStream(CLIENT, "2", { durationSeconds: 3600, memo: "work" });

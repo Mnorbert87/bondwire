@@ -1,13 +1,13 @@
-# Security Audit — Arc Agentic Stack
+# Security Audit, Bondwire
 
-Adversarial self-audit of the two contracts (`AgentBond`, `StreamPay`) using Foundry. Method: full unit + adversarial suites, reentrancy attacker tokens, fee-on-transfer tokens, and a stateful solvency **invariant** (random multi-actor call sequences). All amounts are micro-USDC (6 decimals). (`CommitStake` is audited separately — see its project README and [TEST_AUDIT.md](TEST_AUDIT.md), the independent test-suite audit covering all three contracts.)
+Adversarial self-audit of the two contracts (`AgentBond`, `StreamPay`) using Foundry. Method: full unit + adversarial suites, reentrancy attacker tokens, fee-on-transfer tokens, and a stateful solvency **invariant** (random multi-actor call sequences). All amounts are micro-USDC (6 decimals). (`CommitStake` is audited separately, see its project README and [TEST_AUDIT.md](TEST_AUDIT.md), the independent test-suite audit covering all three contracts.)
 
 **Verdict: no critical or high-severity findings.** Both contracts are solvent under fuzzing, reentrancy-safe, and access-controlled. One low-severity view-correctness bug was found and fixed; one medium design gap (indefinite-lock griefing) was found, fixed, and the fix is deployed.
 
 | Severity | Finding | Status |
 |---|---|---|
 | 🟢 Low | StreamPay: `recipientBalance`/`senderBalance` reported phantom funds for a *terminal* (cancelled) stream | **Fixed** + regression test |
-| 🟡 Medium (design) | AgentBond: an approved enforcer could lock bond **indefinitely** (no obligation expiry) — griefing | **Fixed** (optional deadline + agent self-release, deployed) |
+| 🟡 Medium (design) | AgentBond: an approved enforcer could lock bond **indefinitely** (no obligation expiry), griefing | **Fixed** (optional deadline + agent self-release, deployed) |
 | ⚪ By-design | Approving an enforcer grants it full lock+slash power (ERC-20 `approve` trust model) | Accepted risk, documented |
 
 ---
@@ -17,13 +17,13 @@ Adversarial self-audit of the two contracts (`AgentBond`, `StreamPay`) using Fou
 ```
 AgentBond:    32 passed / 0 failed   (incl. solvency invariant: 256 runs · 128,000 calls · 0 reverts; fee-on-transfer + no-return units)
 StreamPay:    25 passed / 0 failed   (incl. fee-on-transfer, reentrancy, solvent-split fuzz, terminal-view regression)
-CommitStake:  28 passed / 0 failed   (own suite, incl. fee-token solvency invariant — audited separately, see TEST_AUDIT.md)
+CommitStake:  28 passed / 0 failed   (own suite, incl. fee-token solvency invariant, audited separately, see TEST_AUDIT.md)
 ```
 
-### Crown proof — solvency invariant (AgentBond)
+### Crown proof, solvency invariant (AgentBond)
 A handler drives random `deposit / withdraw / setSlashAllowance / lock / release / slash` from 3 agents and 2 enforcers. Across **128,000 calls with zero reverts**, two invariants held continuously:
-- `usdc.balanceOf(AgentBond) == Σ bond[agent]` — the contract is never under- or over-collateralized.
-- `locked[agent] ≤ bond[agent]` for every agent — locked capacity can never exceed the bond backing it.
+- `usdc.balanceOf(AgentBond) == Σ bond[agent]`, the contract is never under- or over-collateralized.
+- `locked[agent] ≤ bond[agent]` for every agent, locked capacity can never exceed the bond backing it.
 
 StreamPay carries an equivalent per-stream solvency property (`withdrawn + recipientBalance + senderBalance == deposit`) verified by `testFuzz_solventSplit` and the adversarial "second stream cannot drain the first" test.
 
@@ -33,9 +33,9 @@ StreamPay carries an equivalent per-stream solvency property (`withdrawn + recip
 
 - **Checks-Effects-Interactions.** Every fund-moving path sets terminal state and updates accounting *before* the external token transfer (`slash`, `withdraw`, `cancel`).
 - **Reentrancy guard.** Single-slot `nonReentrant` mutex on all state-changing entry points (belt-and-suspenders alongside CEI). Proven by attacker-token tests: a malicious token re-entering during payout cannot double-pay; the end state shows exactly one payout.
-- **Balance-delta custody.** Deposits/streams record `balanceOf(after) − balanceOf(before)` — the contract books what actually arrived, not what was requested, so a transfer that delivers less than face value can never let one position drain another's escrow. Unit-tested with fee-on-transfer and no-return tokens (CommitStake additionally carries a fee-token solvency invariant). The production token is Arc USDC, a standard 1:1 ERC-20; other exotic ERC-20 behaviours (e.g. rebasing) are out of scope.
-- **Safe ERC-20.** Low-level call with `require(ok && (data.length == 0 || abi.decode(data,(bool))))` — tolerates non-standard no-return tokens (e.g. USDT-style).
-- **Access control.** `release`/`slash` restricted to the opening enforcer; `withdraw` to the recipient; `cancel` to either party. No owner, no admin, no upgrade key — nothing privileged to compromise.
+- **Balance-delta custody.** Deposits/streams record `balanceOf(after) − balanceOf(before)`, the contract books what actually arrived, not what was requested, so a transfer that delivers less than face value can never let one position drain another's escrow. Unit-tested with fee-on-transfer and no-return tokens (CommitStake additionally carries a fee-token solvency invariant). The production token is Arc USDC, a standard 1:1 ERC-20; other exotic ERC-20 behaviours (e.g. rebasing) are out of scope.
+- **Safe ERC-20.** Low-level call with `require(ok && (data.length == 0 || abi.decode(data,(bool))))`, tolerates non-standard no-return tokens (e.g. USDT-style).
+- **Access control.** `release`/`slash` restricted to the opening enforcer; `withdraw` to the recipient; `cancel` to either party. No owner, no admin, no upgrade key, nothing privileged to compromise.
 - **No cross-actor theft.** Slash allowance is keyed `[agent][enforcer]`; an enforcer can only ever touch the bond of agents that explicitly granted *it*.
 - **Solidity 0.8 checked math** throughout; the `bond ≥ locked` invariant means the `free = bond − locked` subtraction can never underflow.
 
@@ -43,23 +43,23 @@ StreamPay carries an equivalent per-stream solvency property (`withdrawn + recip
 
 ## Findings in detail
 
-### 🟢 LOW — StreamPay terminal-stream views reported phantom balances *(fixed)*
+### 🟢 LOW, StreamPay terminal-stream views reported phantom balances *(fixed)*
 
 **Before:** `streamedTotal` kept accruing against wall-clock time even after a stream became terminal. So a stream cancelled at 50% would later report `recipientBalance = 40 USDC` as "withdrawable," even though the stream was `Ended` and `withdraw()` correctly reverts `NOT_ACTIVE`.
 
-**Impact:** view-only. No funds at risk (the write path is guarded), but a frontend or integrator reading `recipientBalance` / `senderBalance` would display funds that don't exist — an integration footgun.
+**Impact:** view-only. No funds at risk (the write path is guarded), but a frontend or integrator reading `recipientBalance` / `senderBalance` would display funds that don't exist, an integration footgun.
 
 **Fix:** `streamedTotal` now freezes at `withdrawn` once a stream is `Ended`; `recipientBalance` and `senderBalance` return `0` for any non-`Active` stream. Regression tests `test_views_zeroAfterCancel` and `test_views_zeroAfterFullWithdraw` lock the behavior.
 
-### 🟡 MEDIUM (design) — AgentBond obligations never expire *(fixed, deployed)*
+### 🟡 MEDIUM (design), AgentBond obligations never expire *(fixed, deployed)*
 
-**Before:** an enforcer that an agent had approved could call `lock` and then simply never `release` or `slash`. That slice of the agent's bond stayed locked forever; the agent had no way to force-reclaim it. Unlike `slash`, this benefits no one — it is pure griefing by a misbehaving (but previously trusted) enforcer.
+**Before:** an enforcer that an agent had approved could call `lock` and then simply never `release` or `slash`. That slice of the agent's bond stayed locked forever; the agent had no way to force-reclaim it. Unlike `slash`, this benefits no one, it is pure griefing by a misbehaving (but previously trusted) enforcer.
 
 **Why it was not critical:** it cannot move funds anywhere, and it only affects bond the agent voluntarily exposed to that specific enforcer. But it's a liveness gap worth closing.
 
-**Fix (deployed):** `lock(agent, creditor, amount, deadline)` now takes an optional `deadline` (unix seconds; `0` = no expiry). Once a non-zero deadline has passed with no resolution, the *agent* can call `release(id)` itself to unlock the bond without slashing — `release` authorizes either the opening enforcer **or** `msg.sender == agent && deadline != 0 && block.timestamp > deadline`. This preserves the enforcer's window to act while removing the indefinite-lock vector; the `Locked` event carries the `deadline` for off-chain monitoring. The deployed AgentBond (`0xB9b4…f8e0`) contains this code and is source-verified on arcscan.
+**Fix (deployed):** `lock(agent, creditor, amount, deadline)` now takes an optional `deadline` (unix seconds; `0` = no expiry). Once a non-zero deadline has passed with no resolution, the *agent* can call `release(id)` itself to unlock the bond without slashing, `release` authorizes either the opening enforcer **or** `msg.sender == agent && deadline != 0 && block.timestamp > deadline`. This preserves the enforcer's window to act while removing the indefinite-lock vector; the `Locked` event carries the `deadline` for off-chain monitoring. The deployed AgentBond (`0xB9b4…f8e0`) contains this code and is source-verified on arcscan.
 
-### ⚪ BY-DESIGN — enforcer approval is full trust
+### ⚪ BY-DESIGN, enforcer approval is full trust
 
 `setSlashAllowance(enforcer, amount)` is deliberately modeled on ERC-20 `approve`: once granted, the enforcer can `lock` and `slash` up to that amount to a creditor *of its choosing*. Approving a malicious or buggy enforcer is therefore as dangerous as approving a malicious ERC-20 spender. This is the intended composability model (the enforcer is the protocol the agent opted into) and is called out in the contract NatSpec: *"Only ever trust audited enforcer code."* Mitigation is social/operational, not contract-level.
 
@@ -70,7 +70,7 @@ StreamPay carries an equivalent per-stream solvency property (`withdrawn + recip
 ## Notes considered and dismissed
 
 - **Integer overflow in `streamedTotal` (`deposit * elapsed`).** Safe for any realistic USDC amount: even total USDC supply (~10¹⁶ micro-USDC ≈ 2⁵³) times a 64-bit elapsed time stays far below 2²⁵⁶.
-- **Back-dated `start`.** `createStream` allows `start` in the past; this lets a sender intentionally front-load accrual with their own funds — sender's choice, not a vulnerability.
+- **Back-dated `start`.** `createStream` allows `start` in the past; this lets a sender intentionally front-load accrual with their own funds, sender's choice, not a vulnerability.
 - **`block.timestamp` non-monotonic on Arc.** Linear accrual is monotonic regardless; equal timestamps stream nothing extra and the floor/remainder split keeps the escrow exactly solvent.
 - **Reentrancy via creditor/recipient in payouts.** Blocked by both CEI (state already terminal) and the mutex; proven by attacker-token tests.
 
@@ -78,4 +78,4 @@ StreamPay carries an equivalent per-stream solvency property (`withdrawn + recip
 
 ## Not testable without a deployer key (operational)
 
-- On-chain deployment parameters (correct USDC address wired at construction) — verified by reading the live contract's `usdc()` getter on Arc Testnet, not by unit test.
+- On-chain deployment parameters (correct USDC address wired at construction), verified by reading the live contract's `usdc()` getter on Arc Testnet, not by unit test.

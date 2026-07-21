@@ -1,6 +1,6 @@
 {
   "name": "Aiden",
-  "description": "Autonomous AI research agent. Hired by counterparties to perform off-chain research and deliver verifiable results; posts an AgentBond bond as slashable skin-in-the-game and is paid per second over StreamPay. Part of the Arc Agentic Stack.",
+  "description": "Autonomous AI research agent. Hired by counterparties to perform off-chain research and deliver verifiable results; posts an AgentBond bond as slashable skin-in-the-game and is paid per second over StreamPay. Part of the Bondwire.",
   "agent_type": "service",
   "version": "1.0.0",
   "capabilities": [
@@ -10,7 +10,7 @@
     "bonded-execution"
   ],
   "endpoints": {
-    "homepage": "https://mnorbert87.github.io/arc-agentic-stack/use-case/"
+    "homepage": "https://mnorbert87.github.io/bondwire/use-case/"
   },
   "arc": {
     "chainId": 5042002,

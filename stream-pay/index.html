@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>StreamPay — Arc Testnet</title>
+<title>StreamPay, Arc Testnet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -295,13 +295,13 @@
   <div class="hero rise">
     <div class="eyebrow">Arc Testnet · USDC + EURC · Agentic</div>
     <h2>Money that flows<br>by the second</h2>
-    <p>Lock USDC or EURC and stream it to anyone in real time — agent salaries, pay-per-inference, metered APIs, subscriptions, vesting. The recipient withdraws what has streamed at any moment; either party can cancel and split the rest fairly. A public primitive for Arc's agentic economy.</p>
+    <p>Lock USDC or EURC and stream it to anyone in real time, agent salaries, pay-per-inference, metered APIs, subscriptions, vesting. The recipient withdraws what has streamed at any moment; either party can cancel and split the rest fairly. A public primitive for Arc's agentic economy.</p>
   </div>
 
   <div class="stat-row rise d1">
-    <div class="stat"><b id="sTotal">—</b><small>Streams opened</small></div>
-    <div class="stat"><b id="sLocked">—</b><small id="lblStreaming">USDC streaming now</small></div>
-    <div class="stat"><b id="sMine">—</b><small id="lblYours">Your USDC</small></div>
+    <div class="stat"><b id="sTotal">, </b><small>Streams opened</small></div>
+    <div class="stat"><b id="sLocked">, </b><small id="lblStreaming">USDC streaming now</small></div>
+    <div class="stat"><b id="sMine">, </b><small id="lblYours">Your USDC</small></div>
   </div>
 
   <div class="settings-bar rise d2">
@@ -309,8 +309,8 @@
       <button class="tok active" data-tok="USDC">USDC</button>
       <button class="tok" data-tok="EURC">EURC</button>
     </div>
-    <span class="chip">Contract <code id="spChip">—</code></span>
-    <span class="chip"><span id="tokLbl">USDC</span> token <code id="usdcChip">—</code></span>
+    <span class="chip">Contract <code id="spChip">, </code></span>
+    <span class="chip"><span id="tokLbl">USDC</span> token <code id="usdcChip">, </code></span>
     <a id="explorer" class="chip" target="_blank" rel="noopener" style="text-decoration:none;color:var(--c2)">arcscan ↗</a>
   </div>
 
@@ -359,7 +359,7 @@
       <label>Memo</label>
       <input id="cMemo" placeholder="e.g. June API retainer, agent-7 salary" />
       <div class="actions">
-        <button id="rateHint" class="mini" disabled style="opacity:.7;">rate —</button>
+        <button id="rateHint" class="mini" disabled style="opacity:.7;">rate , </button>
         <button id="createBtn" class="primary" style="margin-left:auto;">Approve &amp; Open stream</button>
       </div>
     </div>
@@ -407,7 +407,7 @@
         <h3 style="margin:0;">All streams <span class="count-pill" id="countPill">0</span></h3>
         <button id="browseBtn" class="mini">↻ Refresh</button>
       </div>
-      <p class="hint" style="margin-top:10px;">Read straight from the public Arc RPC — no wallet needed. Bars update live.</p>
+      <p class="hint" style="margin-top:10px;">Read straight from the public Arc RPC, no wallet needed. Bars update live.</p>
       <div id="list" class="grid"></div>
     </div>
   </section>
@@ -416,10 +416,10 @@
   <section id="tab-about" style="display:none;">
     <div class="panel about">
       <h3>How StreamPay works</h3>
-      <div class="step"><div class="num">1</div><div><b>Open.</b> The sender locks USDC and picks a window (start → stop). The funds accrue to the recipient linearly — second by second.</div></div>
+      <div class="step"><div class="num">1</div><div><b>Open.</b> The sender locks USDC and picks a window (start → stop). The funds accrue to the recipient linearly, second by second.</div></div>
       <div class="step"><div class="num">2</div><div><b>Withdraw anytime.</b> The recipient pulls whatever has streamed so far, as often as they like. No waiting for the end.</div></div>
       <div class="step"><div class="num">3</div><div><b>Cancel fairly.</b> Either party can cancel: the recipient keeps everything streamed up to that instant, the sender is refunded the rest. The escrow stays exactly solvent at all times.</div></div>
-      <p style="margin-top:18px;">No owner, no admin keys, no protocol fee. Built for the Arc agentic economy: pay an AI agent per second of work, meter an API by usage, settle subscriptions continuously — in USDC (the chain's native gas asset) or EURC, switchable at the top.</p>
+      <p style="margin-top:18px;">No owner, no admin keys, no protocol fee. Built for the Arc agentic economy: pay an AI agent per second of work, meter an API by usage, settle subscriptions continuously, in USDC (the chain's native gas asset) or EURC, switchable at the top.</p>
     </div>
   </section>
   </div>
@@ -438,7 +438,7 @@ const RPC = "https://rpc.testnet.arc.network";
 const CHAIN_ID = 5042002;
 const CHAIN_HEX = "0x" + CHAIN_ID.toString(16);
 const EXPLORER = "https://testnet.arcscan.app";
-// Two live StreamPay instances on Arc Testnet — one per stablecoin. The toggle picks which one is active.
+// Two live StreamPay instances on Arc Testnet, one per stablecoin. The toggle picks which one is active.
 const TOKENS = {
   USDC: { sp: "0x505739d33D85AD85D0f9eeE64856309782382450", sym: "USDC" },
   EURC: { sp: "0xa49ff45166612a151f57e1cd209dba4e75e14a41", sym: "EURC" }
@@ -469,7 +469,7 @@ if (!TOKENS[activeTok]) activeTok = "USDC";
 const $ = (id) => document.getElementById(id);
 const spAddress = () => TOKENS[activeTok].sp;
 const SYM = () => TOKENS[activeTok].sym;
-const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : "—";
+const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : ", ";
 const fmt = (v) => ethers.formatUnits(v, usdcDecimals);
 const nowSec = () => Math.floor(Date.now() / 1000);
 
@@ -521,7 +521,7 @@ document.querySelectorAll(".tab").forEach((b) => b.onclick = () => {
 
 function syncChips() {
   $("spChip").textContent = short(spAddress());
-  $("usdcChip").textContent = usdcAddr ? short(usdcAddr) : "—";
+  $("usdcChip").textContent = usdcAddr ? short(usdcAddr) : ", ";
   $("explorer").href = `${EXPLORER}/address/${spAddress()}`;
   $("footExplorer").href = `${EXPLORER}/address/${spAddress()}`;
 }
@@ -557,7 +557,7 @@ async function connect() {
     if (!window.ethereum) return toast("No wallet found. Install MetaMask.", "bad");
     provider = new ethers.BrowserProvider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
-    // Show connected as soon as the account is authorized — never block the UI on the network step.
+    // Show connected as soon as the account is authorized, never block the UI on the network step.
     signer = await provider.getSigner();
     account = await signer.getAddress();
     $("connectBtn").textContent = short(account);
@@ -571,7 +571,7 @@ async function connect() {
           nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
           rpcUrls: [RPC], blockExplorerUrls: [EXPLORER] }] });
       } else if (e.code !== 4001) {
-        toast("Connected — now switch to Arc Testnet in MetaMask to transact.", "bad");
+        toast("Connected, now switch to Arc Testnet in MetaMask to transact.", "bad");
       }
     }
     const net = await provider.getNetwork();
@@ -593,7 +593,7 @@ async function ensureChain() {
   signer = await provider.getSigner();
   account = await signer.getAddress();
   const after = await provider.getNetwork();
-  if (Number(after.chainId) !== CHAIN_ID) throw new Error("Wrong network — switch to Arc Testnet (chain " + CHAIN_ID + ")");
+  if (Number(after.chainId) !== CHAIN_ID) throw new Error("Wrong network, switch to Arc Testnet (chain " + CHAIN_ID + ")");
 }
 
 // Token switch (USDC ↔ EURC): repoints the active StreamPay contract and relabels the whole UI.
@@ -642,7 +642,7 @@ function updateRate() {
     else if (perSec * 3600 >= 1) txt = (perSec * 3600).toFixed(3) + " " + u + "/hr";
     else txt = (perSec * 86400).toFixed(3) + " " + u + "/day";
     $("rateHint").textContent = "rate ≈ " + txt;
-  } else $("rateHint").textContent = "rate —";
+  } else $("rateHint").textContent = "rate , ";
 }
 
 $("createBtn").onclick = async () => {
@@ -711,8 +711,8 @@ function renderStream(id, s) {
   const h = [];
   if (!account) h.push("Connect your wallet to act.");
   else {
-    if (me === s.recipient.toLowerCase() && active) h.push("You are the recipient — withdraw what's streamed.");
-    if (me === s.sender.toLowerCase() && active) h.push("You are the sender — cancel to reclaim the unstreamed remainder.");
+    if (me === s.recipient.toLowerCase() && active) h.push("You are the recipient, withdraw what's streamed.");
+    if (me === s.sender.toLowerCase() && active) h.push("You are the sender, cancel to reclaim the unstreamed remainder.");
     if (!active) h.push("This stream has ended.");
   }
   $("roleHint").textContent = h.join(" ");
@@ -750,7 +750,7 @@ async function browse() {
   try {
     const sp = new ethers.Contract(spAddress(), SP_ABI, read);
     const next = Number(await sp.nextId());
-    if (next <= 1) { list.innerHTML = "<div class='empty'>No streams yet — open the first one.</div>"; return; }
+    if (next <= 1) { list.innerHTML = "<div class='empty'>No streams yet, open the first one.</div>"; return; }
     const ids = []; for (let i = 1; i < next; i++) ids.push(i);
     const items = await Promise.all(ids.map((i) => sp.get(i)));
     const t = nowSec();

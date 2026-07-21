@@ -37,13 +37,13 @@
 </head>
 <body>
 
-<h1>Arc Agentic Stack</h1>
+<h1>Bondwire</h1>
 <p class="sub">Trust and settlement primitives for autonomous agents, settled in USDC on Arc.</p>
 <p class="lead" style="font-weight:600; color:#0a2540;">Most agentic projects show agents paying each other. They assume trust. We show what happens when an agent lies, and why lying is structurally unprofitable.</p>
-<span class="track-pill">CIRCLE STABLECOIN COMMERCE STACK CHALLENGE · TRACK 4, BEST AGENTIC ECONOMY EXPERIENCE ON ARC</span>
+<span class="track-pill">CIRCLE STABLECOIN COMMERCE STACK CHALLENGE · TRACK 4, BEST AGENTIC ECONOMY EXPERIENCE ON BONDWIRE</span>
 
 <h2>1. Project Title</h2>
-<p><strong>Arc Agentic Stack.</strong> Three small, ownerless contracts that let an autonomous agent be trusted before it acts and paid while it works, all settled in USDC on Circle's Arc L1.</p>
+<p><strong>Bondwire.</strong> Three small, ownerless contracts that let an autonomous agent be trusted before it acts and paid while it works, all settled in USDC on Circle's Arc L1.</p>
 
 <h2>2. Description</h2>
 <p class="lead">Most "agentic payment" demos quietly assume two things that do not exist on chain yet. That you can trust an agent before it touches your money. And that you can pay it as it works, not after the fact. I built both as composable primitives, with no owner and no admin key.</p>
@@ -84,7 +84,7 @@
   <tr><td>StreamPay</td><td class="mono">0x505739d33D85AD85D0f9eeE64856309782382450</td><td>✅</td></tr>
 </table>
 <ul>
-  <li>Browse the live hub, no wallet needed: <a href="https://mnorbert87.github.io/arc-agentic-stack/">mnorbert87.github.io/arc-agentic-stack</a>.</li>
+  <li>Browse the live hub, no wallet needed: <a href="https://mnorbert87.github.io/bondwire/">mnorbert87.github.io/bondwire</a>.</li>
   <li>Two on-chain burns show the anti-collusion mechanism firing: 1.45 USDC from an overturn and 1.50 USDC from a liveness fail-closed, each a real <span class="mono">Transfer</span> to <span class="mono">0x…dEaD</span> you can open on the explorer.</li>
   <li>The 79-test suite (unit, adversarial, cold-audit, fuzz, 10k-run invariants, and a Halmos symbolic spec) is green and reproduces with one command. Mutation testing kills 84.5% of the mutants and 100% of the revert-class ones.</li>
   <li>Halmos proves the hard properties at the property level, for all inputs, not just the cases a fuzzer happens to hit: solvency, surplus-positivity, no-double-pay, and the fee-residue bound. The two burns above are those same properties firing on chain.</li>
@@ -106,7 +106,7 @@
 
 <h2>9. Documentation</h2>
 <ul>
-  <li><strong>GitHub:</strong> <a href="https://github.com/Mnorbert87/arc-agentic-stack">github.com/Mnorbert87/arc-agentic-stack</a>, public, CI green.</li>
+  <li><strong>GitHub:</strong> <a href="https://github.com/Mnorbert87/bondwire">github.com/Mnorbert87/bondwire</a>, public, CI green.</li>
   <li><strong>For judges, two minutes:</strong> <span class="mono">JUDGES.md</span> has the direct explorer links and the one-command test (the burns, the CCTP onboarding, the ERC-8004 identity).</li>
   <li><strong>Runnable demos:</strong> <span class="mono">cctp-demo/</span> for cross-chain onboarding with Bridge Kit, and <span class="mono">x402-demo/</span> for pay-per-call. Each ships a verified transaction transcript.</li>
   <li><strong>The audit trail:</strong> Halmos for the symbolic proofs, Slither for static analysis, mutation testing (every revert-class mutant killed), and a gas profile.</li>
@@ -119,7 +119,7 @@
   <li><strong>The USDC dual-decimals split is the number-one footgun.</strong> Native gas is 18-decimal, the ERC-20 is 6-decimal, and mixing them silently gives you amounts off by 10¹². I keep all accounting in micro-USDC against the ERC-20 and handle gas separately in native units. A prominent doc callout, or a helper that surfaces the active denomination, would save every builder this bug.</li>
   <li><strong>Arc finality changed how I wrote the agent logic.</strong> Sub-second, no reorgs, so a slashed bond or a settled stream is final the moment the block lands. I deleted the "wait N confirmations and maybe retry" scaffolding I normally carry on other chains. For an autonomous agent that has to decide and move without a human watching, that determinism is the actual feature.</li>
   <li><strong>Block timestamps are not strictly monotonic on the testnet.</strong> That matters for per-second streaming accrual, and StreamPay defends against it. Worth saying out loud in the docs for anyone building time-based settlement.</li>
-  <li><strong>Circle Wallets signing for the agent worked with almost no Arc-specific code.</strong> The agent signed a full lifecycle (approve, bond, stream) through a developer-controlled wallet with the Entity Secret, so no private key on disk ever touched the chain. The only Arc-specific input was the <span class="mono">ARC-TESTNET</span> chain identifier; <span class="mono">estimateContractExecutionFee</span> and <span class="mono">createContractExecutionTransaction</span> handled the USDC-as-gas model on their own.</li>
+  <li><strong>Circle Wallets signing for the agent worked with almost no Arc-specific code.</strong> The agent signed a full lifecycle (approve, bond, stream) through a developer-controlled wallet with the Entity Secret, so no private key on disk ever touched the chain. The only Arc-specific input was the <span class="mono">BONDWIRE-TESTNET</span> chain identifier; <span class="mono">estimateContractExecutionFee</span> and <span class="mono">createContractExecutionTransaction</span> handled the USDC-as-gas model on their own.</li>
   <li><strong>Bridge Kit already knew about Arc, and that surprised me.</strong> I expected to add a custom chain. Instead <span class="mono">ArcTestnet</span> was right there in the chain list with CCTP domain 26, so bridging Base Sepolia to Arc was one <span class="mono">kit.bridge()</span> call. Having Arc as a first-class App Kit chain on day one is a real head start for cross-chain agent flows.</li>
   <li><strong>arcscan exact-match verification worked cleanly</strong> once I pinned <span class="mono">evm_version</span> to <span class="mono">cancun</span>. A one-line note in the docs would have saved me the trial and error.</li>
   <li><strong>The ERC-8004 ReputationRegistry feedback index is 1-based, not 0-based.</strong> My first <span class="mono">readFeedback(agentId, client, 0)</span> reverted with "index must be > 0", which cost me a re-run before I clocked it. A line in the docs, or a 0-based convention to match every other array in the EVM, would avoid it.</li>

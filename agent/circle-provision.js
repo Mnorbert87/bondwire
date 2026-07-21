@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Circle Developer-Controlled Wallets — one-time provisioning for the Arc Agentic Stack.
+ * Circle Developer-Controlled Wallets — one-time provisioning for the Bondwire.
  *
  * Provisions, idempotently:
  *   1. an Entity Secret (32-byte hex) registered against the Circle API key,
  *   2. a wallet set,
- *   3. one EOA developer-controlled wallet on ARC-TESTNET for the agent (Aiden).
+ *   3. one EOA developer-controlled wallet on BONDWIRE-TESTNET for the agent (Aiden).
  *
  * Secrets are written to ./.secrets/.env (gitignored). The registration recovery file
  * is written to ./.secrets/ — keep it: it is the ONLY way to rotate the Entity Secret.
@@ -63,7 +63,7 @@ async function main() {
     console.log("  walletSetId :", existing.CIRCLE_WALLET_SET_ID);
     console.log("  walletId    :", existing.CIRCLE_WALLET_ID);
     console.log("  address     :", existing.CIRCLE_WALLET_ADDRESS);
-    console.log("  blockchain  :", existing.CIRCLE_WALLET_BLOCKCHAIN || "ARC-TESTNET");
+    console.log("  blockchain  :", existing.CIRCLE_WALLET_BLOCKCHAIN || "BONDWIRE-TESTNET");
     return;
   }
 
@@ -87,21 +87,21 @@ async function main() {
     console.log("Reusing Entity Secret from .secrets/.env:", mask(entitySecret));
   }
 
-  // 2) client + wallet set + 3) wallet on ARC-TESTNET
+  // 2) client + wallet set + 3) wallet on BONDWIRE-TESTNET
   const client = initiateDeveloperControlledWalletsClient({ apiKey, entitySecret });
 
-  console.log("Creating wallet set 'arc-agentic-stack' …");
-  const ws = await client.createWalletSet({ name: "arc-agentic-stack" });
+  console.log("Creating wallet set 'bondwire' …");
+  const ws = await client.createWalletSet({ name: "bondwire" });
   const walletSetId = ws.data?.walletSet?.id;
   console.log("  walletSetId:", walletSetId);
 
-  console.log("Creating 1 EOA wallet on ARC-TESTNET for agent Aiden …");
+  console.log("Creating 1 EOA wallet on BONDWIRE-TESTNET for agent Aiden …");
   const wr = await client.createWallets({
     walletSetId,
-    blockchains: ["ARC-TESTNET"],
+    blockchains: ["BONDWIRE-TESTNET"],
     accountType: "EOA",
     count: 1,
-    metadata: [{ name: "aiden-agent", refId: "arc-agentic-stack" }],
+    metadata: [{ name: "aiden-agent", refId: "bondwire" }],
   });
   const wallet = wr.data?.wallets?.[0];
   console.log("  walletId  :", wallet?.id);
@@ -113,7 +113,7 @@ async function main() {
     CIRCLE_WALLET_SET_ID: walletSetId,
     CIRCLE_WALLET_ID: wallet?.id || "",
     CIRCLE_WALLET_ADDRESS: wallet?.address || "",
-    CIRCLE_WALLET_BLOCKCHAIN: wallet?.blockchain || "ARC-TESTNET",
+    CIRCLE_WALLET_BLOCKCHAIN: wallet?.blockchain || "BONDWIRE-TESTNET",
   });
   console.log("\nWrote", SECRETS_ENV, "(mode 600, gitignored).");
   console.log("DONE — Circle wallet live at the provisioning layer.");

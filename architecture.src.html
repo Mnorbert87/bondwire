@@ -103,8 +103,8 @@
     <div class="brand">
       <div class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2L3 20h4l5-10 5 10h4L12 2z" fill="#04111f"/></svg></div>
       <div>
-        <h1>Arc Agentic Stack — Architecture</h1>
-        <small>Three composable USDC primitives for autonomous agents — trust, settlement, and the mechanism that binds them. Everything settles on Arc, where USDC is gas.</small>
+        <h1>Bondwire, Architecture</h1>
+        <small>Three composable USDC primitives for autonomous agents, trust, settlement, and the mechanism that binds them. Everything settles on Arc, where USDC is gas.</small>
       </div>
     </div>
     <div class="track">Track 4 · Agentic Economy</div>
@@ -123,7 +123,7 @@
     <div class="layers">
       <div class="layer trust">
         <div class="lhead"><span class="lbadge">Trust layer</span><h2>AgentBond</h2><div class="q">"Can I trust this agent<br>before it acts?"</div></div>
-        <p class="ldesc">USDC collateral behind an agent's reputation. The agent grants enforcers a slash allowance; counterparties lock a slice of the <i>free</i> bond behind a job, then release on performance or slash on default. Ownerless, balance-delta accounting — the free bond is a public, slashable credit score.</p>
+        <p class="ldesc">USDC collateral behind an agent's reputation. The agent grants enforcers a slash allowance; counterparties lock a slice of the <i>free</i> bond behind a job, then release on performance or slash on default. Ownerless, balance-delta accounting, the free bond is a public, slashable credit score.</p>
         <div class="chips"><span class="chip">setSlashAllowance</span><span class="chip">lock</span><span class="chip">release</span><span class="chip">slash</span><span class="chip">freeBondOf</span></div>
       </div>
 
@@ -135,7 +135,7 @@
 
       <div class="layer mech">
         <div class="lhead"><span class="lbadge">Mechanism layer</span><h2>CommitStakeV2</h2><div class="q">"Who pays when<br>the verifier lies?"</div></div>
-        <p class="ldesc">A <b>bonded verifier</b> escrow. A staker commits USDC behind a goal; the verifier attests pass/fail. A two-sided challenge routes to a named arbiter — on an overturn or a no-show the verifier's bonded slice is <b>slashed</b>, the harmed party gets only <b>damage</b>, and the §7a surplus is <b>burned to 0x…dEaD</b>. Writes zero new custody code — it drives the two primitives above.</p>
+        <p class="ldesc">A <b>bonded verifier</b> escrow. A staker commits USDC behind a goal; the verifier attests pass/fail. A two-sided challenge routes to a named arbiter, on an overturn or a no-show the verifier's bonded slice is <b>slashed</b>, the harmed party gets only <b>damage</b>, and the §7a surplus is <b>burned to 0x…dEaD</b>. Writes zero new custody code, it drives the two primitives above.</p>
         <div class="chips"><span class="chip">commit</span><span class="chip">attest</span><span class="chip">overturn</span><span class="chip">slash</span><span class="chip hot">burn → 0x…dEaD</span></div>
         <div class="compose">
           <div class="comp"><b>composes</b> <span class="arr">↑</span> <span class="tgt blue">AgentBond.slash</span> <span style="color:var(--faint)">· §7a routing</span></div>
@@ -148,7 +148,7 @@
     <div class="actor">
       <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg></div>
       <h3>Counterparty</h3>
-      <p>Business or protocol hiring the agent. Reads the bond to gauge trust, locks collateral against the job, streams payment per second of work delivered — and can stake a goal whose verdict is itself bonded.</p>
+      <p>Business or protocol hiring the agent. Reads the bond to gauge trust, locks collateral against the job, streams payment per second of work delivered, and can stake a goal whose verdict is itself bonded.</p>
       <div class="flow" style="margin-top:4px;color:var(--c2)"><span class="dot">←</span> read trust · lock · pay</div>
     </div>
   </div>
@@ -158,7 +158,7 @@
     <div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2L3 20h4l5-10 5 10h4L12 2z" fill="#04111f"/></svg></div>
     <div>
       <h3>Arc L1 · USDC = gas</h3>
-      <p>Deterministic finality, dollar-denominated fees. The agent budgets, pays gas, posts bond and gets paid in one unit — no FX, no native-token juggling, no bridges in the trust path.</p>
+      <p>Deterministic finality, dollar-denominated fees. The agent budgets, pays gas, posts bond and gets paid in one unit, no FX, no native-token juggling, no bridges in the trust path.</p>
     </div>
     <div class="tags"><span>USDC</span><span>Deterministic finality</span><span>Ownerless</span></div>
   </div>

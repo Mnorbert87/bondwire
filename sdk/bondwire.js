@@ -1,13 +1,13 @@
-// Arc Agentic Stack SDK — one small wrapper over AgentBond + StreamPay on Arc.
+// Bondwire SDK — one small wrapper over AgentBond + StreamPay on Arc.
 //
 // ethers v6 is a peer dependency. In Node: `npm i ethers`. In the browser, map the
 // bare "ethers" specifier with an import map or import this file from a bundler.
 //
 //   import { ethers } from "ethers";
-//   import { ArcAgenticStack } from "@arc/agentic-stack-sdk";
+//   import { Bondwire } from "bondwire-sdk";
 //
-//   const signer = new ethers.Wallet(PRIVATE_KEY, ArcAgenticStack.provider());
-//   const arc = new ArcAgenticStack(signer);
+//   const signer = new ethers.Wallet(PRIVATE_KEY, Bondwire.provider());
+//   const arc = new Bondwire(signer);
 //
 // Every amount argument is a human USDC string/number ("10" = 10 USDC); the SDK
 // converts to micro-USDC (6 decimals) for you. Views return both `.raw` (bigint
@@ -15,7 +15,7 @@
 import { ethers } from "ethers";
 
 /** Arc testnet network + deployed addresses, baked in. */
-export const ARC = Object.freeze({
+export const BONDWIRE = Object.freeze({
   chainId: 5042002,
   rpcUrl: "https://rpc.testnet.arc.network",
   wsUrl: "wss://rpc.testnet.arc.network",
@@ -70,47 +70,47 @@ const STREAM_STATUS = ["None", "Active", "Ended"];
 
 /** A read-only JsonRpcProvider pinned to Arc testnet. */
 function arcProvider() {
-  return new ethers.JsonRpcProvider(ARC.rpcUrl, ARC.chainId);
+  return new ethers.JsonRpcProvider(BONDWIRE.rpcUrl, BONDWIRE.chainId);
 }
 
 /** Wrap a bigint micro-USDC amount with a formatted view. */
 function usdcAmount(raw) {
-  return { raw, usdc: ethers.formatUnits(raw, ARC.usdcDecimals) };
+  return { raw, usdc: ethers.formatUnits(raw, BONDWIRE.usdcDecimals) };
 }
 
-export class ArcAgenticStack {
+export class Bondwire {
   /**
    * @param {ethers.Signer|ethers.Provider} runner a Signer (to send tx) or a
    *        Provider (read-only). Views work with either; writes need a Signer.
    * @param {object} [overrides] optional { AgentBond, StreamPay, USDC } address overrides.
    */
   constructor(runner, overrides = {}) {
-    if (!runner) throw new Error("ArcAgenticStack: pass an ethers Signer or Provider");
+    if (!runner) throw new Error("Bondwire: pass an ethers Signer or Provider");
     this.runner = runner;
-    this.addresses = { ...ARC.contracts, ...overrides };
+    this.addresses = { ...BONDWIRE.contracts, ...overrides };
     this.agentBond = new ethers.Contract(this.addresses.AgentBond, AGENT_BOND_ABI, runner);
     this.streamPay = new ethers.Contract(this.addresses.StreamPay, STREAM_PAY_ABI, runner);
     this.usdc = new ethers.Contract(this.addresses.USDC, ERC20_ABI, runner);
   }
 
-  /** A read-only Arc provider — handy for `new ethers.Wallet(key, ArcAgenticStack.provider())`. */
+  /** A read-only Arc provider — handy for `new ethers.Wallet(key, Bondwire.provider())`. */
   static provider() {
     return arcProvider();
   }
 
   /** Read-only instance straight off the public RPC (no key needed). */
   static readOnly(overrides = {}) {
-    return new ArcAgenticStack(arcProvider(), overrides);
+    return new Bondwire(arcProvider(), overrides);
   }
 
   /** micro-USDC bigint from a human amount ("10" -> 10000000n). */
   toUnits(amount) {
-    return ethers.parseUnits(String(amount), ARC.usdcDecimals);
+    return ethers.parseUnits(String(amount), BONDWIRE.usdcDecimals);
   }
 
   /** human USDC string from a micro-USDC bigint. */
   fromUnits(units) {
-    return ethers.formatUnits(units, ARC.usdcDecimals);
+    return ethers.formatUnits(units, BONDWIRE.usdcDecimals);
   }
 
   async _address() {
@@ -285,7 +285,7 @@ export class ArcAgenticStack {
   }
 
   explorerTx(hash) {
-    return `${ARC.explorer}/tx/${hash}`;
+    return `${BONDWIRE.explorer}/tx/${hash}`;
   }
 
   /** Pull an id from the first matching event in a receipt. */
@@ -302,4 +302,4 @@ export class ArcAgenticStack {
   }
 }
 
-export default ArcAgenticStack;
+export default Bondwire;

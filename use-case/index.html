@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Use case · Hire an AI service agent — Arc Agentic Stack</title>
-<meta name="description" content="A concrete end-to-end commerce flow on Arc: Acme Corp hires Aiden, an AI research agent. Aiden bonds for trust (AgentBond), gets paid per second of work (StreamPay), and settles in USDC — reusing the live testnet contracts." />
+<title>Use case · Hire an AI service agent, Bondwire</title>
+<meta name="description" content="A concrete end-to-end commerce flow on Arc: Acme Corp hires Aiden, an AI research agent. Aiden bonds for trust (AgentBond), gets paid per second of work (StreamPay), and settles in USDC, reusing the live testnet contracts." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -143,7 +143,7 @@
   <div class="brand">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4z" stroke="#04111f" stroke-width="2" stroke-linejoin="round"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#04111f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     <div>
-      <h1>Arc Agentic Stack</h1>
+      <h1>Bondwire</h1>
       <small>use case · hire an AI service agent</small>
     </div>
   </div>
@@ -154,7 +154,7 @@
   <section class="hero rise">
     <div class="eyebrow">Scenario · End-to-end commerce</div>
     <h2>Hire an AI service agent,<br>settled entirely in USDC</h2>
-    <p class="lead"><b>Acme Corp</b> needs a market-research report and hires <b>Aiden</b>, an autonomous AI research agent. The two primitives turn that into a real transaction: Aiden <b>bonds</b> for trust, gets <b>streamed</b> USDC per second of work, and the job <b>settles</b> on-chain — no invoice, no platform, no chargeback. Every step below runs against the <b>live testnet contracts</b>.</p>
+    <p class="lead"><b>Acme Corp</b> needs a market-research report and hires <b>Aiden</b>, an autonomous AI research agent. The two primitives turn that into a real transaction: Aiden <b>bonds</b> for trust, gets <b>streamed</b> USDC per second of work, and the job <b>settles</b> on-chain, no invoice, no platform, no chargeback. Every step below runs against the <b>live testnet contracts</b>.</p>
   </section>
 
   <!-- ACTORS -->
@@ -165,13 +165,13 @@
       <div class="ai-ico">A</div>
       <h3>Acme Corp</h3>
       <div class="who">Buyer · enforcer · payer</div>
-      <p>Wants a research report. Needs to know the agent won't take the money and vanish, and wants to pay for work as it actually lands — not a lump sum up front.</p>
+      <p>Wants a research report. Needs to know the agent won't take the money and vanish, and wants to pay for work as it actually lands, not a lump sum up front.</p>
     </div>
     <div class="actor agent">
       <div class="ai-ico">Ai</div>
       <h3>Aiden</h3>
       <div class="who">Autonomous AI research agent</div>
-      <p>Sells research work. Has no brand or legal entity to vouch for it — so it puts up a USDC bond as collateral, and earns continuously as it delivers.</p>
+      <p>Sells research work. Has no brand or legal entity to vouch for it, so it puts up a USDC bond as collateral, and earns continuously as it delivers.</p>
       <p style="margin-top:10px; font-size:12.5px;">
         <a href="https://testnet.arcscan.app/token/0x8004A818BFB912233c491871b3d84c89A494BD9e/instance/471762" target="_blank" rel="noopener" style="color:var(--c2); text-decoration:none;">🪪 ERC-8004 identity <b>#471762</b> ↗</a>
         &nbsp;·&nbsp; ⭐ <b>5/5</b> <a href="https://testnet.arcscan.app/tx/0x775a67b9d30017d3c60c43c2b82b5a491ae9a45222c8a6de3fe23c6f195f5884" target="_blank" rel="noopener" style="color:var(--muted); text-decoration:none;">verified counterparty feedback ↗</a>
@@ -185,12 +185,12 @@
   <div class="steps rise d2">
     <div class="stepc bond">
       <div class="num">1</div>
-      <div><h4><span class="actor-tag agent">Aiden</span> posts a bond</h4><p>Deposits <code>0.50 USDC</code> into AgentBond — skin-in-the-game behind its reputation. Its free bond becomes a public credit score.</p></div>
+      <div><h4><span class="actor-tag agent">Aiden</span> posts a bond</h4><p>Deposits <code>0.50 USDC</code> into AgentBond, skin-in-the-game behind its reputation. Its free bond becomes a public credit score.</p></div>
       <span class="layer">AgentBond</span>
     </div>
     <div class="stepc bond">
       <div class="num">2</div>
-      <div><h4><span class="actor-tag agent">Aiden</span> grants Acme slashing rights</h4><p><code>setSlashAllowance(Acme, 0.50)</code> — Aiden opts Acme in as the enforcer that may lock and, on default, slash its bond. Nothing can touch the bond without this grant.</p></div>
+      <div><h4><span class="actor-tag agent">Aiden</span> grants Acme slashing rights</h4><p><code>setSlashAllowance(Acme, 0.50)</code>, Aiden opts Acme in as the enforcer that may lock and, on default, slash its bond. Nothing can touch the bond without this grant.</p></div>
       <span class="layer">AgentBond</span>
     </div>
     <div class="stepc bond">
@@ -200,7 +200,7 @@
     </div>
     <div class="stepc stream">
       <div class="num">4</div>
-      <div><h4><span class="actor-tag buyer">Acme</span> opens a pay-per-second stream</h4><p><code>createStream(Aiden, 0.60, window)</code> — USDC now accrues to Aiden second by second as it works. No invoice, no upfront lump sum.</p></div>
+      <div><h4><span class="actor-tag buyer">Acme</span> opens a pay-per-second stream</h4><p><code>createStream(Aiden, 0.60, window)</code>, USDC now accrues to Aiden second by second as it works. No invoice, no upfront lump sum.</p></div>
       <span class="layer">StreamPay</span>
     </div>
     <div class="stepc stream">
@@ -220,39 +220,39 @@
   <p class="section-sub rise d3">These contracts are deployed and running. The counts below are read straight from the public Arc RPC right now.</p>
   <div class="panel rise d3">
     <div class="live-grid">
-      <div class="cell"><b id="lObl">—</b><small>obligations opened</small></div>
-      <div class="cell"><b id="lStreams">—</b><small>streams opened</small></div>
-      <div class="cell"><b id="lUsdc">—</b><small>USDC in the stack</small></div>
+      <div class="cell"><b id="lObl">, </b><small>obligations opened</small></div>
+      <div class="cell"><b id="lStreams">, </b><small>streams opened</small></div>
+      <div class="cell"><b id="lUsdc">, </b><small>USDC in the stack</small></div>
     </div>
     <div style="margin-top:22px; padding-top:20px; border-top:1px solid var(--line);">
       <h4 style="font-family:'Space Grotesk'; font-size:15px; margin:0 0 4px; letter-spacing:-.2px;">This exact scenario, recorded on-chain</h4>
-      <p style="font-size:12.5px; color:var(--faint); margin:0 0 14px;">A real run of the script below — Acme <code style="color:var(--c2);font-family:ui-monospace,monospace;">0x24Bb…E5C4</code> hiring Aiden, settled as obligation <b style="color:var(--gold);">#6</b> and stream <b style="color:var(--good);">#15</b>. Every step is a verifiable testnet transaction:</p>
+      <p style="font-size:12.5px; color:var(--faint); margin:0 0 14px;">A real run of the script below, Acme <code style="color:var(--c2);font-family:ui-monospace,monospace;">0x24Bb…E5C4</code> hiring Aiden, settled as obligation <b style="color:var(--gold);">#6</b> and stream <b style="color:var(--good);">#15</b>. Every step is a verifiable testnet transaction:</p>
       <div style="display:grid; gap:7px;">
         <a class="rec" href="https://testnet.arcscan.app/tx/0xad1f3b08bc036706755bea0da4adb75aeb023ff5208d64c9b70af3d77e677e90" target="_blank" rel="noopener"><span class="rn">0</span> Acme funded with 1.40 USDC (gas + budget) <span class="rh">view tx ↗</span></a>
         <a class="rec" href="https://testnet.arcscan.app/tx/0xbff1507bd5ab0cca76b8f4e3eaaae2f5b6983deea21ec8a03fb85042702689b4" target="_blank" rel="noopener"><span class="rn">2</span> Aiden grants Acme slashing rights <span class="rh">view tx ↗</span></a>
         <a class="rec" href="https://testnet.arcscan.app/tx/0x7a21fd9ca82e93502b38d296e3f266029c05545d9af0697ed1b6f39db9172cd8" target="_blank" rel="noopener"><span class="rn">3</span> Acme locks the 0.50 USDC guarantee → obligation #6 <span class="rh">view tx ↗</span></a>
         <a class="rec" href="https://testnet.arcscan.app/tx/0x57c90d0f06fb2d6bfcd9b1181a6db2332f6db438bc6f836627d7b3b0f9a1780e" target="_blank" rel="noopener"><span class="rn">4</span> Acme opens the 0.60 USDC pay-per-second stream → stream #15 <span class="rh">view tx ↗</span></a>
         <a class="rec" href="https://testnet.arcscan.app/tx/0xd358ff4b39752e239e775523f52196220ce9b715b38778530c8efbfdf3420f0f" target="_blank" rel="noopener"><span class="rn">5</span> Aiden withdraws ~0.30 USDC of streamed earnings <span class="rh">view tx ↗</span></a>
-        <a class="rec" href="https://testnet.arcscan.app/tx/0xf42c5d8131f785dad04156f6f67b0279150afe4a5dffedbe81d9273e42f4f44b" target="_blank" rel="noopener"><span class="rn">6</span> Acme releases obligation #6 — report accepted, settled <span class="rh">view tx ↗</span></a>
+        <a class="rec" href="https://testnet.arcscan.app/tx/0xf42c5d8131f785dad04156f6f67b0279150afe4a5dffedbe81d9273e42f4f44b" target="_blank" rel="noopener"><span class="rn">6</span> Acme releases obligation #6, report accepted, settled <span class="rh">view tx ↗</span></a>
       </div>
     </div>
-    <p style="font-size:12.5px; color:var(--faint); margin:20px 0 0;">Run it yourself — it seeds a fresh buyer wallet and plays all six steps with real USDC transactions:</p>
-    <div class="run" style="margin-top:12px;"><span class="cm"># dry run — print the script of the demo, no transactions</span>
+    <p style="font-size:12.5px; color:var(--faint); margin:20px 0 0;">Run it yourself, it seeds a fresh buyer wallet and plays all six steps with real USDC transactions:</p>
+    <div class="run" style="margin-top:12px;"><span class="cm"># dry run, print the script of the demo, no transactions</span>
 node demo/commerce-scenario.js
 
-<span class="cm"># live — execute on Arc testnet (needs a funded burner)</span>
+<span class="cm"># live, execute on Arc testnet (needs a funded burner)</span>
 <span class="fl">PRIVATE_KEY</span>=0x… <span class="fl">LIVE</span>=1 node demo/commerce-scenario.js</div>
   </div>
 
   <div class="addr-bar rise d4">
     <span class="chip">Chain <code>5042002</code></span>
-    <a id="abLink" target="_blank" rel="noopener">AgentBond <code id="abAddr">—</code> ↗</a>
-    <a id="spLink" target="_blank" rel="noopener">StreamPay <code id="spAddr">—</code> ↗</a>
-    <a href="https://github.com/Mnorbert87/arc-agentic-stack" target="_blank" rel="noopener">GitHub ↗</a>
+    <a id="abLink" target="_blank" rel="noopener">AgentBond <code id="abAddr">, </code> ↗</a>
+    <a id="spLink" target="_blank" rel="noopener">StreamPay <code id="spAddr">, </code> ↗</a>
+    <a href="https://github.com/Mnorbert87/bondwire" target="_blank" rel="noopener">GitHub ↗</a>
   </div>
 
   <footer>
-    Arc Agentic Stack · Use case: hire an AI service agent · Circle Stablecoin Commerce Stack Challenge — Track 4 · Arc Testnet, USDC-native · testnet demo, not for production use
+    Bondwire · Use case: hire an AI service agent · Circle Stablecoin Commerce Stack Challenge, Track 4 · Arc Testnet, USDC-native · testnet demo, not for production use
   </footer>
 </main>
 
@@ -267,7 +267,7 @@ const SP_ADDR = "0x505739d33D85AD85D0f9eeE64856309782382450";
 
 const read = new ethers.JsonRpcProvider(RPC, CHAIN_ID);
 const $ = (id) => document.getElementById(id);
-const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : "—";
+const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : ", ";
 
 $("abAddr").textContent = short(AB_ADDR);
 $("spAddr").textContent = short(SP_ADDR);

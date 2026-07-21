@@ -1,4 +1,4 @@
-// Arc Agentic Stack — end-to-end commerce scenario: "Hire an AI service agent."
+// Bondwire — end-to-end commerce scenario: "Hire an AI service agent."
 //
 // A concrete, named, money-moving flow that turns the two primitives into a product:
 //
@@ -24,7 +24,7 @@
 // The burner key is read from env only, never logged or written. Acme's key is generated
 // fresh at runtime and discarded — it never leaves this process.
 import { ethers } from "ethers";
-import { ArcAgenticStack, ARC } from "../sdk/arc-agentic-stack.js";
+import { Bondwire, BONDWIRE } from "../sdk/bondwire.js";
 
 // --- scenario parameters (real USDC) ---------------------------------------
 const JOB = {
@@ -44,18 +44,18 @@ const c = {
   gold: (s) => `\x1b[33m${s}\x1b[0m`,
   green: (s) => `\x1b[32m${s}\x1b[0m`,
 };
-const tx = (h) => c.dim(`${ARC.explorer}/tx/${h}`);
+const tx = (h) => c.dim(`${BONDWIRE.explorer}/tx/${h}`);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function header() {
-  console.log(c.b("\n  Arc Agentic Stack — commerce scenario: \"Hire an AI service agent\"\n"));
+  console.log(c.b("\n  Bondwire — commerce scenario: \"Hire an AI service agent\"\n"));
   console.log(`  ${c.gold("Acme Corp")} (buyer) hires ${c.cyan("Aiden")} (AI research agent) on Arc, settled in USDC.`);
   console.log(`  Job:       ${JOB.title}`);
   console.log(`  Budget:    ${JOB.budget} USDC streamed over ${JOB.windowSeconds}s of work`);
   console.log(`  Guarantee: ${JOB.guarantee} USDC of Aiden's bond locked behind the job`);
-  console.log(`  Contracts: AgentBond ${c.dim(ARC.contracts.AgentBond)}`);
-  console.log(`             StreamPay ${c.dim(ARC.contracts.StreamPay)}`);
-  console.log(c.dim(`             chain ${ARC.chainId} · ${LIVE ? "LIVE — real testnet transactions" : "DRY RUN — no transactions sent"}\n`));
+  console.log(`  Contracts: AgentBond ${c.dim(BONDWIRE.contracts.AgentBond)}`);
+  console.log(`             StreamPay ${c.dim(BONDWIRE.contracts.StreamPay)}`);
+  console.log(c.dim(`             chain ${BONDWIRE.chainId} · ${LIVE ? "LIVE — real testnet transactions" : "DRY RUN — no transactions sent"}\n`));
 }
 
 function step(n, who, what) {
@@ -80,7 +80,7 @@ async function live() {
   const key = process.env.PRIVATE_KEY;
   if (!key) throw new Error("LIVE=1 needs PRIVATE_KEY (a funded Arc testnet burner).");
 
-  const provider = ArcAgenticStack.provider();
+  const provider = Bondwire.provider();
   const aiden = new ethers.Wallet(key, provider); // the funded burner plays the agent
   const acme = ethers.Wallet.createRandom().connect(provider); // fresh buyer wallet, discarded after
 
@@ -88,8 +88,8 @@ async function live() {
   console.log(`  ${c.cyan("Aiden")} = ${aiden.address}`);
   console.log(`  ${c.gold("Acme")}  = ${acme.address} ${c.dim("(ephemeral; funded by Aiden for the demo)")}\n`);
 
-  const arcAiden = new ArcAgenticStack(aiden);
-  const arcAcme = new ArcAgenticStack(acme);
+  const arcAiden = new Bondwire(aiden);
+  const arcAcme = new Bondwire(acme);
   const hashes = {};
 
   // 0. Seed the buyer wallet. On Arc, USDC *is* the gas token, so one native USDC transfer

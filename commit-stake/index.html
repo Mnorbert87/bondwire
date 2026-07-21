@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>CommitStake — Arc Testnet</title>
+<title>CommitStake, Arc Testnet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -274,18 +274,18 @@
   <div class="hero rise">
     <div class="eyebrow">Arc Testnet · USDC-native</div>
     <h2>Put your money<br>where your goal is</h2>
-    <p>Stake USDC behind a commitment. A verifier confirms before the deadline — succeed and reclaim your stake, fail or expire and it's slashed to the beneficiary. A public primitive anyone can build on.</p>
+    <p>Stake USDC behind a commitment. A verifier confirms before the deadline, succeed and reclaim your stake, fail or expire and it's slashed to the beneficiary. A public primitive anyone can build on.</p>
   </div>
 
   <div class="stat-row rise d1">
-    <div class="stat"><b id="sTotal">—</b><small>Commitments</small></div>
-    <div class="stat"><b id="sLocked">—</b><small>USDC locked now</small></div>
-    <div class="stat"><b id="sMine">—</b><small>Your USDC</small></div>
+    <div class="stat"><b id="sTotal">, </b><small>Commitments</small></div>
+    <div class="stat"><b id="sLocked">, </b><small>USDC locked now</small></div>
+    <div class="stat"><b id="sMine">, </b><small>Your USDC</small></div>
   </div>
 
   <div class="settings-bar rise d2">
     <span class="chip">V1 contract <code id="csChip">0xc307…A9a2</code></span>
-    <span class="chip">USDC <code id="usdcChip">—</code></span>
+    <span class="chip">USDC <code id="usdcChip">, </code></span>
     <button id="editAddrBtn" class="mini">Change</button>
     <a id="explorer" class="chip" href="https://testnet.arcscan.app/address/0xc307d9287707Ba04c03Dd653b4457E949129A9a2" target="_blank" rel="noopener" style="text-decoration:none;color:var(--c2)">V1 on arcscan ↗</a>
   </div>
@@ -305,7 +305,7 @@
     <div class="panel">
       <h3>Create a commitment</h3>
       <p class="hint">Approves USDC, then locks it. The <code>verifier</code> decides pass/fail; the <code>beneficiary</code> receives the stake if you fail.</p>
-      <p class="hint" style="border-left:2px solid var(--c2); padding-left:10px; color:var(--c2);"><b>Silence defaults to fail</b> — if the verifier never resolves, the stake is slashed after the deadline. Choose a verifier you trust.</p>
+      <p class="hint" style="border-left:2px solid var(--c2); padding-left:10px; color:var(--c2);"><b>Silence defaults to fail</b>, if the verifier never resolves, the stake is slashed after the deadline. Choose a verifier you trust.</p>
       <div class="row">
         <div>
           <label>Verifier address</label>
@@ -333,7 +333,7 @@
         <button id="useMeBene" class="mini">Me as beneficiary</button>
         <button id="createBtn" class="primary" style="margin-left:auto;">Approve &amp; Create</button>
       </div>
-      <p id="degenHint" class="hint" style="display:none; color:#e0a020; margin-top:6px;">⚠ Self-verification defeats the purpose — for testing only. The staker, verifier and beneficiary should be three different parties.</p>
+      <p id="degenHint" class="hint" style="display:none; color:#e0a020; margin-top:6px;">⚠ Self-verification defeats the purpose, for testing only. The staker, verifier and beneficiary should be three different parties.</p>
     </div>
   </section>
 
@@ -371,7 +371,7 @@
         <h3 style="margin:0;">All commitments <span class="count-pill" id="countPill">0</span></h3>
         <button id="browseBtn" class="mini">↻ Refresh</button>
       </div>
-      <p class="hint" style="margin-top:10px;">Read straight from the public Arc RPC — no wallet needed.</p>
+      <p class="hint" style="margin-top:10px;">Read straight from the public Arc RPC, no wallet needed.</p>
       <div id="list" class="grid"></div>
     </div>
   </section>
@@ -382,19 +382,19 @@
       <h3>How CommitStake works</h3>
       <div class="step"><div class="num">1</div><div><b>Stake.</b> You lock USDC behind a goal, naming a verifier (who judges it) and a beneficiary (who gets the funds if you fail).</div></div>
       <div class="step"><div class="num">2</div><div><b>Resolve.</b> Before the deadline the verifier marks <b>pass</b> (stake unlocked for you) or <b>fail</b> (stake slashed to the beneficiary).</div></div>
-      <div class="step"><div class="num">3</div><div><b>Claim or slash.</b> On pass, you claim your stake back. If the verifier stays silent past the deadline, <b>anyone</b> can trigger the slash — they can't grief you by going quiet.</div></div>
-      <p style="margin-top:18px; border-left:2px solid var(--c2); padding-left:12px;"><b>The verifier can be an AI agent.</b> Bond it with <b>AgentBond</b> so it has slashable skin in the game, and pay its verification fee over a <b>StreamPay</b> stream — that's how the full stack composes: CommitStake is the first app built on the two primitives.</p>
-      <p style="margin-top:18px;">No owner, no admin keys, no protocol fee. It's a public building block — language tests, fitness goals, code challenges, accountability bets. Built on Arc, where USDC is the gas token.</p>
+      <div class="step"><div class="num">3</div><div><b>Claim or slash.</b> On pass, you claim your stake back. If the verifier stays silent past the deadline, <b>anyone</b> can trigger the slash, they can't grief you by going quiet.</div></div>
+      <p style="margin-top:18px; border-left:2px solid var(--c2); padding-left:12px;"><b>The verifier can be an AI agent.</b> Bond it with <b>AgentBond</b> so it has slashable skin in the game, and pay its verification fee over a <b>StreamPay</b> stream, that's how the full stack composes: CommitStake is the first app built on the two primitives.</p>
+      <p style="margin-top:18px;">No owner, no admin keys, no protocol fee. It's a public building block, language tests, fitness goals, code challenges, accountability bets. Built on Arc, where USDC is the gas token.</p>
     </div>
   </section>
   </div>
 
-  <!-- ════════════════════ V2 — BONDED VERIFIER (appended; V1 above is unchanged) ════════════════════ -->
+  <!-- ════════════════════ V2, BONDED VERIFIER (appended; V1 above is unchanged) ════════════════════ -->
   <section id="v2" class="rise" style="margin-top:64px; scroll-margin-top:80px; border-top:1px solid var(--line); padding-top:48px;">
     <div class="hero" style="margin:0 0 26px;">
       <div class="eyebrow">V2 · bonded verifier · §7a routing</div>
       <h2 style="font-size:clamp(26px,4.4vw,42px);">The verifier now has<br>skin in the game</h2>
-      <p>V2 locks a slice of the verifier's <b>AgentBond</b> bond behind every commitment and streams its fee over <b>StreamPay</b>. Lie or vanish and the slice is slashed — the harmed party gets only <b>damage</b>, the surplus is <b>burned to a dead address</b>. Everything below is read live from Arc; every routing row links to its real transaction.</p>
+      <p>V2 locks a slice of the verifier's <b>AgentBond</b> bond behind every commitment and streams its fee over <b>StreamPay</b>. Lie or vanish and the slice is slashed, the harmed party gets only <b>damage</b>, the surplus is <b>burned to a dead address</b>. Everything below is read live from Arc; every routing row links to its real transaction.</p>
     </div>
 
     <div class="settings-bar" style="margin-bottom:18px;">
@@ -406,15 +406,15 @@
     </div>
 
     <div class="stat-row" style="margin-bottom:20px;">
-      <div class="stat"><b id="v2Total">—</b><small>Seeded commitments</small></div>
-      <div class="stat"><b id="v2Burned">—</b><small>USDC burned (§7a surplus)</small></div>
-      <div class="stat"><b id="v2Bond">—</b><small>Verifier bond slashed</small></div>
+      <div class="stat"><b id="v2Total">, </b><small>Seeded commitments</small></div>
+      <div class="stat"><b id="v2Burned">, </b><small>USDC burned (§7a surplus)</small></div>
+      <div class="stat"><b id="v2Bond">, </b><small>Verifier bond slashed</small></div>
     </div>
 
-    <!-- §7a routing table — each row bound to a live branch + its real tx -->
+    <!-- §7a routing table, each row bound to a live branch + its real tx -->
     <div class="panel">
-      <h3>§7a routing — three branches proven on-chain</h3>
-      <p class="hint">Three seeded branches link to their real Arc transactions in the <b>proof</b> column; their <b>outcome</b> is read live from <code>get(id)</code> (the 🔥 burn transfers go to <code>0x…dEaD</code>). The remaining routing outcomes are shown as <b>mechanism — not seeded in this demo</b>, with no on-chain proof.</p>
+      <h3>§7a routing, three branches proven on-chain</h3>
+      <p class="hint">Three seeded branches link to their real Arc transactions in the <b>proof</b> column; their <b>outcome</b> is read live from <code>get(id)</code> (the 🔥 burn transfers go to <code>0x…dEaD</code>). The remaining routing outcomes are shown as <b>mechanism, not seeded in this demo</b>, with no on-chain proof.</p>
       <div style="overflow-x:auto;">
         <table id="v2table" style="width:100%; border-collapse:collapse; font-size:13px;">
           <thead>
@@ -439,7 +439,7 @@
         <h3 style="margin:0;">Seeded V2 commitments <span class="count-pill" id="v2Count">0</span></h3>
         <button id="v2Refresh" class="mini">↻ Refresh</button>
       </div>
-      <p class="hint" style="margin-top:10px;">Read straight from the public Arc RPC against the V2 address — no wallet needed.</p>
+      <p class="hint" style="margin-top:10px;">Read straight from the public Arc RPC against the V2 address, no wallet needed.</p>
       <div id="v2list" class="grid"></div>
     </div>
   </section>
@@ -482,7 +482,7 @@ let provider, signer, account, usdcAddr, usdcDecimals = 6;
 
 const $ = (id) => document.getElementById(id);
 const csAddress = () => (localStorage.getItem("cs_addr") || DEFAULT_CS);
-const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : "—";
+const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : ", ";
 const fmt = (v) => ethers.formatUnits(v, usdcDecimals);
 
 // animated count-up for stat numbers
@@ -528,7 +528,7 @@ document.querySelectorAll(".tab").forEach((b) => b.onclick = () => {
 
 function syncChips() {
   $("csChip").textContent = short(csAddress());
-  $("usdcChip").textContent = usdcAddr ? short(usdcAddr) : "—";
+  $("usdcChip").textContent = usdcAddr ? short(usdcAddr) : ", ";
   $("explorer").href = `${EXPLORER}/address/${csAddress()}`;
   $("footExplorer").href = `${EXPLORER}/address/${csAddress()}`;
 }
@@ -589,7 +589,7 @@ async function ensureChain() {
   signer = await provider.getSigner();
   account = await signer.getAddress();
   const after = await provider.getNetwork();
-  if (Number(after.chainId) !== CHAIN_ID) throw new Error("Wrong network — switch to Arc Testnet (chain " + CHAIN_ID + ")");
+  if (Number(after.chainId) !== CHAIN_ID) throw new Error("Wrong network, switch to Arc Testnet (chain " + CHAIN_ID + ")");
 }
 
 $("editAddrBtn").onclick = () => {
@@ -656,9 +656,9 @@ async function renderCommitment(id, c) {
   const h = [];
   if (!account) h.push("Connect your wallet to act.");
   else {
-    if (me === c.verifier.toLowerCase() && active && !expired) h.push("You are the verifier — resolve it.");
-    if (me === c.staker.toLowerCase() && passed) h.push("You are the staker — claim your stake.");
-    if (active && expired) h.push("Expired with no pass — anyone may slash to the beneficiary.");
+    if (me === c.verifier.toLowerCase() && active && !expired) h.push("You are the verifier, resolve it.");
+    if (me === c.staker.toLowerCase() && passed) h.push("You are the staker, claim your stake.");
+    if (active && expired) h.push("Expired with no pass, anyone may slash to the beneficiary.");
   }
   $("roleHint").textContent = h.join(" ");
 }
@@ -694,7 +694,7 @@ async function browse() {
   try {
     const cs = new ethers.Contract(csAddress(), CS_ABI, read);
     const next = Number(await cs.nextId());
-    if (next <= 1) { list.innerHTML = "<div class='empty'>No commitments yet — create the first one.</div>"; return; }
+    if (next <= 1) { list.innerHTML = "<div class='empty'>No commitments yet, create the first one.</div>"; return; }
     const ids = []; for (let i = 1; i < next; i++) ids.push(i);
     const items = await Promise.all(ids.map((i) => cs.get(i)));
     list.innerHTML = "";
@@ -766,7 +766,7 @@ const SEED = [
 ];
 
 const $ = (id) => document.getElementById(id);
-const short = (a) => a ? a.slice(0,6) + "…" + a.slice(-4) : "—";
+const short = (a) => a ? a.slice(0,6) + "…" + a.slice(-4) : ", ";
 const txLink = (label,h) => `<a href="${EXPLORER}/tx/${h}" target="_blank" rel="noopener" style="color:var(--c2); text-decoration:none; white-space:nowrap;">${label} ↗</a>`;
 const read = new ethers.JsonRpcProvider(RPC, CHAIN_ID);
 let dec = 6;
@@ -789,7 +789,7 @@ function routing(outcome, c) {
     case "LivenessSlash": return { stake:"returned → staker", slice:`damage 0 → staker · <b style="color:var(--bad)">${usd(c.verifierSlice)} burned</b>`, burned:c.verifierSlice };
     case "OverturnedToPass": { const b=c.verifierSlice - c.arbiterFee; return { stake:"→ staker (corrected)", slice:`damage ${usd(c.arbiterFee)} → staker · <b style="color:var(--bad)">${usd(b)} burned</b>`, burned:b }; }
     case "OverturnedToFail": { const b=c.verifierSlice - c.arbiterFee; return { stake:"→ beneficiary (corrected)", slice:`damage ${usd(c.arbiterFee)} → beneficiary · <b style="color:var(--bad)">${usd(b)} burned</b>`, burned:b }; }
-    default: return { stake:"—", slice:"—", burned:0n };
+    default: return { stake:", ", slice:", ", burned:0n };
   }
 }
 
@@ -846,7 +846,7 @@ async function loadV2() {
     if (!liveRows) {
       tbody.innerHTML = `<tr><td colspan="5" class="empty" style="padding:22px;">No V2 commitments found at this address.</td></tr>`;
     } else {
-      // non-seeded §7a outcomes — routing mechanism only, not demoed (no on-chain proof for these rows)
+      // non-seeded §7a outcomes, routing mechanism only, not demoed (no on-chain proof for these rows)
       const MECH = [
         ["CleanFail", "→ beneficiary", "released to verifier · no burn"],
         ["UpheldFail (frivolous challenge)", "→ beneficiary", "challenger bond slashed · slice released"]
@@ -856,7 +856,7 @@ async function loadV2() {
         tr.style.borderBottom = "1px solid var(--line)";
         tr.style.opacity = "0.55";
         tr.innerHTML = `
-          <td style="padding:12px 8px; font-weight:600; color:var(--muted);">— mechanism</td>
+          <td style="padding:12px 8px; font-weight:600; color:var(--muted);">,  mechanism</td>
           <td style="padding:12px 8px;"><span class="badge">${oc}</span></td>
           <td style="padding:12px 8px; color:var(--muted);">${stake}</td>
           <td style="padding:12px 8px; color:var(--muted);">${slice}</td>

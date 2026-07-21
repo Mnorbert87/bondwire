@@ -54,11 +54,11 @@ On where this sits: ERC-8004 answers who an agent is and what job it took on. It
 
 ## 4. Run the 79-test suite (~2 min)
 
-This is exactly what CI runs ([the green run is here](https://github.com/Mnorbert87/arc-agentic-stack/actions/workflows/test.yml)). You need [Foundry](https://getfoundry.sh) and nothing else.
+This is exactly what CI runs ([the green run is here](https://github.com/Mnorbert87/bondwire/actions/workflows/test.yml)). You need [Foundry](https://getfoundry.sh) and nothing else.
 
 ```bash
-git clone https://github.com/Mnorbert87/arc-agentic-stack
-cd arc-agentic-stack/contracts/commit-stake-v2
+git clone https://github.com/Mnorbert87/bondwire
+cd bondwire/contracts/commit-stake-v2
 git clone --depth 1 --branch v1.16.1 https://github.com/foundry-rs/forge-std lib/forge-std
 forge test -vv
 ```
@@ -83,7 +83,7 @@ The suite compiles the real `agent-bond` and `stream-pay` from source, not vendo
 
 - RPC: `https://rpc.testnet.arc.network`. Explorer: `https://testnet.arcscan.app`.
 - USDC is the native gas token on Arc. Value transfers use the 6-decimal ERC-20 at `0x3600…0000`.
-- The live frontend (browse it, no wallet needed) is at https://mnorbert87.github.io/arc-agentic-stack/.
+- The live frontend (browse it, no wallet needed) is at https://mnorbert87.github.io/bondwire/.
 
 ---
 

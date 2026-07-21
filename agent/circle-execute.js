@@ -4,7 +4,7 @@
  * Circle Developer-Controlled Wallet instead of a local burner key. No private key on disk
  * touches the chain: Circle holds the key, we authorize via the registered Entity Secret.
  *
- * This runs one or more contract executions on the live Arc Agentic Stack:
+ * This runs one or more contract executions on the live Bondwire:
  *   approve  → StreamPay can pull the agent's USDC
  *   deposit  → AgentBond (build the credit score)
  *   createStream → StreamPay (open a pay-per-second stream)
@@ -15,7 +15,7 @@
  *
  *   CIRCLE_API_KEY        env, else ../../commit-stake/.env
  *   CIRCLE_ENTITY_SECRET  ./.secrets/.env
- *   CIRCLE_WALLET_ID      ./.secrets/.env   (wallet 0xdfda…f46b on ARC-TESTNET)
+ *   CIRCLE_WALLET_ID      ./.secrets/.env   (wallet 0xdfda…f46b on BONDWIRE-TESTNET)
  *   STEPS=approve         comma list: approve,deposit,stream,withdraw  (default: approve)
  */
 import fs from "node:fs";
