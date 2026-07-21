@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bonded Verifier, live on Arc, Bondwire</title>
+<meta name="description" content="Live CommitStakeV2 bonded-verifier flow on Arc testnet: create a staked commitment, verifier resolves, challenge window, arbiter rules, finalize. Every step is a real MetaMask tx settled in USDC, confirmed on arcscan. No backend." />
+<style>
+  :root{--bg:#0a0e17;--card:#111827;--card2:#1a2236;--border:#1f2d45;--text:#e2e8f0;--muted:#64748b;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5;padding:0 0 60px}
+  header{padding:18px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;background:rgba(10,14,23,.92);backdrop-filter:blur(8px);z-index:10}
+  header h1{font-size:16px;font-weight:800}
+  header .tag{font-size:11px;color:var(--muted)}
+  .wrap{max-width:960px;margin:0 auto;padding:24px 20px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:12px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+  input{background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;width:100%;font-family:inherit}
+  input:focus{outline:none;border-color:var(--blue)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fld{flex:1;min-width:160px}
+  button{background:var(--blue);color:#fff;border:0;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  button:hover{background:#2563eb}button:disabled{opacity:.45;cursor:not-allowed}
+  .btn-green{background:rgba(34,197,94,.16);color:var(--green);border:1px solid var(--green)}
+  .btn-red{background:rgba(239,68,68,.16);color:var(--red);border:1px solid var(--red)}
+  .btn-ghost{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+  .mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+  a{color:#5b8cff;text-decoration:none}a:hover{text-decoration:underline}
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;font-size:12px}
+  .kv b{color:var(--muted);font-weight:500}
+  .muted{color:var(--muted)}.green{color:var(--green)}.red{color:var(--red)}.yellow{color:var(--yellow)}
+  #log .item{padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--card2);font-size:12px}
+  .pill{display:inline-block;padding:1px 9px;border-radius:20px;font-size:11px;font-weight:700}
+  .note{font-size:12px;color:var(--muted);margin-top:8px}
+  .status-bar{font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Bondwire</h1>
+  <span class="tag">Bonded verifier · CommitStakeV2 · live on Arc testnet</span>
+  <span id="net" class="status-bar muted" style="margin-left:auto">not connected</span>
+  <button id="connect">Connect wallet</button>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>Contract</h2>
+    <div class="kv">
+      <b>CommitStakeV2</b><span><a id="csLink" target="_blank" class="mono"></a> · exact-match verified</span>
+      <b>USDC (gas + value)</b><span class="mono">0x3600000000000000000000000000000000000000</span>
+      <b>nextId</b><span id="nextId" class="mono">,</span>
+      <b>totalEscrowed</b><span id="totalEsc" class="mono">,</span>
+      <b>your USDC</b><span id="myUsdc" class="mono">,</span>
+    </div>
+    <p class="note">The bonded verifier settles a staked commitment: the verifier posts its own slashable AgentBond bond, so trusting its verdict reduces to trusting a party with real money on the line. If a colluding verifier lies, the surplus burns. Every button below writes a real tx to the live contract.</p>
+  </div>
+
+  <div class="card">
+    <h2>Step 0 · Bond the verifier (prerequisite)</h2>
+    <p class="note" style="margin-top:0">CommitStakeV2 can only lock a verifier's slice if that verifier has an AgentBond bond and has granted CommitStakeV2 a slash allowance. Run this once for the wallet you will use as the verifier.</p>
+    <div class="row">
+      <div class="fld"><label>Bond deposit (USDC)</label><input id="bondAmt" value="5" /></div>
+      <div class="fld" style="align-self:flex-end"><button id="btnBond" class="btn-green">Approve + deposit + allow CommitStakeV2</button></div>
+    </div>
+    <div class="kv"><b>your free bond</b><span id="freeBond" class="mono">,</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Step 1 · Create a staked commitment</h2>
+    <div class="grid2">
+      <div class="fld"><label>Verifier (bonded wallet)</label><input id="verifier" placeholder="0x… (defaults to you)" /></div>
+      <div class="fld"><label>Beneficiary (paid if agent defaults)</label><input id="beneficiary" placeholder="0x… (defaults to you)" /></div>
+      <div class="fld"><label>Arbiter (rules on a challenge)</label><input id="arbiter" placeholder="0x… (defaults to you)" /></div>
+      <div class="fld"><label>Stake amount (USDC)</label><input id="amount" value="10" /></div>
+      <div class="fld"><label>Verifier slice (USDC, slashable)</label><input id="slice" value="1.5" /></div>
+      <div class="fld"><label>Challenge bond (USDC)</label><input id="chBond" value="1" /></div>
+      <div class="fld"><label>Arbiter fee (USDC)</label><input id="arbFee" value="0.5" /></div>
+      <div class="fld"><label>Challenge window (seconds)</label><input id="chWin" value="120" /></div>
+    </div>
+    <div class="fld" style="margin-top:6px"><label>Goal / deliverable</label><input id="goal" value="Deliver the research brief agreed off-chain" /></div>
+    <div class="row" style="margin-top:12px"><button id="btnCreate">Approve stake + create commitment</button>
+      <span class="note">verifier deadline +1h, arbiter deadline +1h from challenge, fee stream off for this demo.</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Step 2 · Inspect &amp; act on a commitment</h2>
+    <div class="row"><div class="fld" style="max-width:160px"><label>Commitment id</label><input id="inspectId" value="0" /></div>
+      <div style="align-self:flex-end"><button id="btnLoad" class="btn-ghost">Load state</button></div>
+      <span id="stPill"></span></div>
+    <div id="stateBox" class="kv" style="margin-top:6px"></div>
+    <div class="row" style="margin-top:14px;gap:8px">
+      <button id="aResolvePass" class="btn-green">Verifier: resolve PASS</button>
+      <button id="aResolveFail" class="btn-red">Verifier: resolve FAIL</button>
+      <button id="aChallenge" class="btn-ghost">Challenge (pay bond)</button>
+      <button id="aArbOver" class="btn-ghost">Arbiter: OVERTURN</button>
+      <button id="aArbUphold" class="btn-ghost">Arbiter: UPHOLD</button>
+      <button id="aFinalize">Finalize</button>
+    </div>
+  </div>
+
+  <div class="card"><h2>Transactions</h2><div id="log"><span class="muted">Actions appear here with an arcscan link.</span></div></div>
+
+</div>
+
+<script type="module">
+import { ethers } from "https://esm.sh/ethers@6.13.4";
+
+const CHAIN_ID = 5042002, CHAIN_HEX = "0x4cef52";
+const RPC = "https://rpc.testnet.arc.network";
+const EXPLORER = "https://testnet.arcscan.app";
+const ADDR = {
+  CommitStakeV2: "0x1f1CA31bC36a95a3909628F1bA97970E20698CA9",
+  AgentBond:     "0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0",
+  USDC:          "0x3600000000000000000000000000000000000000",
+};
+const CS_ABI = [
+  "function create((address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint64 deadline,uint64 challengeWindow,uint256 challengeBond,uint64 arbiterDeadline,uint256 arbiterFee,uint256 feeDeposit,uint64 feeStart,uint64 feeStop,string goal) p) returns (uint256)",
+  "function resolve(uint256 id, bool passed)",
+  "function challenge(uint256 id)",
+  "function arbitrate(uint256 id, bool overturn)",
+  "function finalize(uint256 id)",
+  "function nextId() view returns (uint256)",
+  "function totalEscrowed() view returns (uint256)",
+  "function get(uint256 id) view returns (tuple(address staker,address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint256 bondObligationId,uint256 challengeBond,uint256 challengeBondPaid,uint256 arbiterFee,uint256 feeStreamId,uint64 deadline,uint64 challengeWindow,uint64 arbiterDeadline,uint64 resolvedAt,uint64 challengedAt,bool resolvedPass,uint8 status,uint8 outcome))",
+];
+const BOND_ABI = [
+  "function deposit(uint256 amount)",
+  "function setSlashAllowance(address enforcer, uint256 amount)",
+  "function freeBondOf(address) view returns (uint256)",
+];
+const ERC20_ABI = [
+  "function approve(address,uint256) returns (bool)",
+  "function allowance(address,address) view returns (uint256)",
+  "function balanceOf(address) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+];
+const STATUS = ["Open (awaiting verify)","Resolved (challenge window)","Challenged (awaiting arbiter)","Finalized"];
+const OUTCOME = [", ","Passed, stake released","Failed, stake to beneficiary","Overturned by arbiter"];
+
+let provider, signer, me, ro;
+const $ = (id)=>document.getElementById(id);
+const usdc = (n)=> (Number(n)/1e6).toLocaleString(undefined,{maximumFractionDigits:6});
+const toU = (s)=> BigInt(Math.round(parseFloat(s||"0")*1e6));
+const short = (a)=> a? a.slice(0,6)+"…"+a.slice(-4):",";
+function logTx(label, hash){
+  const el=$("log"); if(el.querySelector(".muted")) el.innerHTML="";
+  const d=document.createElement("div"); d.className="item";
+  d.innerHTML=`${label} · <a href="${EXPLORER}/tx/${hash}" target="_blank" class="mono">${hash.slice(0,18)}…</a> <span class="muted">confirming…</span>`;
+  el.prepend(d); return d;
+}
+$("csLink").href = `${EXPLORER}/address/${ADDR.CommitStakeV2}`;
+$("csLink").textContent = ADDR.CommitStakeV2;
+
+async function readOnly(){ if(!ro) ro = new ethers.JsonRpcProvider(RPC); return ro; }
+async function refresh(){
+  try{
+    const p = await readOnly();
+    const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, p);
+    $("nextId").textContent = (await cs.nextId()).toString();
+    $("totalEsc").textContent = usdc(await cs.totalEscrowed()) + " USDC";
+    if(me){
+      const u = new ethers.Contract(ADDR.USDC, ERC20_ABI, p);
+      $("myUsdc").textContent = usdc(await u.balanceOf(me)) + " USDC";
+      const b = new ethers.Contract(ADDR.AgentBond, BOND_ABI, p);
+      $("freeBond").textContent = usdc(await b.freeBondOf(me)) + " USDC";
+    }
+  }catch(e){ console.warn(e); }
+}
+
+$("connect").onclick = async ()=>{
+  if(!window.ethereum){ alert("Install MetaMask to write transactions. (State is still readable.)"); return; }
+  provider = new ethers.BrowserProvider(window.ethereum);
+  await provider.send("eth_requestAccounts", []);
+  const net = await provider.getNetwork();
+  if(Number(net.chainId)!==CHAIN_ID){
+    try{ await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CHAIN_HEX}]}); }
+    catch{ await window.ethereum.request({method:"wallet_addEthereumChain",params:[{chainId:CHAIN_HEX,chainName:"Arc Testnet",rpcUrls:[RPC],nativeCurrency:{name:"USDC",symbol:"USDC",decimals:18},blockExplorerUrls:[EXPLORER]}]}); }
+    provider = new ethers.BrowserProvider(window.ethereum);
+  }
+  signer = await provider.getSigner(); me = await signer.getAddress();
+  $("net").textContent = "Arc testnet · " + short(me); $("net").className="status-bar green";
+  $("connect").textContent = "Connected";
+  refresh();
+};
+
+async function ensureApprove(spender, amount){
+  const u = new ethers.Contract(ADDR.USDC, ERC20_ABI, signer);
+  const cur = await u.allowance(me, spender);
+  if(cur < amount){ const tx = await u.approve(spender, amount); const d=logTx("approve USDC", tx.hash); await tx.wait(); d.querySelector(".muted").textContent="✓"; }
+}
+function need(){ if(!signer){ alert("Connect your wallet first."); return false; } return true; }
+async function done(d){ d.querySelector(".muted").textContent="✓ confirmed"; d.querySelector(".muted").className="green"; refresh(); }
+
+$("btnBond").onclick = async ()=>{ if(!need())return;
+  try{ const amt = toU($("bondAmt").value);
+    await ensureApprove(ADDR.AgentBond, amt);
+    const b = new ethers.Contract(ADDR.AgentBond, BOND_ABI, signer);
+    let tx = await b.deposit(amt); let d=logTx("AgentBond.deposit", tx.hash); await tx.wait(); await done(d);
+    tx = await b.setSlashAllowance(ADDR.CommitStakeV2, ethers.MaxUint256); d=logTx("setSlashAllowance CommitStakeV2", tx.hash); await tx.wait(); await done(d);
+  }catch(e){ alert("Failed: "+(e.shortMessage||e.message)); }
+};
+
+$("btnCreate").onclick = async ()=>{ if(!need())return;
+  try{
+    const now = Math.floor(Date.now()/1000);
+    const p = {
+      verifier: $("verifier").value.trim()||me, beneficiary: $("beneficiary").value.trim()||me, arbiter: $("arbiter").value.trim()||me,
+      amount: toU($("amount").value), verifierSlice: toU($("slice").value),
+      deadline: BigInt(now+3600), challengeWindow: BigInt(parseInt($("chWin").value||"120")),
+      challengeBond: toU($("chBond").value), arbiterDeadline: BigInt(3600),
+      arbiterFee: toU($("arbFee").value), feeDeposit: 0n, feeStart: 0n, feeStop: 0n, goal: $("goal").value,
+    };
+    await ensureApprove(ADDR.CommitStakeV2, p.amount + p.arbiterFee + p.feeDeposit);
+    const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, signer);
+    const tx = await cs.create(p); const d=logTx("create commitment", tx.hash);
+    const rc = await tx.wait(); await done(d);
+    const cs2 = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, await readOnly());
+    const id = (await cs2.nextId()) - 1n; $("inspectId").value = id.toString();
+    d.innerHTML += ` <span class="green">→ id ${id}</span>`; loadState();
+  }catch(e){ alert("Create failed: "+(e.shortMessage||e.message)+"  (verifier must be bonded, see Step 0)"); }
+};
+
+async function loadState(){
+  try{
+    const id = BigInt($("inspectId").value||"0");
+    const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, await readOnly());
+    const c = await cs.get(id);
+    const st = Number(c.status), oc = Number(c.outcome);
+    const colors=["yellow","blue","red","green"];
+    $("stPill").innerHTML = `<span class="pill" style="background:rgba(59,130,246,.15)">${STATUS[st]||("status "+st)}</span>`;
+    $("stateBox").innerHTML = [
+      ["staker", short(c.staker)],["verifier", short(c.verifier)],["beneficiary", short(c.beneficiary)],["arbiter", short(c.arbiter)],
+      ["stake", usdc(c.amount)+" USDC"],["verifier slice", usdc(c.verifierSlice)+" USDC"],["challenge bond", usdc(c.challengeBond)+" USDC"],
+      ["arbiter fee", usdc(c.arbiterFee)+" USDC"],["goal", c.goal],
+      ["resolved", c.resolvedAt>0n? (c.resolvedPass?"PASS":"FAIL") : "no"],["outcome", OUTCOME[oc]||("outcome "+oc)],
+    ].map(([k,v])=>`<b>${k}</b><span class="mono">${v}</span>`).join("");
+  }catch(e){ $("stateBox").innerHTML=`<span class="red">not found or read error: ${e.shortMessage||e.message}</span>`; }
+}
+$("btnLoad").onclick = loadState;
+
+function action(fn){ return async ()=>{ if(!need())return;
+  try{ const id = BigInt($("inspectId").value||"0"); const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, signer);
+    const {tx,label} = await fn(cs,id); const d=logTx(label, tx.hash); await tx.wait(); await done(d); loadState();
+  }catch(e){ alert("Failed: "+(e.shortMessage||e.message)); } };
+}
+$("aResolvePass").onclick = action(async (cs,id)=>({tx:await cs.resolve(id,true),  label:"resolve PASS"}));
+$("aResolveFail").onclick = action(async (cs,id)=>({tx:await cs.resolve(id,false), label:"resolve FAIL"}));
+$("aChallenge").onclick   = action(async (cs,id)=>{ const c=await cs.get(id); if(c.challengeBond>0n) await ensureApprove(ADDR.CommitStakeV2,c.challengeBond); return {tx:await cs.challenge(id),label:"challenge"}; });
+$("aArbOver").onclick     = action(async (cs,id)=>({tx:await cs.arbitrate(id,true),  label:"arbitrate OVERTURN"}));
+$("aArbUphold").onclick   = action(async (cs,id)=>({tx:await cs.arbitrate(id,false), label:"arbitrate UPHOLD"}));
+$("aFinalize").onclick    = action(async (cs,id)=>({tx:await cs.finalize(id),        label:"finalize"}));
+
+refresh(); setInterval(refresh, 15000);
+</script>
+</body>
+</html>

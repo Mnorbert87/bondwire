@@ -23,6 +23,7 @@ trust-and-pay rail for autonomous agents.
 
 - **Hub:** https://mnorbert87.github.io/bondwire/
 - **Use case, hire an AI service agent:** https://mnorbert87.github.io/bondwire/use-case/
+- **Bonded verifier (live CommitStakeV2 flow):** https://mnorbert87.github.io/bondwire/bonded-verifier/ , create a staked commitment, verifier resolves, challenge window, arbiter rules, finalize. Every step is a real MetaMask tx confirmed on arcscan.
 - **AgentBond:** https://mnorbert87.github.io/bondwire/agent-bond/
 - **StreamPay:** https://mnorbert87.github.io/bondwire/stream-pay/
 - **x402 pay-per-call demo (runnable):** [`x402-demo/`](./x402-demo/), agent pays an API over HTTP `402`, settled per second on StreamPay. [Verified tx transcript](./x402-demo/SAMPLE_RUN.md).
