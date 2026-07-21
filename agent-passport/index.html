@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agent Passport, portable agent reputation on Arc | Bondwire</title>
+<meta name="description" content="Portable, verifiable reputation for autonomous agents on Arc. Reads the deployed AgentBond contract and scores any agent address by bond depth, completed obligations, and slashing history. Read only, no wallet needed." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060912; --bg-2: #0a0f1e; --ink: #eef3fb; --muted: #8c98af; --faint: #525d72;
+    --line: rgba(255,255,255,0.065); --line-2: rgba(122,170,255,0.20);
+    --glass: rgba(255,255,255,0.022); --glass-2: rgba(255,255,255,0.05);
+    --c1: #4da2ff; --c2: #56cfe1; --c3: #2f6bff;
+    --good: #4fd6a8; --bad: #ff7a7a; --warn: #ffc266; --gold: #ffd479;
+    --r: 16px; --ease: cubic-bezier(.22,.61,.36,1); font-synthesis: none;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
+  body { margin: 0; color: var(--ink); background: var(--bg);
+    font-family: "Inter", system-ui, sans-serif; -webkit-font-smoothing: antialiased; line-height: 1.55; overflow-x: hidden; }
+  a { color: inherit; }
+  .aurora { position: fixed; inset: 0; z-index: -2; overflow: hidden;
+    background:
+      radial-gradient(1000px 560px at 50% -10%, rgba(77,162,255,0.18), transparent 60%),
+      radial-gradient(760px 540px at 88% 112%, rgba(47,107,255,0.14), transparent 60%),
+      var(--bg); }
+  .grain { position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .4;
+    background-image:
+      linear-gradient(rgba(122,170,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(122,170,255,0.05) 1px, transparent 1px);
+    background-size: 56px 56px; background-position: center;
+    -webkit-mask-image: radial-gradient(circle at 50% 18%, #000 0%, transparent 74%);
+    mask-image: radial-gradient(circle at 50% 18%, #000 0%, transparent 74%); }
+
+  header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 14px 26px; border-bottom: 1px solid var(--line); background: rgba(5,7,15,0.55); backdrop-filter: blur(20px) saturate(150%); }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 36px; height: 36px; border-radius: 11px; background: linear-gradient(135deg, var(--c1), var(--c2));
+    display: grid; place-items: center; box-shadow: 0 8px 24px rgba(91,140,255,0.45), inset 0 0 0 1px rgba(255,255,255,0.25); }
+  .logo svg { width: 20px; height: 20px; }
+  .brand h1 { font-family: "Space Grotesk"; font-size: 16px; margin: 0; letter-spacing: -.2px; font-weight: 600; }
+  .brand small { color: var(--muted); font-size: 11px; display: block; }
+  .header-actions { display: flex; align-items: center; gap: 12px; }
+  .net-badge { font-size: 11px; color: var(--c2); display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; background: var(--glass); }
+  .net-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 8px currentColor; }
+  .nav-cta { font: inherit; font-weight: 600; cursor: pointer; border-radius: 11px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--glass); padding: 9px 15px; text-decoration: none; font-size: 13px; white-space: nowrap; }
+  .nav-cta:hover { color: var(--ink); }
+  @media (max-width: 600px) {
+    header { padding: 11px 14px; }
+    header .net-badge { display: none; }
+    .brand small { display: none; }
+  }
+
+  main { max-width: 880px; margin: 0 auto; padding: 46px 20px 90px; }
+  .hero { text-align: center; margin-bottom: 30px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--c2); border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 14px; background: var(--glass); margin-bottom: 18px; }
+  .hero h2 { font-family: "Space Grotesk"; font-weight: 700; font-size: clamp(28px, 5vw, 46px); line-height: 1.08; margin: 0 0 14px;
+    background: linear-gradient(180deg, #fff, #b8c6de); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { color: var(--muted); font-size: clamp(15px, 2vw, 18px); max-width: 620px; margin: 0 auto; }
+
+  .searchbar { display: flex; gap: 10px; margin: 26px auto 8px; max-width: 660px; flex-wrap: wrap; }
+  .searchbar input { flex: 1; min-width: 240px; font: inherit; font-size: 15px; color: var(--ink); background: var(--bg-2);
+    border: 1px solid var(--line-2); border-radius: 13px; padding: 15px 17px; outline: none; font-family: "Space Grotesk", monospace; }
+  .searchbar input:focus { border-color: var(--c1); box-shadow: 0 0 0 3px rgba(77,162,255,0.15); }
+  .searchbar button { font: inherit; font-weight: 600; cursor: pointer; border-radius: 13px; border: none; color: #04111f;
+    background: linear-gradient(135deg, var(--c2), var(--c1)); padding: 15px 24px; font-size: 15px;
+    box-shadow: 0 10px 28px rgba(54,160,255,0.32); transition: .2s var(--ease); }
+  .searchbar button:hover { filter: brightness(1.07); transform: translateY(-1px); }
+  .searchbar button:disabled { opacity: .55; cursor: wait; transform: none; }
+  .hint { text-align: center; color: var(--faint); font-size: 12.5px; margin-top: 4px; }
+  .hint a { color: var(--c2); text-decoration: none; } .hint a:hover { text-decoration: underline; }
+
+  .status { text-align: center; color: var(--muted); font-size: 14px; margin: 30px 0; min-height: 20px; }
+  .status.err { color: var(--bad); }
+
+  /* Passport card */
+  .passport { display: none; margin-top: 28px; border-radius: 22px; overflow: hidden; border: 1px solid var(--line-2);
+    background: linear-gradient(180deg, rgba(16,22,38,0.9), rgba(8,11,22,0.94)); box-shadow: 0 30px 80px rgba(0,0,0,0.45); }
+  .passport.show { display: block; animation: rise .5s var(--ease); }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .pp-top { display: flex; align-items: center; gap: 18px; padding: 24px 26px; border-bottom: 1px solid var(--line);
+    background: radial-gradient(120% 140% at 0% 0%, rgba(77,162,255,0.12), transparent 60%); }
+  .score-ring { width: 92px; height: 92px; flex: none; border-radius: 50%; display: grid; place-items: center; position: relative; }
+  .score-ring b { font-family: "Space Grotesk"; font-size: 30px; font-weight: 700; }
+  .score-ring small { position: absolute; bottom: 15px; font-size: 9px; color: var(--faint); letter-spacing: .1em; }
+  .pp-id { flex: 1; min-width: 0; }
+  .pp-id .tier { font-family: "Space Grotesk"; font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 9px; }
+  .pp-id .addr { font-family: "Space Grotesk", monospace; font-size: 13px; color: var(--muted); margin-top: 4px; word-break: break-all; }
+  .pp-id .addr a { color: var(--c2); text-decoration: none; }
+  .badge-pill { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px; letter-spacing: .04em; }
+
+  .pp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); }
+  .pp-grid .cell { background: var(--bg-2); padding: 18px 20px; }
+  .pp-grid .cell .k { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: .08em; }
+  .pp-grid .cell .v { font-family: "Space Grotesk"; font-size: 23px; font-weight: 600; margin-top: 5px; }
+  .pp-grid .cell .v small { font-size: 12px; color: var(--muted); font-weight: 400; }
+  @media (max-width: 640px) { .pp-grid { grid-template-columns: repeat(2, 1fr); } .pp-top { flex-direction: column; text-align: center; } }
+
+  .pp-breakdown { padding: 20px 26px; border-top: 1px solid var(--line); }
+  .pp-breakdown h4 { margin: 0 0 12px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 9px; font-size: 13px; }
+  .bar-row .lbl { width: 130px; color: var(--muted); flex: none; }
+  .bar-track { flex: 1; height: 8px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--c1), var(--c2)); }
+  .bar-row .pts { width: 62px; text-align: right; font-family: "Space Grotesk"; color: var(--ink); flex: none; }
+
+  .pp-foot { padding: 16px 26px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    font-size: 12px; color: var(--faint); }
+  .pp-foot .src { display: flex; gap: 7px; align-items: center; }
+  .pp-foot code { color: var(--c2); font-family: "Space Grotesk", monospace; }
+
+  .how { margin-top: 40px; border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; background: var(--glass); }
+  .how h3 { margin: 0 0 10px; font-family: "Space Grotesk"; font-size: 16px; }
+  .how p, .how li { color: var(--muted); font-size: 14px; }
+  .how code { color: var(--c2); font-family: "Space Grotesk", monospace; font-size: 13px; }
+  footer { text-align: center; color: var(--faint); font-size: 12.5px; padding: 40px 20px; }
+  footer a { color: var(--c2); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="aurora"></div><div class="grain"></div>
+
+<header>
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4z" stroke="#04111f" stroke-width="2" stroke-linejoin="round"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#04111f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div><h1>Bondwire</h1><small>Agent Passport</small></div>
+  </div>
+  <div class="header-actions">
+    <span class="net-badge"><span class="dot"></span>Arc Testnet</span>
+    <a class="nav-cta" href="../">All dApps</a>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <span class="eyebrow">Portable agent reputation</span>
+    <h2>Agent Passport</h2>
+    <p>A portable, verifiable reputation score for any autonomous agent on Arc. Sourced live from the onchain AgentBond contract, no wallet, no signup, no trust in us. Paste an agent address and read its track record straight from the chain.</p>
+  </div>
+
+  <div class="searchbar">
+    <input id="addr" spellcheck="false" placeholder="0x agent address" autocomplete="off" />
+    <button id="go">Look up</button>
+  </div>
+  <div class="hint">Try the seeded demo agent: <a href="#" id="demoLink">0x2e36…A08a</a> &nbsp;·&nbsp; read only, runs entirely in your browser</div>
+
+  <div class="status" id="status"></div>
+
+  <div class="passport" id="passport">
+    <div class="pp-top">
+      <div class="score-ring" id="ring"><b id="scoreNum">0</b><small>SCORE</small></div>
+      <div class="pp-id">
+        <div class="tier"><span id="tierName">—</span><span class="badge-pill" id="tierPill"></span></div>
+        <div class="addr" id="ppAddr"></div>
+      </div>
+    </div>
+    <div class="pp-grid">
+      <div class="cell"><div class="k">Active bond</div><div class="v"><span id="mBond">0</span> <small>USDC</small></div></div>
+      <div class="cell"><div class="k">Reliability</div><div class="v" id="mRel">—</div></div>
+      <div class="cell"><div class="k">Completed</div><div class="v" id="mDone">0</div></div>
+      <div class="cell"><div class="k">Slashed</div><div class="v" id="mSlash">0</div></div>
+    </div>
+    <div class="pp-breakdown">
+      <h4>Score breakdown (transparent, recomputable from chain)</h4>
+      <div class="bar-row"><span class="lbl">Reliability</span><div class="bar-track"><div class="bar-fill" id="barRel"></div></div><span class="pts" id="ptsRel">0 / 55</span></div>
+      <div class="bar-row"><span class="lbl">Bond depth</span><div class="bar-track"><div class="bar-fill" id="barBond"></div></div><span class="pts" id="ptsBond">0 / 30</span></div>
+      <div class="bar-row"><span class="lbl">Track record</span><div class="bar-track"><div class="bar-fill" id="barRec"></div></div><span class="pts" id="ptsRec">0 / 15</span></div>
+    </div>
+    <div class="pp-foot">
+      <div class="src">Source: AgentBond <code id="srcAddr"></code></div>
+      <a id="explorerLink" href="#" target="_blank" style="color:var(--c2);text-decoration:none;">Verify on arcscan ↗</a>
+    </div>
+  </div>
+
+  <div class="how">
+    <h3>How the score works</h3>
+    <p>Every number comes from the deployed AgentBond contract on Arc testnet, read live in your browser. There is no backend and no database. An agent earns reputation the only way that matters in an escrow economy: by putting up a bond and completing obligations without being slashed.</p>
+    <ul>
+      <li><b>Reliability (0 to 55):</b> completed obligations divided by completed plus slashed. A single slash is heavily penalized.</li>
+      <li><b>Bond depth (0 to 30):</b> current active bond, capped at 500 USDC. Skin in the game.</li>
+      <li><b>Track record (0 to 15):</b> total obligations taken on, capped at 10. Tenure and volume.</li>
+    </ul>
+    <p>Tiers: <b>Trusted</b> (80+, never slashed), <b>Established</b> (55+), <b>New</b> (active, thin history), <b>Flagged</b> (any slash on record). The passport is composable: any Arc contract or agent can read the same AgentBond state and reach the same verdict.</p>
+  </div>
+</main>
+
+<footer>
+  Bondwire · trust and settlement primitives for autonomous agents on Arc ·
+  <a href="../">dApps</a> · <a href="https://github.com/Mnorbert87/bondwire" target="_blank">GitHub</a>
+</footer>
+
+<script type="module">
+import { ethers } from "https://esm.sh/ethers@6.13.4";
+
+const CHAIN = { rpc: "https://rpc.testnet.arc.network", explorer: "https://testnet.arcscan.app" };
+const AGENT_BOND = "0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0";
+const DEMO = "0x2e36F4037E711e1d4c853BBCBF7F526B3714A08a";
+// Reputation is read by ENUMERATING obligations, not by scanning event logs: the Arc RPC
+// caps eth_getLogs at a 10k block range and the chain is 50M+ blocks deep, so a full-history
+// log scan is infeasible in the browser. getObligation(id) is a single eth_call at any chain
+// depth. Obligation status: 1=Active, 2=Released (completed), 3=Slashed (defaulted).
+const ABI = [
+  "function bond(address) view returns (uint256)",
+  "function locked(address) view returns (uint256)",
+  "function freeBondOf(address) view returns (uint256)",
+  "function nextObligationId() view returns (uint256)",
+  "function getObligation(uint256 id) view returns (tuple(address agent, address enforcer, address creditor, uint256 amount, uint64 deadline, uint8 status))"
+];
+
+// Multicall3 (canonical address, deployed on Arc testnet) lets us fetch every obligation in a
+// SINGLE eth_call — fast, and it sidesteps the public RPC's rejection of concurrent requests.
+const MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11";
+const MC_ABI = ["function aggregate3(tuple(address target, bool allowFailure, bytes callData)[] calls) view returns (tuple(bool success, bytes returnData)[])"];
+
+const provider = new ethers.JsonRpcProvider(CHAIN.rpc, undefined, { staticNetwork: true });
+const bond = new ethers.Contract(AGENT_BOND, ABI, provider);
+const multicall = new ethers.Contract(MULTICALL3, MC_ABI, provider);
+const bondIface = new ethers.Interface(ABI);
+const $ = (id) => document.getElementById(id);
+const fmtUsdc = (raw) => (Number(raw) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 });
+
+$("srcAddr").textContent = AGENT_BOND.slice(0, 8) + "…" + AGENT_BOND.slice(-4);
+
+function setStatus(msg, err = false) { const s = $("status"); s.textContent = msg; s.className = "status" + (err ? " err" : ""); }
+
+// Fetch every obligation (ids 1..next-1) via Multicall3 and tally the ones for this agent.
+// getObligation is a single view at any chain depth (unlike getLogs, which the RPC caps at 10k
+// blocks); Multicall3 batches them so the whole history is 1..few eth_calls regardless of volume.
+async function history(agent) {
+  const next = Number(await bond.nextObligationId());
+  const CAP = 5000;
+  const last = Math.min(next - 1, CAP);
+  const a = agent.toLowerCase();
+  let taken = 0, done = 0, slashed = 0, active = 0, slashedAmt = 0n;
+  const CHUNK = 400;                                   // obligations per multicall (response-size safe)
+  for (let start = 1; start <= last; start += CHUNK) {
+    const calls = [];
+    for (let i = start; i <= Math.min(start + CHUNK - 1, last); i++)
+      calls.push({ target: AGENT_BOND, allowFailure: true, callData: bondIface.encodeFunctionData("getObligation", [i]) });
+    const res = await multicall.aggregate3(calls);
+    for (const r of res) {
+      if (!r.success) continue;
+      const o = bondIface.decodeFunctionResult("getObligation", r.returnData)[0];
+      if (o.agent.toLowerCase() !== a) continue;
+      taken++;
+      const st = Number(o.status);
+      if (st === 2) done++;
+      else if (st === 3) { slashed++; slashedAmt += o.amount; }
+      else if (st === 1) active++;
+    }
+  }
+  return { taken, done, slashed, active, slashedAmt, truncated: next - 1 > CAP };
+}
+
+function score({ bondRaw, done, slashed, taken }) {
+  const settled = done + slashed;
+  const reliability = settled > 0 ? done / settled : null;   // null = no closed obligations yet
+  const relPts = reliability === null ? 0 : reliability * 55;
+  const bondUsdc = Number(bondRaw) / 1e6;
+  const bondPts = Math.min(bondUsdc / 500, 1) * 30;
+  const recPts = Math.min(taken / 10, 1) * 15;
+  const total = Math.round(relPts + bondPts + recPts);
+  let tier, color;
+  if (slashed > 0 && (reliability === null || reliability < 0.75)) { tier = "Flagged"; color = "var(--bad)"; }
+  else if (total >= 80 && slashed === 0) { tier = "Trusted"; color = "var(--good)"; }
+  else if (total >= 55) { tier = "Established"; color = "var(--c2)"; }
+  else { tier = "New"; color = "var(--warn)"; }
+  return { total, tier, color, reliability, relPts, bondPts, recPts, bondUsdc };
+}
+
+async function lookup(agent) {
+  if (!ethers.isAddress(agent)) { setStatus("That is not a valid address.", true); return; }
+  agent = ethers.getAddress(agent);
+  $("passport").classList.remove("show");
+  $("go").disabled = true; setStatus("Reading AgentBond on Arc testnet…");
+  try {
+    const bondRaw = await bond.bond(agent);   // sequential: the Arc public RPC rejects concurrent calls
+    const h = await history(agent);
+    const s = score({ bondRaw, done: h.done, slashed: h.slashed, taken: h.taken });
+
+    $("scoreNum").textContent = s.total;
+    $("ring").style.background = `conic-gradient(${s.color} ${s.total * 3.6}deg, rgba(255,255,255,0.06) 0deg)`;
+    $("ring").style.boxShadow = `inset 0 0 0 6px var(--bg-2)`;
+    $("tierName").textContent = s.tier;
+    const pill = $("tierPill"); pill.textContent = h.slashed > 0 ? h.slashed + " slash on record" : (h.done + h.slashed === 0 ? "no closed obligations" : "verified onchain");
+    pill.style.background = "color-mix(in srgb, " + s.color + " 18%, transparent)"; pill.style.color = s.color;
+    $("ppAddr").innerHTML = `<a href="${CHAIN.explorer}/address/${agent}" target="_blank">${agent}</a>`;
+    $("mBond").textContent = fmtUsdc(bondRaw);
+    $("mRel").textContent = s.reliability === null ? "—" : Math.round(s.reliability * 100) + "%";
+    $("mDone").textContent = h.done;
+    $("mSlash").innerHTML = h.slashed + (h.slashed ? ` <small style="color:var(--bad)">(${fmtUsdc(h.slashedAmt)} USDC)</small>` : "");
+
+    const setBar = (bar, pts, cap, ptsEl) => { $(bar).style.width = (pts / cap * 100) + "%"; $(ptsEl).textContent = Math.round(pts) + " / " + cap; };
+    setBar("barRel", s.relPts, 55, "ptsRel");
+    setBar("barBond", s.bondPts, 30, "ptsBond");
+    setBar("barRec", s.recPts, 15, "ptsRec");
+    $("explorerLink").href = `${CHAIN.explorer}/address/${agent}`;
+
+    $("passport").classList.add("show");
+    setStatus(h.taken === 0 && Number(bondRaw) === 0
+      ? "This address has never bonded on AgentBond, a fresh and unproven agent." : "");
+  } catch (e) {
+    console.error(e);
+    setStatus("Could not read the chain (" + (e.shortMessage || e.message || "RPC error") + "). The public Arc RPC rate limits; try again in a moment.", true);
+  } finally { $("go").disabled = false; }
+}
+
+$("go").onclick = () => lookup($("addr").value.trim());
+$("addr").addEventListener("keydown", (e) => { if (e.key === "Enter") lookup($("addr").value.trim()); });
+$("demoLink").onclick = (e) => { e.preventDefault(); $("addr").value = DEMO; lookup(DEMO); };
+</script>
+</body>
+</html>
