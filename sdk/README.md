@@ -8,7 +8,7 @@ trust), [`StreamPay`](https://mnorbert87.github.io/bondwire/stream-pay/)
 (chain `5042002`). Includes the Agent Passport reputation score as a single call.
 
 Addresses, chain id, and USDC's 6 decimals are baked in. You pass human USDC amounts
-(`"10"` = 10 USDC); the SDK handles micro-USDC conversion and approvals.
+(`"10"` = 10 USDC); the SDK handles six decimal unit conversion and approvals.
 
 ```bash
 npm i ethers
@@ -30,7 +30,7 @@ import { Bondwire } from "./bondwire.js";
 const agent  = new ethers.Wallet(process.env.AGENT_KEY, Bondwire.provider());
 const arc    = new Bondwire(agent);
 
-await arc.bond("5");                                  // post 5 USDC of skin-in-the-game
+await arc.bond("5");                                  // post 5 USDC of skin in the game
 const { id } = await arc.createStream(CLIENT_ADDR, "2", { durationSeconds: 3600, memo: "api work" });
 console.log("free bond:", (await arc.freeBondOf(agent.address)).usdc);
 console.log("stream", id, (await arc.getStream(id)).streamedPct + "% streamed");
@@ -51,7 +51,7 @@ const ro  = Bondwire.readOnly();              // read straight off the public RP
 
 | Method | What it does |
 |---|---|
-| `bond(amount)` | Post / top up your bond (approves USDC for you USDC). |
+| `bond(amount)` | Post / top up your bond (approves USDC for you). |
 | `unbond(amount)` | Withdraw free (unlocked) bond. |
 | `setSlashAllowance(enforcer, amount)` | Let an enforcer contract lock/slash up to `amount` of your bond. |
 | `lock(agent, creditor, amount, deadline?)` | *(enforcer)* Lock bond behind an obligation → `{ id, receipt }`. |
