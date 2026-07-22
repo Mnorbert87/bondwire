@@ -61,7 +61,7 @@
 
   <div class="card">
     <h2>Step 0 · Bond the verifier (prerequisite)</h2>
-    <p class="note" style="margin-top:0">CommitStakeV2 can only lock a verifier's slice if that verifier has an AgentBond bond and has granted CommitStakeV2 a slash allowance. Run this once for the wallet you will use as the verifier.</p>
+    <p class="note" style="margin-top:0">CommitStakeV2 can only lock a verifier's slice if that verifier has an AgentBond bond and has granted CommitStakeV2 a slash allowance. This button grants an UNLIMITED allowance so the same verifier can serve many commitments without approving again; it lets only this one escrow contract lock and slash your bond, capped by your actual bonded balance. Run it once for the wallet you will use as the verifier. To bound it, call setSlashAllowance with a fixed number instead.</p>
     <div class="row">
       <div class="fld"><label>Bond deposit (USDC)</label><input id="bondAmt" value="5" /></div>
       <div class="fld" style="align-self:flex-end"><button id="btnBond" class="btn-green">Approve + deposit + allow CommitStakeV2</button></div>
