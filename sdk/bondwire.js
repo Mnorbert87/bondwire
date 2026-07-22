@@ -24,7 +24,9 @@ export const BONDWIRE = Object.freeze({
   contracts: Object.freeze({
     AgentBond: "0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0",
     StreamPay: "0x505739d33D85AD85D0f9eeE64856309782382450",
+    CommitStakeV2: "0x1f1CA31bC36a95a3909628F1bA97970E20698CA9",
     USDC: "0x3600000000000000000000000000000000000000",
+    Multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11",
   }),
 });
 
@@ -58,6 +60,22 @@ const STREAM_PAY_ABI = [
   "event Created(uint256 indexed id, address indexed sender, address indexed recipient, uint256 deposit, uint64 start, uint64 stop, string memo)",
 ];
 
+const COMMIT_STAKE_ABI = [
+  "function create((address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint64 deadline,uint64 challengeWindow,uint256 challengeBond,uint64 arbiterDeadline,uint256 arbiterFee,uint256 feeDeposit,uint64 feeStart,uint64 feeStop,string goal) p) returns (uint256)",
+  "function resolve(uint256 id, bool passed)",
+  "function challenge(uint256 id)",
+  "function arbitrate(uint256 id, bool overturn)",
+  "function finalize(uint256 id)",
+  "function nextId() view returns (uint256)",
+  "function totalEscrowed() view returns (uint256)",
+  "function get(uint256 id) view returns (tuple(address staker,address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint256 bondObligationId,uint256 challengeBond,uint256 challengeBondPaid,uint256 arbiterFee,uint256 feeStreamId,uint64 deadline,uint64 challengeWindow,uint64 arbiterDeadline,uint64 resolvedAt,uint64 challengedAt,bool resolvedPass,uint8 status,uint8 outcome))",
+  "event Created(uint256 indexed id, address indexed staker, address indexed verifier, address beneficiary, uint256 amount, uint64 deadline)",
+];
+
+const MULTICALL3_ABI = [
+  "function aggregate3(tuple(address target, bool allowFailure, bytes callData)[] calls) view returns (tuple(bool success, bytes returnData)[])",
+];
+
 const ERC20_ABI = [
   "function approve(address spender, uint256 amount) returns (bool)",
   "function allowance(address owner, address spender) view returns (uint256)",
@@ -67,10 +85,22 @@ const ERC20_ABI = [
 
 const OBLIGATION_STATUS = ["None", "Active", "Released", "Slashed"];
 const STREAM_STATUS = ["None", "Active", "Ended"];
+const COMMITMENT_STATUS = ["None", "Open", "Resolved", "Challenged", "Finalized"];
+const COMMITMENT_OUTCOME = [
+  "None", "CleanPass", "CleanFail", "UpheldPass", "UpheldFail",
+  "OverturnedToPass", "OverturnedToFail", "SilencePass", "SilenceFail", "LivenessSlash",
+];
 
-/** A read-only JsonRpcProvider pinned to Arc testnet. */
+/**
+ * A read-only JsonRpcProvider pinned to Arc testnet. batchMaxCount 1 because the
+ * public Arc RPC rejects batched (array) JSON-RPC requests, which ethers v6 sends
+ * by default when calls land in the same tick; staticNetwork skips chainId probes.
+ */
 function arcProvider() {
-  return new ethers.JsonRpcProvider(BONDWIRE.rpcUrl, BONDWIRE.chainId);
+  return new ethers.JsonRpcProvider(BONDWIRE.rpcUrl, BONDWIRE.chainId, {
+    staticNetwork: true,
+    batchMaxCount: 1,
+  });
 }
 
 /** Wrap a bigint micro-USDC amount with a formatted view. */
@@ -90,7 +120,9 @@ export class Bondwire {
     this.addresses = { ...BONDWIRE.contracts, ...overrides };
     this.agentBond = new ethers.Contract(this.addresses.AgentBond, AGENT_BOND_ABI, runner);
     this.streamPay = new ethers.Contract(this.addresses.StreamPay, STREAM_PAY_ABI, runner);
+    this.commitStake = new ethers.Contract(this.addresses.CommitStakeV2, COMMIT_STAKE_ABI, runner);
     this.usdc = new ethers.Contract(this.addresses.USDC, ERC20_ABI, runner);
+    this.multicall = new ethers.Contract(this.addresses.Multicall3, MULTICALL3_ABI, runner);
   }
 
   /** A read-only Arc provider — handy for `new ethers.Wallet(key, Bondwire.provider())`. */
@@ -273,15 +305,153 @@ export class Bondwire {
     };
   }
 
+  // --- CommitStakeV2: bonded-verifier escrow (pay only on verified PASS) ------
+
+  /**
+   * Open a staked commitment: the caller escrows `amount` USDC that only releases
+   * to `beneficiary` on a verified PASS. The verifier must hold an AgentBond bond
+   * and have granted CommitStakeV2 a slash allowance — its `verifierSlice` gets
+   * locked behind the verdict, so a lying verifier loses real money.
+   *
+   * Required: { verifier, beneficiary, amount }. Everything else has safe defaults:
+   * arbiter (0 = none), verifierSlice ("1"), deadline (+24h), challengeWindow (600s),
+   * challengeBond ("1"), arbiterDeadline (+48h), arbiterFee ("0"), goal ("").
+   * Returns { id, receipt }.
+   */
+  async commit(p, { approve = true } = {}) {
+    const now = Math.floor(Date.now() / 1000);
+    const params = {
+      verifier: p.verifier,
+      beneficiary: p.beneficiary,
+      arbiter: p.arbiter ?? ethers.ZeroAddress,
+      amount: this.toUnits(p.amount),
+      verifierSlice: this.toUnits(p.verifierSlice ?? "1"),
+      deadline: BigInt(p.deadline ?? now + 24 * 3600),
+      challengeWindow: BigInt(p.challengeWindow ?? 600),
+      challengeBond: this.toUnits(p.challengeBond ?? "1"),
+      arbiterDeadline: BigInt(p.arbiterDeadline ?? now + 48 * 3600),
+      arbiterFee: this.toUnits(p.arbiterFee ?? "0"),
+      feeDeposit: 0n, feeStart: 0n, feeStop: 0n,
+      goal: p.goal ?? "",
+    };
+    if (approve) await this.approveUsdc(this.addresses.CommitStakeV2, this.fromUnits(params.amount));
+    const tx = await this.commitStake.create(params);
+    const receipt = await tx.wait();
+    const id = this._eventId(receipt, this.commitStake, "Created");
+    return { id, receipt };
+  }
+
+  /** Verifier-side: post the verdict (true = work passed, stake to staker path). */
+  async resolveCommitment(id, passed) {
+    const tx = await this.commitStake.resolve(id, passed);
+    return tx.wait();
+  }
+
+  /** Dispute a verdict inside the challenge window. Escrows the challenge bond (approves first by default). */
+  async challengeCommitment(id, { approve = true } = {}) {
+    if (approve) {
+      const c = await this.commitStake.get(id);
+      await this.approveUsdc(this.addresses.CommitStakeV2, this.fromUnits(c.challengeBond));
+    }
+    const tx = await this.commitStake.challenge(id);
+    return tx.wait();
+  }
+
+  /** Arbiter-side: uphold (false) or overturn (true) a challenged verdict. */
+  async arbitrateCommitment(id, overturn) {
+    const tx = await this.commitStake.arbitrate(id, overturn);
+    return tx.wait();
+  }
+
+  /** Anyone: settle a commitment whose window/deadline has passed. Routes the money. */
+  async finalizeCommitment(id) {
+    const tx = await this.commitStake.finalize(id);
+    return tx.wait();
+  }
+
+  /** Full formatted state of one commitment. */
+  async commitment(id) {
+    const c = await this.commitStake.get(id);
+    return {
+      id: Number(id),
+      staker: c.staker, verifier: c.verifier, beneficiary: c.beneficiary, arbiter: c.arbiter,
+      amount: usdcAmount(c.amount),
+      verifierSlice: usdcAmount(c.verifierSlice),
+      challengeBond: usdcAmount(c.challengeBond),
+      deadline: Number(c.deadline),
+      challengeWindow: Number(c.challengeWindow),
+      resolvedAt: Number(c.resolvedAt),
+      challengedAt: Number(c.challengedAt),
+      resolvedPass: c.resolvedPass,
+      status: COMMITMENT_STATUS[Number(c.status)] ?? "Unknown",
+      outcome: COMMITMENT_OUTCOME[Number(c.outcome)] ?? "Unknown",
+    };
+  }
+
+  // --- Agent Passport: portable, money-backed reputation ----------------------
+
+  /**
+   * Portable reputation for any agent address, recomputed live from AgentBond.
+   * One Multicall3 round trip enumerates every obligation (the Arc RPC caps
+   * eth_getLogs at 10k blocks and rejects concurrent calls — this avoids both).
+   * Score: reliability 0..55 (done/(done+slashed)) + bond depth 0..30 (cap 500
+   * USDC) + track record 0..15 (cap 10 obligations). Tiers: Trusted / Established
+   * / New / Flagged. Same math as the hosted Agent Passport dApp.
+   */
+  async passport(agent) {
+    const a = ethers.getAddress(agent);
+    const bondRaw = await this.agentBond.bond(a);
+    const next = Number(await this.agentBond.nextObligationId());
+    let taken = 0, done = 0, slashed = 0, active = 0, slashedAmt = 0n;
+    const iface = this.agentBond.interface;
+    const CHUNK = 400;
+    for (let start = 1; start < next; start += CHUNK) {
+      const calls = [];
+      for (let i = start; i < Math.min(start + CHUNK, next); i++)
+        calls.push({ target: this.addresses.AgentBond, allowFailure: true, callData: iface.encodeFunctionData("getObligation", [i]) });
+      const res = await this.multicall.aggregate3(calls);
+      for (const r of res) {
+        if (!r.success) continue;
+        const o = iface.decodeFunctionResult("getObligation", r.returnData)[0];
+        if (o.agent.toLowerCase() !== a.toLowerCase()) continue;
+        taken++;
+        const st = Number(o.status);
+        if (st === 2) done++;
+        else if (st === 3) { slashed++; slashedAmt += o.amount; }
+        else if (st === 1) active++;
+      }
+    }
+    const settled = done + slashed;
+    const reliability = settled > 0 ? done / settled : null;
+    const bondUsdc = Number(bondRaw) / 10 ** BONDWIRE.usdcDecimals;
+    const score = Math.round(
+      (reliability === null ? 0 : reliability * 55) +
+      Math.min(bondUsdc / 500, 1) * 30 +
+      Math.min(taken / 10, 1) * 15
+    );
+    let tier;
+    if (slashed > 0 && (reliability === null || reliability < 0.75)) tier = "Flagged";
+    else if (score >= 80 && slashed === 0) tier = "Trusted";
+    else if (score >= 55) tier = "Established";
+    else tier = "New";
+    return {
+      agent: a, score, tier,
+      bond: usdcAmount(bondRaw),
+      reliability,
+      obligations: { taken, done, slashed, active },
+      slashedTotal: usdcAmount(slashedAmt),
+    };
+  }
+
   // --- misc ------------------------------------------------------------------
 
-  /** Totals for the hub: obligations opened + streams opened. */
+  /** Totals for the hub: obligations opened + streams opened + commitments opened. */
   async stats() {
-    const [nextObl, nextStream] = await Promise.all([
-      this.agentBond.nextObligationId(),
-      this.streamPay.nextId(),
-    ]);
-    return { obligations: Number(nextObl) - 1, streams: Number(nextStream) - 1 };
+    // Sequential on purpose: the public Arc RPC rejects concurrent requests.
+    const nextObl = await this.agentBond.nextObligationId();
+    const nextStream = await this.streamPay.nextId();
+    const nextCommit = await this.commitStake.nextId();
+    return { obligations: Number(nextObl) - 1, streams: Number(nextStream) - 1, commitments: Number(nextCommit) - 1 };
   }
 
   explorerTx(hash) {

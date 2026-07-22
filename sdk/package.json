@@ -1,7 +1,7 @@
 {
   "name": "bondwire-sdk",
-  "version": "0.1.0",
-  "description": "Tiny ethers v6 SDK for the Bondwire — AgentBond (reputation-backed trust) + StreamPay (continuous USDC settlement) on Arc testnet.",
+  "version": "0.2.0",
+  "description": "Tiny ethers v6 SDK for Bondwire on Arc testnet: AgentBond (reputation backed trust), StreamPay (continuous USDC settlement), CommitStakeV2 (bonded verifier escrow, pay only on verified PASS) and the Agent Passport reputation score.",
   "type": "module",
   "main": "bondwire.js",
   "module": "bondwire.js",
@@ -22,15 +22,18 @@
     "ethers",
     "agent",
     "escrow",
-    "payment-streaming",
+    "streaming",
     "stablecoin",
-    "agentic"
+    "agentic",
+    "reputation",
+    "verifier",
+    "bondwire"
   ],
   "license": "MIT",
   "homepage": "https://mnorbert87.github.io/bondwire/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Mnorbert87/bondwire"
+    "url": "git+https://github.com/Mnorbert87/bondwire.git"
   },
   "peerDependencies": {
     "ethers": "^6.13.0"
