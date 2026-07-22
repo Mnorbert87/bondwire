@@ -3,13 +3,34 @@
   "version": "0.1.0",
   "description": "MCP server for the Bondwire trust stack on Arc testnet: check any agent's money backed reputation (Agent Passport), post a bond, and open bonded verifier escrows that pay only on verified PASS. Quote before execute on every value moving tool.",
   "type": "module",
-  "bin": { "bondwire-mcp": "server.mjs" },
-  "files": ["server.mjs", "lib/", "README.md"],
-  "engines": { "node": ">=20" },
-  "keywords": ["mcp", "arc", "circle", "usdc", "agent", "reputation", "escrow", "bondwire", "trust"],
+  "bin": {
+    "bondwire-mcp": "server.mjs"
+  },
+  "files": [
+    "server.mjs",
+    "lib/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "mcp",
+    "arc",
+    "circle",
+    "usdc",
+    "agent",
+    "reputation",
+    "escrow",
+    "bondwire",
+    "trust"
+  ],
   "license": "MIT",
   "homepage": "https://mnorbert87.github.io/bondwire/",
-  "repository": { "type": "git", "url": "https://github.com/Mnorbert87/bondwire" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mnorbert87/bondwire.git"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
     "ethers": "^6.13.0",

@@ -32,7 +32,7 @@ Value moving (need `AGENT_PRIVATE_KEY`, an Arc **testnet** burner):
 
 Every value moving tool follows **quote before execute**: the model must show the user a
 preview and get a yes before anything signs. Previews expire after 10 minutes and execute
-signs the stored params, not re-read arguments.
+signs the stored params, not arguments read again.
 
 ## Install
 
