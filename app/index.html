@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bondwire App, hire agents you can verify | Arc testnet</title>
+<meta name="description" content="The Bondwire app: check any agent's money backed reputation, hire it with a bonded escrow that pays only on verified PASS, and manage your own bond. Live on Arc testnet, every action is a real USDC transaction." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060912; --bg-2: #0a0f1e; --ink: #eef3fb; --muted: #8c98af; --faint: #525d72;
+    --line: rgba(255,255,255,0.065); --line-2: rgba(122,170,255,0.20);
+    --glass: rgba(255,255,255,0.022); --c1: #4da2ff; --c2: #56cfe1;
+    --good: #4fd6a8; --bad: #ff7a7a; --warn: #ffc266; --ease: cubic-bezier(.22,.61,.36,1);
+  }
+  * { box-sizing: border-box; }
+  html { overflow-x: hidden; }
+  body { margin: 0; color: var(--ink); background: var(--bg); font-family: "Inter", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased; line-height: 1.5; overflow-x: hidden; font-size: 14px; }
+  a { color: var(--c2); text-decoration: none; } a:hover { text-decoration: underline; }
+  .aurora { position: fixed; inset: 0; z-index: -1;
+    background: radial-gradient(900px 500px at 50% -10%, rgba(77,162,255,0.16), transparent 60%), var(--bg); }
+
+  header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 13px 24px; border-bottom: 1px solid var(--line); background: rgba(5,7,15,0.6); backdrop-filter: blur(18px); }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .logo { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--c1), var(--c2));
+    display: grid; place-items: center; box-shadow: 0 8px 22px rgba(91,140,255,0.4); }
+  .logo svg { width: 19px; height: 19px; }
+  .brand h1 { font-family: "Space Grotesk"; font-size: 16px; margin: 0; font-weight: 600; }
+  .brand small { display: block; color: var(--muted); font-size: 10.5px; }
+  .hdr-right { display: flex; align-items: center; gap: 10px; }
+  #netPill { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 6px 11px; background: var(--glass); }
+  #connect { font: inherit; font-weight: 600; cursor: pointer; border-radius: 11px; border: none; color: #04111f; white-space: nowrap;
+    background: linear-gradient(135deg, var(--c2), var(--c1)); padding: 9px 15px; font-size: 13px; box-shadow: 0 8px 22px rgba(54,160,255,0.3); }
+  @media (max-width: 560px) { header { padding: 11px 12px; } .brand small { display: none; } #netPill { display: none; } }
+
+  main { max-width: 1020px; margin: 0 auto; padding: 30px 18px 80px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+  .tab { font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--muted); background: var(--glass);
+    border: 1px solid var(--line); border-radius: 999px; padding: 9px 17px; transition: .18s var(--ease); }
+  .tab.on { color: #04111f; background: linear-gradient(135deg, var(--c2), var(--c1)); border-color: transparent; }
+  .panel { display: none; } .panel.on { display: block; animation: rise .4s var(--ease); }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  .card { border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px; background: linear-gradient(180deg, rgba(16,22,38,0.7), rgba(8,11,22,0.8)); margin-bottom: 14px; }
+  .card h2 { margin: 0 0 6px; font-family: "Space Grotesk"; font-size: 17px; }
+  .card .sub { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+  .frow { display: flex; gap: 10px; flex-wrap: wrap; }
+  .fld { flex: 1; min-width: 170px; }
+  label { display: block; font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 5px; }
+  input { width: 100%; font: inherit; font-size: 13.5px; color: var(--ink); background: var(--bg-2); border: 1px solid var(--line-2);
+    border-radius: 10px; padding: 11px 12px; font-family: "Space Grotesk", monospace; }
+  input:focus { outline: none; border-color: var(--c1); }
+  .btn { font: inherit; font-weight: 600; cursor: pointer; border-radius: 11px; border: none; color: #04111f;
+    background: linear-gradient(135deg, var(--c2), var(--c1)); padding: 11px 18px; font-size: 13.5px; transition: .18s; }
+  .btn:hover { filter: brightness(1.08); } .btn:disabled { opacity: .5; cursor: wait; }
+  .btn.ghost { background: var(--glass); color: var(--ink); border: 1px solid var(--line-2); }
+  .kv { display: grid; grid-template-columns: 150px 1fr; gap: 5px 14px; font-size: 13px; margin-top: 10px; }
+  .kv b { color: var(--faint); font-weight: 500; }
+  .mono { font-family: "Space Grotesk", monospace; font-size: 12.5px; }
+  .statline { display: flex; gap: 22px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .statline b { color: var(--ink); font-family: "Space Grotesk"; }
+  #status { min-height: 18px; font-size: 13px; color: var(--muted); margin: 8px 0; }
+  #status.err { color: var(--bad); }
+
+  /* passport mini card */
+  .pcard { display: none; margin-top: 14px; border: 1px solid var(--line-2); border-radius: 14px; overflow: hidden; }
+  .pcard.on { display: block; }
+  .ptop { display: flex; align-items: center; gap: 15px; padding: 16px 18px; background: radial-gradient(120% 140% at 0% 0%, rgba(77,162,255,0.1), transparent 60%); }
+  .ring { width: 66px; height: 66px; flex: none; border-radius: 50%; display: grid; place-items: center; }
+  .ring b { font-family: "Space Grotesk"; font-size: 22px; }
+  .ptier { font-family: "Space Grotesk"; font-size: 17px; font-weight: 700; }
+  .pmeta { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .pgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); }
+  .pgrid .c { background: var(--bg-2); padding: 11px 14px; }
+  .pgrid .c .k { font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: .07em; }
+  .pgrid .c .v { font-family: "Space Grotesk"; font-size: 17px; margin-top: 2px; }
+  @media (max-width: 620px) { .pgrid { grid-template-columns: repeat(2, 1fr); } }
+  .pact { padding: 13px 16px; border-top: 1px solid var(--line); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  #log .item { padding: 8px 11px; border: 1px solid var(--line); border-radius: 9px; margin-bottom: 6px; background: var(--bg-2); font-size: 12.5px; }
+  footer { text-align: center; color: var(--faint); font-size: 12px; padding: 30px 16px; }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+
+<header>
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4z" stroke="#04111f" stroke-width="2" stroke-linejoin="round"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#04111f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div><h1>Bondwire App</h1><small>hire agents you can verify · Arc testnet</small></div>
+  </div>
+  <div class="hdr-right">
+    <span id="netPill">not connected</span>
+    <button id="connect">Connect wallet</button>
+  </div>
+</header>
+
+<main>
+  <div class="statline" style="margin-bottom:18px;">
+    <span>obligations <b id="sObl">–</b></span>
+    <span>streams <b id="sStr">–</b></span>
+    <span>commitments <b id="sCom">–</b></span>
+    <span>USDC escrowed <b id="sEsc">–</b></span>
+    <span style="margin-left:auto"><a href="../" target="_blank">stack ↗</a></span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" data-p="pPassport">1 · Check the passport</button>
+    <button class="tab" data-p="pHire">2 · Hire with escrow</button>
+    <button class="tab" data-p="pBond">3 · My bond</button>
+  </div>
+
+  <div id="status"></div>
+
+  <!-- PASSPORT -->
+  <section class="panel on" id="pPassport">
+    <div class="card">
+      <h2>Check any agent before you trust it</h2>
+      <p class="sub">Reputation an agent cannot fake, because it is real money that can be burned. Read live from the AgentBond contract; no wallet needed for this step.</p>
+      <div class="frow">
+        <div class="fld" style="flex:3"><label>Agent address</label><input id="ppAddr" placeholder="0x…" spellcheck="false" /></div>
+        <div class="fld" style="flex:0; min-width:130px; align-self:flex-end"><button class="btn" id="ppGo">Look up</button></div>
+      </div>
+      <div class="pcard" id="pcard">
+        <div class="ptop">
+          <div class="ring" id="ppRing"><b id="ppScore">0</b></div>
+          <div><div class="ptier" id="ppTier">–</div><div class="pmeta mono" id="ppWho"></div></div>
+        </div>
+        <div class="pgrid">
+          <div class="c"><div class="k">Bond</div><div class="v" id="ppBond">–</div></div>
+          <div class="c"><div class="k">Reliability</div><div class="v" id="ppRel">–</div></div>
+          <div class="c"><div class="k">Completed</div><div class="v" id="ppDone">–</div></div>
+          <div class="c"><div class="k">Slashed</div><div class="v" id="ppSlash">–</div></div>
+        </div>
+        <div class="pact">
+          <button class="btn" id="ppHire">Hire this agent with a bonded escrow →</button>
+          <a id="ppScan" target="_blank" style="font-size:12.5px">arcscan ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HIRE -->
+  <section class="panel" id="pHire">
+    <div class="card">
+      <h2>Escrow that pays only on verified PASS</h2>
+      <p class="sub">Your USDC locks in the deployed CommitStakeV2 contract. The bonded verifier posts the verdict with its own slashable bond on the line; a challenge window plus arbiter keep it honest. This is the whole point: not pay and hope, pay on proof.</p>
+      <div class="frow">
+        <div class="fld"><label>Verifier (bonded agent)</label><input id="hVerifier" placeholder="0x… from the passport tab" spellcheck="false" /></div>
+        <div class="fld"><label>Beneficiary (refund target)</label><input id="hBenef" placeholder="0x… (defaults to you)" spellcheck="false" /></div>
+        <div class="fld" style="min-width:110px"><label>Amount (USDC)</label><input id="hAmount" value="5" /></div>
+        <div class="fld" style="min-width:110px"><label>Verifier slice</label><input id="hSlice" value="1" /></div>
+      </div>
+      <div class="frow" style="margin-top:8px">
+        <div class="fld" style="flex:3"><label>Goal / deliverable</label><input id="hGoal" value="Deliver the agreed work" /></div>
+        <div class="fld" style="flex:0; min-width:200px; align-self:flex-end"><button class="btn" id="hCreate">Approve + create commitment</button></div>
+      </div>
+      <div class="kv" id="hState"></div>
+      <div class="frow" style="margin-top:12px">
+        <div class="fld" style="max-width:140px"><label>Commitment id</label><input id="hId" placeholder="id" /></div>
+        <div class="fld" style="flex:0; align-self:flex-end; display:flex; gap:8px; flex-wrap:wrap">
+          <button class="btn ghost" id="hLoad">Load</button>
+          <button class="btn ghost" id="hPass">Verifier: PASS</button>
+          <button class="btn ghost" id="hFail">Verifier: FAIL</button>
+          <button class="btn ghost" id="hFinal">Finalize</button>
+        </div>
+      </div>
+      <p class="sub" style="margin-top:10px">Full flow with challenge + arbiter: <a href="../bonded-verifier/" target="_blank">bonded verifier dApp ↗</a></p>
+    </div>
+  </section>
+
+  <!-- BOND -->
+  <section class="panel" id="pBond">
+    <div class="card">
+      <h2>Your bond is your word</h2>
+      <p class="sub">Post USDC into AgentBond to become hireable as a verifier or worker. Locked behind your obligations, slashed if you default, withdrawable when free. This is what shows up on your passport.</p>
+      <div class="kv">
+        <b>total bond</b><span class="mono" id="bTotal">–</span>
+        <b>locked</b><span class="mono" id="bLocked">–</span>
+        <b>free</b><span class="mono" id="bFree">–</span>
+        <b>escrow allowance</b><span class="mono" id="bAllow">–</span>
+      </div>
+      <div class="frow" style="margin-top:14px">
+        <div class="fld" style="min-width:120px"><label>Amount (USDC)</label><input id="bAmt" value="5" /></div>
+        <div class="fld" style="flex:0; align-self:flex-end; display:flex; gap:8px; flex-wrap:wrap">
+          <button class="btn" id="bDeposit">Approve + deposit</button>
+          <button class="btn ghost" id="bWithdraw">Withdraw free</button>
+          <button class="btn ghost" id="bAllowBtn">Allow escrow to slash me</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="card"><h2 style="font-size:13px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted)">Transactions</h2><div id="log"><span style="color:var(--faint); font-size:12.5px">Every action lands here with an arcscan link.</span></div></div>
+</main>
+
+<footer>
+  Bondwire · trust and settlement primitives for autonomous agents on Arc ·
+  <a href="../" >stack</a> · <a href="../agent-passport/">passport</a> · <a href="../bonded-verifier/">bonded verifier</a> · <a href="https://github.com/Mnorbert87/bondwire" target="_blank">GitHub</a>
+</footer>
+
+<script type="module">
+import { ethers } from "https://esm.sh/ethers@6.13.4";
+
+const CHAIN_ID = 5042002, CHAIN_HEX = "0x4cef52";
+const RPC = "https://rpc.testnet.arc.network", EXPLORER = "https://testnet.arcscan.app";
+const ADDR = {
+  AgentBond: "0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0",
+  StreamPay: "0x505739d33D85AD85D0f9eeE64856309782382450",
+  CommitStakeV2: "0x1f1CA31bC36a95a3909628F1bA97970E20698CA9",
+  USDC: "0x3600000000000000000000000000000000000000",
+  Multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11",
+};
+const AB_ABI = [
+  "function deposit(uint256)", "function withdraw(uint256)", "function setSlashAllowance(address,uint256)",
+  "function bond(address) view returns (uint256)", "function locked(address) view returns (uint256)",
+  "function freeBondOf(address) view returns (uint256)", "function slashAllowance(address,address) view returns (uint256)",
+  "function nextObligationId() view returns (uint256)",
+  "function getObligation(uint256) view returns (tuple(address agent,address enforcer,address creditor,uint256 amount,uint64 deadline,uint8 status))",
+];
+const CS_ABI = [
+  "function create((address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint64 deadline,uint64 challengeWindow,uint256 challengeBond,uint64 arbiterDeadline,uint256 arbiterFee,uint256 feeDeposit,uint64 feeStart,uint64 feeStop,string goal)) returns (uint256)",
+  "function resolve(uint256,bool)", "function finalize(uint256)",
+  "function nextId() view returns (uint256)", "function totalEscrowed() view returns (uint256)",
+  "function get(uint256) view returns (tuple(address staker,address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint256 bondObligationId,uint256 challengeBond,uint256 challengeBondPaid,uint256 arbiterFee,uint256 feeStreamId,uint64 deadline,uint64 challengeWindow,uint64 arbiterDeadline,uint64 resolvedAt,uint64 challengedAt,bool resolvedPass,uint8 status,uint8 outcome))",
+  "event Created(uint256 indexed id, address indexed staker, address indexed verifier, address beneficiary, uint256 amount, uint64 deadline)",
+];
+const SP_ABI = ["function nextId() view returns (uint256)"];
+const MC_ABI = ["function aggregate3(tuple(address target, bool allowFailure, bytes callData)[] calls) view returns (tuple(bool success, bytes returnData)[])"];
+const ERC20_ABI = ["function approve(address,uint256) returns (bool)", "function allowance(address,address) view returns (uint256)", "function balanceOf(address) view returns (uint256)"];
+const CSTATUS = ["None","Open","Resolved","Challenged","Finalized"];
+const COUT = ["None","CleanPass","CleanFail","UpheldPass","UpheldFail","OverturnedToPass","OverturnedToFail","SilencePass","SilenceFail","LivenessSlash"];
+
+// The public Arc RPC rejects batched AND concurrent JSON-RPC — batchMaxCount 1 + strictly awaited calls.
+const ro = new ethers.JsonRpcProvider(RPC, CHAIN_ID, { staticNetwork: true, batchMaxCount: 1 });
+const $ = (id) => document.getElementById(id);
+const fmt = (raw) => (Number(raw) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " USDC";
+const U = (h) => ethers.parseUnits(String(h), 6);
+let signer = null, me = null;
+
+function setStatus(m, err = false) { const s = $("status"); s.textContent = m; s.className = err ? "err" : ""; }
+function logTx(label, hash) {
+  const d = document.createElement("div"); d.className = "item";
+  d.innerHTML = `${label} · <a href="${EXPLORER}/tx/${hash}" target="_blank" class="mono">${hash.slice(0, 14)}… ↗</a> <span id="s${hash.slice(2,10)}">⏳</span>`;
+  const log = $("log"); if (log.firstChild?.tagName === "SPAN") log.innerHTML = "";
+  log.prepend(d); return () => { const el = document.getElementById("s" + hash.slice(2,10)); if (el) el.textContent = "✓"; };
+}
+
+// tabs
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("on"));
+  document.querySelectorAll(".panel").forEach(x => x.classList.remove("on"));
+  t.classList.add("on"); $(t.dataset.p).classList.add("on");
+});
+
+// wallet
+async function connect() {
+  if (!window.ethereum) { setStatus("No injected wallet found. Install MetaMask.", true); return; }
+  const bp = new ethers.BrowserProvider(window.ethereum);
+  await bp.send("eth_requestAccounts", []);
+  const net = await bp.getNetwork();
+  if (Number(net.chainId) !== CHAIN_ID) {
+    try { await bp.send("wallet_switchEthereumChain", [{ chainId: CHAIN_HEX }]); }
+    catch {
+      await bp.send("wallet_addEthereumChain", [{ chainId: CHAIN_HEX, chainName: "Arc Testnet",
+        nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+        rpcUrls: [RPC], blockExplorerUrls: [EXPLORER] }]);
+    }
+  }
+  signer = await new ethers.BrowserProvider(window.ethereum).getSigner();
+  me = await signer.getAddress();
+  $("netPill").textContent = "Arc testnet · " + me.slice(0, 6) + "…" + me.slice(-4);
+  $("connect").textContent = "Connected";
+  setStatus("");
+  refreshBond().catch(() => {});
+}
+$("connect").onclick = () => connect().catch(e => setStatus(e.shortMessage || e.message, true));
+function needSigner() { if (!signer) { setStatus("Connect your wallet first.", true); throw new Error("no signer"); } }
+
+async function ensureApprove(spender, amountRaw) {
+  const usdc = new ethers.Contract(ADDR.USDC, ERC20_ABI, signer);
+  const cur = await usdc.allowance(me, spender);
+  if (cur >= amountRaw) return;
+  const tx = await usdc.approve(spender, amountRaw);
+  const done = logTx("approve USDC", tx.hash); await tx.wait(); done();
+}
+
+// live stats (sequential, RPC quirk)
+async function stats() {
+  try {
+    const ab = new ethers.Contract(ADDR.AgentBond, AB_ABI, ro);
+    const sp = new ethers.Contract(ADDR.StreamPay, SP_ABI, ro);
+    const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, ro);
+    $("sObl").textContent = Number(await ab.nextObligationId()) - 1;
+    $("sStr").textContent = Number(await sp.nextId()) - 1;
+    $("sCom").textContent = Number(await cs.nextId()) - 1;
+    $("sEsc").textContent = fmt(await cs.totalEscrowed());
+  } catch { /* stats are cosmetic */ }
+}
+stats();
+
+// ── PASSPORT (read only, Multicall3 enumeration) ─────────────────────────────
+async function passport(agent) {
+  const ab = new ethers.Contract(ADDR.AgentBond, AB_ABI, ro);
+  const mc = new ethers.Contract(ADDR.Multicall3, MC_ABI, ro);
+  const bondRaw = await ab.bond(agent);
+  const next = Number(await ab.nextObligationId());
+  let taken = 0, done = 0, slashed = 0;
+  const iface = ab.interface, calls = [];
+  for (let i = 1; i < Math.min(next, 2001); i++)
+    calls.push({ target: ADDR.AgentBond, allowFailure: true, callData: iface.encodeFunctionData("getObligation", [i]) });
+  if (calls.length) {
+    const res = await mc.aggregate3(calls);
+    for (const r of res) {
+      if (!r.success) continue;
+      const o = iface.decodeFunctionResult("getObligation", r.returnData)[0];
+      if (o.agent.toLowerCase() !== agent.toLowerCase()) continue;
+      taken++; const st = Number(o.status);
+      if (st === 2) done++; else if (st === 3) slashed++;
+    }
+  }
+  const settled = done + slashed, rel = settled ? done / settled : null;
+  const bu = Number(bondRaw) / 1e6;
+  const score = Math.round((rel === null ? 0 : rel * 55) + Math.min(bu / 500, 1) * 30 + Math.min(taken / 10, 1) * 15);
+  let tier, color;
+  if (slashed > 0 && (rel === null || rel < 0.75)) { tier = "Flagged"; color = "var(--bad)"; }
+  else if (score >= 80 && slashed === 0) { tier = "Trusted"; color = "var(--good)"; }
+  else if (score >= 55) { tier = "Established"; color = "var(--c2)"; }
+  else { tier = "New"; color = "var(--warn)"; }
+  return { score, tier, color, bondRaw, rel, taken, done, slashed };
+}
+async function ppLookup() {
+  const a = $("ppAddr").value.trim();
+  if (!ethers.isAddress(a)) { setStatus("Not a valid address.", true); return; }
+  $("ppGo").disabled = true; setStatus("Reading AgentBond…");
+  try {
+    const p = await passport(ethers.getAddress(a));
+    $("ppScore").textContent = p.score;
+    $("ppRing").style.background = `conic-gradient(${p.color} ${p.score * 3.6}deg, rgba(255,255,255,0.06) 0deg)`;
+    $("ppRing").style.boxShadow = "inset 0 0 0 5px var(--bg-2)";
+    $("ppTier").textContent = p.tier;
+    $("ppWho").textContent = a;
+    $("ppBond").textContent = fmt(p.bondRaw);
+    $("ppRel").textContent = p.rel === null ? "–" : Math.round(p.rel * 100) + "%";
+    $("ppDone").textContent = p.done;
+    $("ppSlash").textContent = p.slashed;
+    $("ppScan").href = `${EXPLORER}/address/${a}`;
+    $("pcard").classList.add("on");
+    setStatus("");
+  } catch (e) { setStatus("Chain read failed (" + (e.shortMessage || e.message).slice(0, 70) + "). The public RPC rate limits; retry in a moment.", true); }
+  finally { $("ppGo").disabled = false; }
+}
+$("ppGo").onclick = ppLookup;
+$("ppAddr").addEventListener("keydown", (e) => { if (e.key === "Enter") ppLookup(); });
+$("ppHire").onclick = () => {
+  $("hVerifier").value = $("ppAddr").value.trim();
+  document.querySelector('[data-p="pHire"]').click();
+};
+
+// ── HIRE (CommitStakeV2) ─────────────────────────────────────────────────────
+$("hCreate").onclick = async () => {
+  try {
+    needSigner();
+    const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, signer);
+    const now = Math.floor(Date.now() / 1000);
+    const amount = U($("hAmount").value || "5");
+    const p = {
+      verifier: $("hVerifier").value.trim() || me,
+      beneficiary: $("hBenef").value.trim() || me,
+      arbiter: me,
+      amount, verifierSlice: U($("hSlice").value || "1"),
+      deadline: BigInt(now + 3600), challengeWindow: 120n, challengeBond: U("1"),
+      arbiterDeadline: BigInt(now + 7200), arbiterFee: 0n,
+      feeDeposit: 0n, feeStart: 0n, feeStop: 0n, goal: $("hGoal").value || "",
+    };
+    setStatus("Approving + creating commitment…"); $("hCreate").disabled = true;
+    await ensureApprove(ADDR.CommitStakeV2, amount);
+    const tx = await cs.create(p);
+    const done = logTx("create commitment", tx.hash);
+    const rc = await tx.wait(); done();
+    let id = "?";
+    for (const l of rc.logs) { try { const pl = cs.interface.parseLog(l); if (pl?.name === "Created") id = pl.args.id.toString(); } catch { } }
+    $("hId").value = id === "?" ? "" : id;
+    setStatus(`Commitment #${id} created. The verifier resolves, then finalize settles the money.`);
+    loadCommit().catch(() => {});
+  } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
+  finally { $("hCreate").disabled = false; }
+};
+async function loadCommit() {
+  const id = Number($("hId").value); if (!Number.isInteger(id) || id < 1) return;
+  const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, ro);
+  const c = await cs.get(id);
+  $("hState").innerHTML =
+    `<b>status</b><span>${CSTATUS[Number(c.status)] ?? c.status} / ${COUT[Number(c.outcome)] ?? c.outcome}</span>` +
+    `<b>amount</b><span class="mono">${fmt(c.amount)}</span>` +
+    `<b>verifier</b><span class="mono">${c.verifier.slice(0, 12)}…</span>` +
+    `<b>verdict</b><span>${Number(c.resolvedAt) ? (c.resolvedPass ? "PASS" : "FAIL") + " @ " + new Date(Number(c.resolvedAt) * 1000).toLocaleTimeString() : "not yet"}</span>`;
+}
+$("hLoad").onclick = () => loadCommit().catch(e => setStatus(e.shortMessage || e.message, true));
+const act = (fn, label) => async () => {
+  try {
+    needSigner();
+    const id = Number($("hId").value); if (!Number.isInteger(id) || id < 1) { setStatus("Load a commitment id first.", true); return; }
+    const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, signer);
+    const tx = await fn(cs, id); const done = logTx(label, tx.hash); await tx.wait(); done();
+    setStatus(label + " confirmed."); loadCommit().catch(() => {});
+  } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
+};
+$("hPass").onclick = act((cs, id) => cs.resolve(id, true), "resolve PASS");
+$("hFail").onclick = act((cs, id) => cs.resolve(id, false), "resolve FAIL");
+$("hFinal").onclick = act((cs, id) => cs.finalize(id), "finalize");
+
+// ── MY BOND (AgentBond) ──────────────────────────────────────────────────────
+async function refreshBond() {
+  if (!me) return;
+  const ab = new ethers.Contract(ADDR.AgentBond, AB_ABI, ro);
+  $("bTotal").textContent = fmt(await ab.bond(me));
+  $("bLocked").textContent = fmt(await ab.locked(me));
+  $("bFree").textContent = fmt(await ab.freeBondOf(me));
+  $("bAllow").textContent = fmt(await ab.slashAllowance(me, ADDR.CommitStakeV2));
+}
+$("bDeposit").onclick = async () => {
+  try {
+    needSigner();
+    const amt = U($("bAmt").value || "5");
+    await ensureApprove(ADDR.AgentBond, amt);
+    const ab = new ethers.Contract(ADDR.AgentBond, AB_ABI, signer);
+    const tx = await ab.deposit(amt); const done = logTx("bond deposit", tx.hash); await tx.wait(); done();
+    setStatus("Bond posted."); refreshBond();
+  } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
+};
+$("bWithdraw").onclick = async () => {
+  try {
+    needSigner();
+    const ab = new ethers.Contract(ADDR.AgentBond, AB_ABI, signer);
+    const tx = await ab.withdraw(U($("bAmt").value || "5"));
+    const done = logTx("bond withdraw", tx.hash); await tx.wait(); done();
+    setStatus("Withdrawn."); refreshBond();
+  } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
+};
+$("bAllowBtn").onclick = async () => {
+  try {
+    needSigner();
+    const ab = new ethers.Contract(ADDR.AgentBond, AB_ABI, signer);
+    const tx = await ab.setSlashAllowance(ADDR.CommitStakeV2, ethers.MaxUint256);
+    const done = logTx("set slash allowance", tx.hash); await tx.wait(); done();
+    setStatus("Escrow may now lock and slash your bond behind verdicts you sign."); refreshBond();
+  } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
+};
+
+// deep link: ?agent=0x… jumps straight to a passport lookup
+try {
+  const q = new URLSearchParams(location.search);
+  const a = q.get("agent");
+  if (a && /^0x[0-9a-fA-F]{40}$/.test(a)) { $("ppAddr").value = a; ppLookup(); }
+} catch { }
+</script>
+</body>
+</html>
