@@ -143,6 +143,9 @@ const OUTCOME = [", ","Passed, stake released","Failed, stake to beneficiary","O
 
 let provider, signer, me, ro;
 const $ = (id)=>document.getElementById(id);
+// HTML escape for any onchain or RPC string rendered via innerHTML. The `goal` is an
+// attacker settable free text field on create(), so it must never reach innerHTML raw.
+const esc = (s)=> String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const usdc = (n)=> (Number(n)/1e6).toLocaleString(undefined,{maximumFractionDigits:6});
 const toU = (s)=> BigInt(Math.round(parseFloat(s||"0")*1e6));
 const short = (a)=> a? a.slice(0,6)+"…"+a.slice(-4):",";
@@ -235,10 +238,10 @@ async function loadState(){
     $("stateBox").innerHTML = [
       ["staker", short(c.staker)],["verifier", short(c.verifier)],["beneficiary", short(c.beneficiary)],["arbiter", short(c.arbiter)],
       ["stake", usdc(c.amount)+" USDC"],["verifier slice", usdc(c.verifierSlice)+" USDC"],["challenge bond", usdc(c.challengeBond)+" USDC"],
-      ["arbiter fee", usdc(c.arbiterFee)+" USDC"],["goal", c.goal],
+      ["arbiter fee", usdc(c.arbiterFee)+" USDC"],["goal", esc(c.goal)],
       ["resolved", c.resolvedAt>0n? (c.resolvedPass?"PASS":"FAIL") : "no"],["outcome", OUTCOME[oc]||("outcome "+oc)],
-    ].map(([k,v])=>`<b>${k}</b><span class="mono">${v}</span>`).join("");
-  }catch(e){ $("stateBox").innerHTML=`<span class="red">not found or read error: ${e.shortMessage||e.message}</span>`; }
+    ].map(([k,v])=>`<b>${esc(k)}</b><span class="mono">${v}</span>`).join("");
+  }catch(e){ $("stateBox").innerHTML=`<span class="red">not found or read error: ${esc(e.shortMessage||e.message)}</span>`; }
 }
 $("btnLoad").onclick = loadState;
 
