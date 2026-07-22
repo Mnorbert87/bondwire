@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bondwire Ledger, every bonded agent on Arc | reputation explorer</title>
+<meta name="description" content="A browsable, read only explorer of every agent bonded on AgentBond on Arc testnet: bond depth as a public credit score, completed versus slashed obligations, tier. No wallet, no backend, recomputed live from the chain." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060912; --bg-2: #0a0f1e; --ink: #eef3fb; --muted: #8c98af; --faint: #525d72;
+    --line: rgba(255,255,255,0.065); --line-2: rgba(122,170,255,0.20); --glass: rgba(255,255,255,0.022);
+    --c1: #4da2ff; --c2: #56cfe1; --good: #4fd6a8; --bad: #ff7a7a; --warn: #ffc266;
+  }
+  * { box-sizing: border-box; }
+  html { overflow-x: hidden; }
+  body { margin: 0; color: var(--ink); background: var(--bg); font-family: "Inter", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased; line-height: 1.5; overflow-x: hidden; font-size: 14px; }
+  a { color: var(--c2); text-decoration: none; } a:hover { text-decoration: underline; }
+  .aurora { position: fixed; inset: 0; z-index: -1;
+    background: radial-gradient(900px 500px at 50% -10%, rgba(77,162,255,0.15), transparent 60%), var(--bg); }
+
+  header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 13px 24px; border-bottom: 1px solid var(--line); background: rgba(5,7,15,0.6); backdrop-filter: blur(18px); }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .logo { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--c1), var(--c2));
+    display: grid; place-items: center; box-shadow: 0 8px 22px rgba(91,140,255,0.4); }
+  .logo svg { width: 19px; height: 19px; }
+  .brand h1 { font-family: "Space Grotesk"; font-size: 16px; margin: 0; font-weight: 600; }
+  .brand small { display: block; color: var(--muted); font-size: 10.5px; }
+  .nav-cta { font-size: 13px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; background: var(--glass); white-space: nowrap; }
+  .nav-cta:hover { color: var(--ink); text-decoration: none; }
+  @media (max-width: 560px) { header { padding: 11px 12px; } .brand small { display: none; } }
+
+  main { max-width: 940px; margin: 0 auto; padding: 40px 18px 80px; }
+  .hero { text-align: center; margin-bottom: 26px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--c2); border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 14px; background: var(--glass); margin-bottom: 16px; }
+  h2.title { font-family: "Space Grotesk"; font-weight: 700; font-size: clamp(26px, 4.5vw, 40px); margin: 0 0 12px;
+    background: linear-gradient(180deg, #fff, #b8c6de); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { color: var(--muted); font-size: clamp(14px, 2vw, 16px); max-width: 600px; margin: 0 auto; }
+
+  .bar { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; margin: 22px 0 14px; color: var(--muted); font-size: 13px; }
+  .bar b { color: var(--ink); font-family: "Space Grotesk"; }
+  .bar .sort { margin-left: auto; display: flex; gap: 6px; }
+  .sort button { font: inherit; font-size: 12.5px; cursor: pointer; color: var(--muted); background: var(--glass);
+    border: 1px solid var(--line); border-radius: 999px; padding: 6px 13px; }
+  .sort button.on { color: #04111f; background: linear-gradient(135deg, var(--c2), var(--c1)); border-color: transparent; font-weight: 600; }
+
+  #status { text-align: center; color: var(--muted); font-size: 14px; margin: 40px 0; }
+  #status.err { color: var(--bad); }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  thead th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--faint);
+    padding: 8px 10px; border-bottom: 1px solid var(--line); font-weight: 500; }
+  thead th.num, tbody td.num { text-align: right; }
+  tbody tr { border-bottom: 1px solid var(--line); transition: background .15s; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody td { padding: 11px 10px; font-size: 13px; }
+  .addr { font-family: "Space Grotesk", monospace; font-size: 12.5px; }
+  .score { font-family: "Space Grotesk"; font-weight: 600; font-size: 15px; }
+  .pill { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .slash { color: var(--bad); }
+  @media (max-width: 620px) { .hide-sm { display: none; } tbody td, thead th { padding: 9px 7px; } }
+
+  .foot { text-align: center; color: var(--faint); font-size: 12px; margin-top: 34px; }
+  .foot code { color: var(--c2); font-family: "Space Grotesk", monospace; }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+
+<header>
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4z" stroke="#04111f" stroke-width="2" stroke-linejoin="round"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#04111f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div><h1>Bondwire Ledger</h1><small>every bonded agent on Arc</small></div>
+  </div>
+  <a class="nav-cta" href="../">All dApps</a>
+</header>
+
+<main>
+  <div class="hero">
+    <span class="eyebrow">Reputation explorer</span>
+    <h2 class="title">The public ledger of agent trust</h2>
+    <p>Every agent that has posted a bond on AgentBond, ranked by a money backed credit score. Bond depth, completed versus slashed obligations, tier. No wallet, no backend, recomputed live from the chain each time you open it.</p>
+  </div>
+
+  <div class="bar" id="bar" style="display:none;">
+    <span>agents <b id="cAgents">–</b></span>
+    <span>total bonded <b id="cBond">–</b></span>
+    <span>obligations <b id="cObl">–</b></span>
+    <span class="slash">slashed <b id="cSlash">–</b></span>
+    <div class="sort">
+      <button data-k="score" class="on">Score</button>
+      <button data-k="bond">Bond</button>
+      <button data-k="done">Completed</button>
+    </div>
+  </div>
+
+  <div id="status">Reading AgentBond on Arc testnet…</div>
+
+  <table id="tbl" style="display:none;">
+    <thead><tr>
+      <th>Agent</th><th class="num">Score</th><th>Tier</th>
+      <th class="num">Bond</th><th class="num hide-sm">Reliability</th>
+      <th class="num">Done</th><th class="num">Slashed</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <div class="foot">
+    Source: AgentBond <code id="srcAddr"></code> · enumerated via Multicall3 ·
+    <a href="../agent-passport/">look up one agent</a> · <a href="../">stack</a>
+  </div>
+</main>
+
+<script type="module">
+import { ethers } from "https://esm.sh/ethers@6.13.4";
+
+const CHAIN = { rpc: "https://rpc.testnet.arc.network", explorer: "https://testnet.arcscan.app", id: 5042002 };
+const AGENT_BOND = "0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0";
+const MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11";
+const AB_ABI = [
+  "function bond(address) view returns (uint256)",
+  "function nextObligationId() view returns (uint256)",
+  "function getObligation(uint256) view returns (tuple(address agent, address enforcer, address creditor, uint256 amount, uint64 deadline, uint8 status))",
+];
+const MC_ABI = ["function aggregate3(tuple(address target, bool allowFailure, bytes callData)[] calls) view returns (tuple(bool success, bytes returnData)[])"];
+
+// The public Arc RPC rejects batched AND concurrent JSON RPC and has timeout moods — batchMaxCount 1 + retry.
+const provider = new ethers.JsonRpcProvider(CHAIN.rpc, CHAIN.id, { staticNetwork: true, batchMaxCount: 1 });
+const ab = new ethers.Contract(AGENT_BOND, AB_ABI, provider);
+const abIface = new ethers.Interface(AB_ABI);
+const mc = new ethers.Contract(MULTICALL3, MC_ABI, provider);
+const $ = (id) => document.getElementById(id);
+const fmtUsdc = (raw) => (Number(raw) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 });
+const short = (a) => a.slice(0, 8) + "…" + a.slice(-4);
+$("srcAddr").textContent = AGENT_BOND.slice(0, 8) + "…" + AGENT_BOND.slice(-4);
+
+async function withRetry(fn, label) {
+  for (let i = 0; ; i++) {
+    try { return await fn(); }
+    catch (e) {
+      if (i >= 3) throw e;
+      $("status").textContent = `${label}… the public RPC is slow, retry ${i + 1}/3`;
+      await new Promise((r) => setTimeout(r, 4000 * (i + 1)));
+    }
+  }
+}
+
+function scoreOf({ bondRaw, done, slashed, taken }) {
+  const settled = done + slashed;
+  const reliability = settled > 0 ? done / settled : null;
+  const bondUsdc = Number(bondRaw) / 1e6;
+  const score = Math.round(
+    (reliability === null ? 0 : reliability * 55) +
+    Math.min(bondUsdc / 500, 1) * 30 +
+    Math.min(taken / 10, 1) * 15
+  );
+  let tier, color;
+  if (slashed > 0 && (reliability === null || reliability < 0.75)) { tier = "Flagged"; color = "var(--bad)"; }
+  else if (score >= 80 && slashed === 0) { tier = "Trusted"; color = "var(--good)"; }
+  else if (score >= 55) { tier = "Established"; color = "var(--c2)"; }
+  else { tier = "New"; color = "var(--warn)"; }
+  return { score, tier, color, reliability };
+}
+
+let ROWS = [];
+function render(sortKey = "score") {
+  ROWS.sort((a, b) => (sortKey === "bond" ? Number(b.bondRaw - a.bondRaw)
+    : sortKey === "done" ? b.done - a.done : b.score - a.score));
+  $("rows").innerHTML = ROWS.map((r) => `
+    <tr>
+      <td><a class="addr" href="../app/?agent=${r.agent}" title="Open in the Bondwire App: ${r.agent}">${short(r.agent)}</a>
+          <a class="addr" href="${CHAIN.explorer}/address/${r.agent}" target="_blank" style="color:var(--faint)">↗</a></td>
+      <td class="num score">${r.score}</td>
+      <td><span class="pill" style="background:color-mix(in srgb, ${r.color} 18%, transparent); color:${r.color}">${r.tier}</span></td>
+      <td class="num">${fmtUsdc(r.bondRaw)}</td>
+      <td class="num hide-sm">${r.reliability === null ? "–" : Math.round(r.reliability * 100) + "%"}</td>
+      <td class="num">${r.done}</td>
+      <td class="num ${r.slashed ? "slash" : ""}">${r.slashed}</td>
+    </tr>`).join("");
+}
+
+async function load() {
+  try {
+    const next = Number(await withRetry(() => ab.nextObligationId(), "counting obligations"));
+    // Enumerate every obligation via Multicall3, tally per agent.
+    const tally = new Map();   // agent -> { taken, done, slashed }
+    const CHUNK = 400, CAP = 5000;
+    const last = Math.min(next - 1, CAP);
+    for (let start = 1; start <= last; start += CHUNK) {
+      const calls = [];
+      for (let i = start; i <= Math.min(start + CHUNK - 1, last); i++)
+        calls.push({ target: AGENT_BOND, allowFailure: true, callData: abIface.encodeFunctionData("getObligation", [i]) });
+      $("status").textContent = `Reading obligations ${start} to ${Math.min(start + CHUNK - 1, last)} of ${last}…`;
+      const res = await withRetry(() => mc.aggregate3(calls), "reading obligations");
+      for (const r of res) {
+        if (!r.success) continue;
+        const o = abIface.decodeFunctionResult("getObligation", r.returnData)[0];
+        const a = o.agent.toLowerCase();
+        const t = tally.get(a) || { taken: 0, done: 0, slashed: 0 };
+        t.taken++;
+        const st = Number(o.status);
+        if (st === 2) t.done++; else if (st === 3) t.slashed++;
+        tally.set(a, t);
+      }
+    }
+    if (tally.size === 0) { $("status").textContent = "No bonded agents yet — be the first to post a bond."; return; }
+
+    // Per agent bond() — sequential (the RPC rejects concurrency).
+    let totalBond = 0n, totalObl = 0, totalSlash = 0;
+    ROWS = [];
+    let done = 0;
+    for (const [agent, t] of tally) {
+      $("status").textContent = `Reading bonds ${++done} of ${tally.size}…`;
+      const bondRaw = await withRetry(() => ab.bond(agent), "reading bonds");
+      const s = scoreOf({ bondRaw, done: t.done, slashed: t.slashed, taken: t.taken });
+      ROWS.push({ agent: ethers.getAddress(agent), bondRaw, done: t.done, slashed: t.slashed, taken: t.taken, ...s });
+      totalBond += bondRaw; totalObl += t.taken; totalSlash += t.slashed;
+    }
+
+    $("cAgents").textContent = ROWS.length;
+    $("cBond").textContent = fmtUsdc(totalBond) + " USDC";
+    $("cObl").textContent = totalObl;
+    $("cSlash").textContent = totalSlash;
+    $("status").style.display = "none";
+    $("bar").style.display = "flex";
+    $("tbl").style.display = "table";
+    render("score");
+  } catch (e) {
+    console.error(e);
+    $("status").className = "err";
+    $("status").textContent = "Could not read the chain (" + (e.shortMessage || e.message || "RPC error") + "). The public Arc RPC rate limits and times out; reload in a moment.";
+  }
+}
+
+document.querySelectorAll(".sort button").forEach((b) => b.onclick = () => {
+  document.querySelectorAll(".sort button").forEach((x) => x.classList.remove("on"));
+  b.classList.add("on"); render(b.dataset.k);
+});
+
+load();
+</script>
+</body>
+</html>
