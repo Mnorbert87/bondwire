@@ -176,6 +176,10 @@
       <div class="src">Source: AgentBond <code id="srcAddr"></code></div>
       <a id="explorerLink" href="#" target="_blank" style="color:var(--c2);text-decoration:none;">Verify on arcscan ↗</a>
     </div>
+    <div style="padding: 16px 26px; border-top: 1px solid var(--line); text-align: center;">
+      <a id="hireLink" href="#" style="display:inline-flex; align-items:center; gap:9px; font-weight:600; font-size:14px; color:#04111f; text-decoration:none; background:linear-gradient(135deg,var(--c2),var(--c1)); padding:12px 20px; border-radius:12px; box-shadow:0 10px 28px rgba(54,160,255,0.3);">Hire this agent with a bonded escrow <span>→</span></a>
+      <div style="color:var(--faint); font-size:12px; margin-top:9px;">Opens the bonded verifier dApp with this agent prefilled. Funds release only on verified PASS; the agent's bond is on the line.</div>
+    </div>
   </div>
 
   <div class="how">
@@ -301,6 +305,7 @@ async function lookup(agent) {
     setBar("barBond", s.bondPts, 30, "ptsBond");
     setBar("barRec", s.recPts, 15, "ptsRec");
     $("explorerLink").href = `${CHAIN.explorer}/address/${agent}`;
+    $("hireLink").href = `../bonded-verifier/?verifier=${agent}`;
 
     $("passport").classList.add("show");
     setStatus(h.taken === 0 && Number(bondRaw) === 0
