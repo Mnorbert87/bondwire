@@ -13,7 +13,8 @@
     "README.md"
   ],
   "scripts": {
-    "example": "node example.js"
+    "example": "node example.js",
+    "test": "node --test test.js"
   },
   "keywords": [
     "arc",

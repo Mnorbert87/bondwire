@@ -157,7 +157,16 @@
       </div>
       <div class="frow" style="margin-top:8px">
         <div class="fld" style="flex:3"><label>Goal / deliverable</label><input id="hGoal" value="Deliver the agreed work" /></div>
-        <div class="fld" style="flex:0; min-width:200px; align-self:flex-end"><button class="btn" id="hCreate">Approve + create commitment</button></div>
+        <div class="fld" style="flex:0; min-width:200px; align-self:flex-end"><button class="btn" id="hCreate">Preview the deal</button></div>
+      </div>
+      <!-- quote before execute: nothing signs until the preview is confirmed -->
+      <div id="hPreview" style="display:none; margin-top:14px; border:1px solid var(--line-2); border-radius:12px; padding:14px 16px; background:var(--glass);">
+        <div style="font-family:'Space Grotesk'; font-weight:600; font-size:14px; margin-bottom:8px;">Preview, nothing is signed yet</div>
+        <div class="kv" id="hPreviewBody" style="margin-top:0"></div>
+        <div class="frow" style="margin-top:12px">
+          <button class="btn" id="hConfirm">Confirm and sign</button>
+          <button class="btn ghost" id="hCancel">Cancel</button>
+        </div>
       </div>
       <div class="kv" id="hState"></div>
       <div class="frow" style="margin-top:12px">
@@ -361,34 +370,60 @@ $("ppHire").onclick = () => {
   document.querySelector('[data-p="pHire"]').click();
 };
 
-// ── HIRE (CommitStakeV2) ─────────────────────────────────────────────────────
+// ── HIRE (CommitStakeV2) — quote before execute: preview first, sign only on confirm ──
+let hPending = null;   // the exact params the preview showed; confirm signs THESE, not the form
+function buildHireParams() {
+  const now = Math.floor(Date.now() / 1000);
+  const v = $("hVerifier").value.trim() || me, b = $("hBenef").value.trim() || me;
+  if (!ethers.isAddress(v) || !ethers.isAddress(b)) throw new Error("Verifier and beneficiary must be valid addresses (connect a wallet for the defaults).");
+  return {
+    verifier: v, beneficiary: b, arbiter: me,
+    amount: U($("hAmount").value || "5"), verifierSlice: U($("hSlice").value || "1"),
+    deadline: BigInt(now + 3600), challengeWindow: 120n, challengeBond: U("1"),
+    arbiterDeadline: BigInt(now + 7200), arbiterFee: 0n,
+    feeDeposit: 0n, feeStart: 0n, feeStop: 0n, goal: $("hGoal").value || "",
+  };
+}
 $("hCreate").onclick = async () => {
   try {
     needSigner();
+    $("hCreate").disabled = true; setStatus("Building the preview…");
+    const p = buildHireParams();
+    // live reputation check on the verifier, part of the quote — hire decisions see the tier
+    let tierLine = "no bond history";
+    try { const pp = await passport(p.verifier); tierLine = `${pp.tier} · score ${pp.score} · bond ${fmt(pp.bondRaw)} · slashed ${pp.slashed}×`; } catch { }
+    $("hPreviewBody").innerHTML =
+      `<b>you escrow</b><span class="mono">${fmt(p.amount)}</span>` +
+      `<b>verifier</b><span class="mono">${p.verifier.slice(0, 14)}… (${tierLine})</span>` +
+      `<b>verifier risks</b><span class="mono">${fmt(p.verifierSlice)} of its own bond behind the verdict</span>` +
+      `<b>on PASS</b><span>stake returns to you after a ${Number(p.challengeWindow)}s challenge window</span>` +
+      `<b>on FAIL</b><span>stake pays the beneficiary ${p.beneficiary.slice(0, 14)}…</span>` +
+      `<b>goal</b><span>${p.goal.replace(/</g, "&lt;")}</span>`;
+    hPending = p;
+    $("hPreview").style.display = "block"; setStatus("");
+  } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
+  finally { $("hCreate").disabled = false; }
+};
+$("hCancel").onclick = () => { hPending = null; $("hPreview").style.display = "none"; setStatus("Preview discarded, nothing was signed."); };
+$("hConfirm").onclick = async () => {
+  try {
+    needSigner();
+    if (!hPending) { setStatus("Preview the deal first.", true); return; }
+    const p = hPending;
+    $("hConfirm").disabled = true; setStatus("Approving + creating commitment…");
     const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, signer);
-    const now = Math.floor(Date.now() / 1000);
-    const amount = U($("hAmount").value || "5");
-    const p = {
-      verifier: $("hVerifier").value.trim() || me,
-      beneficiary: $("hBenef").value.trim() || me,
-      arbiter: me,
-      amount, verifierSlice: U($("hSlice").value || "1"),
-      deadline: BigInt(now + 3600), challengeWindow: 120n, challengeBond: U("1"),
-      arbiterDeadline: BigInt(now + 7200), arbiterFee: 0n,
-      feeDeposit: 0n, feeStart: 0n, feeStop: 0n, goal: $("hGoal").value || "",
-    };
-    setStatus("Approving + creating commitment…"); $("hCreate").disabled = true;
-    await ensureApprove(ADDR.CommitStakeV2, amount);
+    await ensureApprove(ADDR.CommitStakeV2, p.amount);
     const tx = await cs.create(p);
     const done = logTx("create commitment", tx.hash);
     const rc = await tx.wait(); done();
     let id = "?";
     for (const l of rc.logs) { try { const pl = cs.interface.parseLog(l); if (pl?.name === "Created") id = pl.args.id.toString(); } catch { } }
     $("hId").value = id === "?" ? "" : id;
+    hPending = null; $("hPreview").style.display = "none";
     setStatus(`Commitment #${id} created. The verifier resolves, then finalize settles the money.`);
     loadCommit().catch(() => {});
   } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
-  finally { $("hCreate").disabled = false; }
+  finally { $("hConfirm").disabled = false; }
 };
 async function loadCommit() {
   const id = Number($("hId").value); if (!Number.isInteger(id) || id < 1) return;

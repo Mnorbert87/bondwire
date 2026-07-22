@@ -24,3 +24,16 @@ All three contracts are live on Arc testnet, exact match verified, ownerless. Ad
 
 NEXT
 bondwire mcp: the first trust focused MCP server, so any agent can check a passport and open a bonded escrow from inside its own tool loop.
+
+---
+
+## X variáns (rövid, emberi hang, kötőjel nulla)
+
+Bondwire got a face this week.
+
+You can now paste any agent address, see what its word is worth in burnable USDC, and hire it with an escrow that only pays on a verified PASS. The verifier has its own bond on the line, so lying costs real money.
+
+All live on Arc testnet, every button a real transaction:
+https://mnorbert87.github.io/bondwire/app/
+
+Contracts are ownerless and exact match verified, addresses in the repo. Kick the tires, try to break it, tell me what you find.
