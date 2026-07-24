@@ -39,8 +39,8 @@ abstract contract ReentrancyGuard {
 ///         No owner, no admin, no upgrade key. The contract custodies only the bonds, using
 ///         balance-delta accounting: it books the amount that actually arrived (balanceOf delta),
 ///         not the requested amount. Unit-tested with fee-on-transfer and no-return (USDT-style)
-///         tokens; the production token is Arc USDC, a standard 1:1 ERC-20. Other exotic ERC-20
-///         behaviours are out of scope.
+///         tokens (`AgentBondFeeToken.t.sol`); the production token is Arc USDC, a standard 1:1
+///         ERC-20. Other exotic ERC-20 behaviours are out of scope.
 ///
 ///         USDC has 6 decimals; all amounts are micro-USDC.
 contract AgentBond is ReentrancyGuard {
@@ -57,6 +57,7 @@ contract AgentBond is ReentrancyGuard {
         address creditor; // where a slash sends the funds
         uint256 amount; // micro-USDC locked
         uint64 deadline; // 0 = no expiry; if set, the agent may self-release after this time
+        uint64 allowanceEpoch; // grant generation this obligation was locked under (see revoke)
         Status status;
     }
 
@@ -68,6 +69,11 @@ contract AgentBond is ReentrancyGuard {
     mapping(address => uint256) public locked;
     /// @notice Slashing allowance an agent grants to an enforcer contract (revolving capacity).
     mapping(address => mapping(address => uint256)) public slashAllowance;
+    /// @notice Grant generation per (agent, enforcer). Bumped whenever the agent hard-redefines
+    ///         or tightens the grant (`setSlashAllowance` / `decreaseSlashAllowance`). A release
+    ///         only returns revolving capacity if the obligation was locked under the *current*
+    ///         generation — so a revoke can never be undone by an in-flight obligation.
+    mapping(address => mapping(address => uint64)) public allowanceEpoch;
 
     uint256 public nextObligationId = 1;
     mapping(uint256 => Obligation) public obligations;
@@ -118,13 +124,51 @@ contract AgentBond is ReentrancyGuard {
         emit Withdrawn(msg.sender, amount, bond[msg.sender]);
     }
 
-    /// @notice Grant (or revoke, with 0) an enforcer contract the right to lock and slash up to
-    ///         `amount` of the caller's bond. Set to the exact revolving capacity you want that
-    ///         protocol to have. Only ever trust audited enforcer code with this.
+    /// @notice Grant (or hard-revoke, with 0) an enforcer contract the right to lock and slash up
+    ///         to `amount` of the caller's bond. This is an ABSOLUTE (re)definition of the grant:
+    ///         it bumps the grant generation, so any obligation still open under the previous
+    ///         generation will NOT return its capacity to this allowance when released. Use this to
+    ///         revoke: `setSlashAllowance(enforcer, 0)` guarantees the enforcer cannot re-lock, even
+    ///         by release-then-relock of an in-flight obligation. Only ever trust audited enforcer
+    ///         code with this.
+    ///
+    ///         NOTE the classic approve-race: because this overwrites, an enforcer can front-run a
+    ///         change and `lock` at the old value. To adjust a live grant without that race, use
+    ///         `increaseSlashAllowance` / `decreaseSlashAllowance` (relative deltas).
     function setSlashAllowance(address enforcer, uint256 amount) external {
         require(enforcer != address(0), "ENFORCER_ZERO");
         slashAllowance[msg.sender][enforcer] = amount;
+        unchecked {
+            allowanceEpoch[msg.sender][enforcer] += 1;
+        }
         emit AllowanceSet(msg.sender, enforcer, amount);
+    }
+
+    /// @notice Race-free grant increase: add `delta` to the enforcer's revolving capacity. Keeps the
+    ///         current grant generation (in-flight obligations still restore on release). Preferred
+    ///         over `setSlashAllowance` for topping up a live grant.
+    function increaseSlashAllowance(address enforcer, uint256 delta) external {
+        require(enforcer != address(0), "ENFORCER_ZERO");
+        require(delta > 0, "AMOUNT_ZERO");
+        uint256 next = slashAllowance[msg.sender][enforcer] + delta;
+        slashAllowance[msg.sender][enforcer] = next;
+        emit AllowanceSet(msg.sender, enforcer, next);
+    }
+
+    /// @notice Race-free grant tightening: subtract `delta` (saturating at 0) from the enforcer's
+    ///         revolving capacity. A deliberate reduction of trust, so it bumps the grant generation
+    ///         too — in-flight obligations will not top the allowance back up on release. To fully
+    ///         revoke, `decreaseSlashAllowance(enforcer, type(uint256).max)` or `setSlashAllowance(enforcer, 0)`.
+    function decreaseSlashAllowance(address enforcer, uint256 delta) external {
+        require(enforcer != address(0), "ENFORCER_ZERO");
+        require(delta > 0, "AMOUNT_ZERO");
+        uint256 cur = slashAllowance[msg.sender][enforcer];
+        uint256 next = delta >= cur ? 0 : cur - delta;
+        slashAllowance[msg.sender][enforcer] = next;
+        unchecked {
+            allowanceEpoch[msg.sender][enforcer] += 1;
+        }
+        emit AllowanceSet(msg.sender, enforcer, next);
     }
 
     // --- enforcer: open and resolve obligations ---
@@ -159,6 +203,7 @@ contract AgentBond is ReentrancyGuard {
             creditor: creditor,
             amount: amount,
             deadline: deadline,
+            allowanceEpoch: allowanceEpoch[agent][msg.sender],
             status: Status.Active
         });
 
@@ -178,7 +223,13 @@ contract AgentBond is ReentrancyGuard {
 
         o.status = Status.Released;
         locked[o.agent] -= o.amount;
-        slashAllowance[o.agent][o.enforcer] += o.amount;
+        // Return revolving capacity ONLY if the grant generation is unchanged since this
+        // obligation was locked. If the agent revoked or tightened the grant in the meantime
+        // (setSlashAllowance / decreaseSlashAllowance bumped the epoch), the capacity is NOT
+        // restored — closing the release-then-relock trap against a revoking agent.
+        if (o.allowanceEpoch == allowanceEpoch[o.agent][o.enforcer]) {
+            slashAllowance[o.agent][o.enforcer] += o.amount;
+        }
 
         emit Released(id, o.agent, o.amount);
     }
