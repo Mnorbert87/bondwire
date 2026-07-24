@@ -64,6 +64,22 @@ contract AgentBondHandler is Test {
         ab.setSlashAllowance(e, amt);
     }
 
+    function grantIncrease(uint256 ai, uint256 ei, uint256 delta) public {
+        address a = agents[ai % agents.length];
+        address e = enforcers[ei % enforcers.length];
+        delta = bound(delta, 1, 10_000e6);
+        vm.prank(a);
+        ab.increaseSlashAllowance(e, delta);
+    }
+
+    function grantDecrease(uint256 ai, uint256 ei, uint256 delta) public {
+        address a = agents[ai % agents.length];
+        address e = enforcers[ei % enforcers.length];
+        delta = bound(delta, 1, 20_000e6); // may exceed current -> saturates to 0
+        vm.prank(a);
+        ab.decreaseSlashAllowance(e, delta);
+    }
+
     function lock(uint256 ai, uint256 ei, uint256 ci, uint256 amt, uint64 deadlineOffset) public {
         address a = agents[ai % agents.length];
         address e = enforcers[ei % enforcers.length];
@@ -85,7 +101,7 @@ contract AgentBondHandler is Test {
     function release(uint256 idx) public {
         if (openIds.length == 0) return;
         uint256 id = openIds[idx % openIds.length];
-        (, address e,,,, AgentBond.Status st) = ab.obligations(id);
+        (, address e,,,,, AgentBond.Status st) = ab.obligations(id);
         if (st != AgentBond.Status.Active) return;
         vm.prank(e);
         ab.release(id);
@@ -95,7 +111,7 @@ contract AgentBondHandler is Test {
     function selfRelease(uint256 idx) public {
         if (openIds.length == 0) return;
         uint256 id = openIds[idx % openIds.length];
-        (address a,,,, uint64 deadline, AgentBond.Status st) = ab.obligations(id);
+        (address a,,,, uint64 deadline,, AgentBond.Status st) = ab.obligations(id);
         if (st != AgentBond.Status.Active || deadline == 0 || block.timestamp <= deadline) return;
         vm.prank(a);
         ab.release(id);
@@ -104,7 +120,7 @@ contract AgentBondHandler is Test {
     function slash(uint256 idx) public {
         if (openIds.length == 0) return;
         uint256 id = openIds[idx % openIds.length];
-        (address a, address e, address c, uint256 amount,, AgentBond.Status st) = ab.obligations(id);
+        (address a, address e, address c, uint256 amount,,, AgentBond.Status st) = ab.obligations(id);
         if (st != AgentBond.Status.Active) return;
         uint256 before = usdc.balanceOf(c);
         vm.prank(e);
