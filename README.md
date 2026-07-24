@@ -117,10 +117,21 @@ Three claims, each backed by something you can re-run:
 colluding arbiter can never *take* the slice (claim 2, symbolically proven). It does **not** make
 the arbiter *honest*. A staker can name an arbiter that is only address-distinct from the parties
 (`CommitStakeV2.sol:335-337`) and, on a *correct* verdict, have it overturn, burning an honest
-verifier's slice. This is **griefing, not theft**: the attacker nets ≈ gas and never a profit, by
-the same §7a burn that the spec proves. The verifier's exposure is bounded today by the **revocable
-slash allowance** it grants AgentBond (spent per `lock`), so the operational defense is a minimal
-per-job allowance. Removing the residual griefing is on the **roadmap**: per-commitment verifier
+verifier's slice.
+
+**Correction (2026-07-24):** this paragraph used to say that case is *"griefing, not theft: the
+attacker nets ≈ gas and never a profit"*. **That was wrong**, and a PoC measurement corrected it.
+The arbiter fee is reimbursed to the harmed party out of the slashed slice (`damage = feeAccrued +
+fee`, `CommitStakeV2.sol:533-537`) *and* paid to the arbiter out of the challenger's own bond
+(`:545`), which the challenger gets refunded (`:546`). Between independent parties that nets exactly
+0 (control run). Behind one entity, it is profit taken from the verifier: **+5.000000 USDC measured
+from a 1 USDC dust stake against a 150 USDC slice**, scaling to **~99.99% of the slice** when
+`arbiterFee` is set high, since nothing caps it relative to the slice. So it *is* theft from the
+verifier, and the §7a burn bounds only how much is destroyed, not how much the attacker keeps. Full
+measurement, table and defense in [THREAT_MODEL §8](THREAT_MODEL.md). The verifier's exposure is
+bounded today by the **slash allowance** it grants AgentBond (spent per `lock`), so the operational
+defense on the deployed release is a minimal per-job allowance, and a blanket allowance is unsafe.
+Removing this is on the **roadmap**: per-commitment verifier
 opt-in to the named arbiter (or an AgentBond arbiter allowlist), plus a stake-proportional slice cap
 `verifierSlice ≤ k·(amount + feeDeposit + arbiterFee)`. We state this because a careful reviewer
 reaches it: the symbolic spec proves the *accounting* of a slash, not the *justness* of the verdict
