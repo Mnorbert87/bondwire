@@ -17,7 +17,8 @@ Scope: the three on-chain primitives in this repo, [`AgentBond`](contracts/agent
 
 **Defense, damage is capped and cannot be redirected:**
 - The payout destination is fixed *before* the judge acts: `CommitStake.create` pins `beneficiary` (`CommitStake.sol:113-120`), `AgentBond.lock` pins `creditor` (`AgentBond.sol:153-160`). A hostile judge can trigger the payout, but only to the address the funding party already accepted, it cannot pay itself.
-- AgentBond exposure is bounded by the agent's own grant: `lock` spends `slashAllowance` (`AgentBond.sol:144-149`), which the agent sets and can revoke to zero at any time (`setSlashAllowance`, `AgentBond.sol:121-125`). A slash burns capacity permanently (`slash` does not restore allowance, `AgentBond.sol:185-196`), so a hostile enforcer cannot recycle one grant into repeated slashes.
+- AgentBond exposure is bounded by the agent's own grant: `lock` spends `slashAllowance` (`AgentBond.sol:144-149`), which the agent sets (`setSlashAllowance`, `AgentBond.sol:121-125`). A slash burns capacity permanently (`slash` does not restore allowance, `AgentBond.sol:185-196`), so a hostile enforcer cannot recycle one grant into repeated slashes.
+- **Correction (2026-07-24), the revoke is not final on the deployed contract.** An earlier version of this line said the agent "can revoke to zero at any time". That overstates it. `release` restores the released amount to the allowance unconditionally (`AgentBond.sol:181`), so while an obligation is still Active an enforcer can defeat a `setSlashAllowance(e, 0)` by releasing it (capacity comes back) and locking again. The exposure **cap is never exceeded** and no extra funds can be taken, this is not theft above the grant, but the agent cannot unilaterally end the relationship while the enforcer keeps one obligation in flight. Fix implemented and tested, not deployed: see [`fix/agentbond-allowance-epoch`](https://github.com/Mnorbert87/bondwire/tree/fix/agentbond-allowance-epoch) (grant generations + race-free `increase/decreaseSlashAllowance`, 43/43 green vs 32/32 on the deployed source). Not merged into the deployed source for the same reason as §8, the live AgentBond (`0xB9b4…Bf8e0`) is source-verified and any source edit would break the recompile-to-bytecode match during judging.
 - Tested: `test_slash_paysCreditorAndBurnsCapacity`, `testFuzz_slash_paysExactlyLockedAmount`, `test_revokeAllowance_blocksNewLocks`, and the `invariant_exactlyOnePayout` campaign proving a stake can never reach both sides.
 
 **Residual risk (accepted, documented):** a dishonest verifier *can* misjudge the outcome within those bounds. That is the stated trust model, pick your verifier/enforcer the way you pick an escrow agent. The primitive guarantees the blast radius, not the judge's honesty.
@@ -70,18 +71,39 @@ Scope: the three on-chain primitives in this repo, [`AgentBond`](contracts/agent
 
 **Defense:** structural, there is no owner, no admin function, no upgrade hook, no pausability, and no `selfdestruct` in any of the three contracts. The only addresses that can ever move a given escrow's funds are the ones named in that escrow's record. Nothing to compromise, nothing to subpoena.
 
-### 8. Sockpuppet-arbiter griefing (CommitStakeV2, the honest verifier's burnable slice)
+### 8. Sockpuppet-arbiter attack (CommitStakeV2, the honest verifier's slice)
 
-**Attack:** CommitStakeV2 adds a dispute arbiter, named by the staker at `create`. The §7a surplus burn already proves a colluding arbiter can never *take* the slice (it burns, it cannot be redirected, symbolically verified). But burning is still *harm*: a staker can name an arbiter that is only address-distinct from the parties, lock an honest verifier's bonded slice, let the verifier resolve *correctly*, challenge as the harmed party, and have its sockpuppet arbiter overturn the correct verdict, burning the honest verifier's slice. The attacker nets ≈ gas (no profit, by the same burn), so this is **griefing / availability**, not theft. It is exploitable to the extent the verifier granted a broad slash allowance, exactly the open-market "free bond is a credit score, anyone can hire me" posture.
+> **Correction, 2026-07-24.** Every earlier version of this section classified this as *griefing, not theft*, on the claim that "the attacker nets ≈ gas (no profit, by the same burn)". **That claim was wrong.** A PoC measurement (two independent runs, below) shows the attack is *profitable*. The corrected analysis stands here in full rather than being quietly deleted, because the point of this document is that its numbers can be checked.
 
-**Defense (deployed release):** the verifier's exposure is bounded by the revocable slash allowance it grants AgentBond (spent per `lock`), so an operator can cap blast radius with a minimal per-job allowance. The §7a burn keeps the attack profitless in all cases. The symbolic spec proves the *accounting* of a slash, not the *justness* of the verdict, arbiter honesty is a stated trust assumption, exactly as the verifier's is.
+**Attack:** CommitStakeV2 adds a dispute arbiter, named by the staker at `create`. A staker names an arbiter that is only address-distinct from the parties, locks an honest verifier's bonded slice, lets the verifier resolve *correctly*, challenges as the harmed party, and has its sockpuppet arbiter overturn the correct verdict. It is exploitable to the extent the verifier granted a broad slash allowance, exactly the open-market "free bond is a credit score, anyone can hire me" posture the repo advocates, so the precondition is not exotic.
+
+**What the attacker actually nets.** In the overturn branch the arbiter fee lands on the same entity twice:
+- `damage = feeAccrued + fee` is paid to the *harmed party* out of the **verifier's slashed slice** (`CommitStakeV2.sol:533-537`);
+- `fee` is paid to the *arbiter* out of the **challenger's own challenge bond** (`:545`), and the challenger is refunded the remainder (`:546`).
+
+With independent parties this is correct: the second leg reimburses a real cost, and a control run confirms an independent challenger's net delta is exactly **0**. When challenger, harmed party and arbiter are one entity, the second leg is a refund of its own money, so the first leg is pure profit **taken from the verifier's bond**. Measured net gain: `min(feeAccrued + arbiterFee, slice)`.
+
+Measured (Foundry PoC, attacker's total USDC delta across all its addresses, gas excluded):
+
+| Stake | Verifier slice | `arbiterFee` | Attacker net | Burned |
+|---|---|---|---|---|
+| 1 USDC (dust) | 150 USDC | 5 USDC | **+5.000000 USDC** | 145 USDC |
+| 1 USDC (dust) | 10,000 USDC | ~9,999 USDC | **+9,998.999999 USDC** | ~1.000001 USDC |
+
+The `SLICE_TOO_SMALL` check (`CommitStakeV2.sol:374`) requires `verifierSlice > amount + feeDeposit + arbiterFee`, which guarantees the surplus burn is *strictly positive* but can leave it as small as 1 wei. There is **no cap on `arbiterFee` relative to the slice**, so the profit scales to nearly the whole slice. **This is theft from the verifier, not griefing**, and the §7a surplus burn bounds only *how much is destroyed*, not *how much the attacker keeps*.
+
+Note that two in-code NatSpec comments carry the same superseded reasoning (`CommitStakeV2.sol:366-372` "a lie must be a mathematical loss in every outcome" / "damage can no longer reach the slice", and `:490`). They are left byte-for-byte untouched on purpose: the deployed CommitStakeV2 is exact-match verified, and editing even a comment would change the metadata hash and break the recompile-to-bytecode check a judge may run. Read them against this section.
+
+**Defense (deployed release):** the only contract-level bound is the slash allowance the verifier grants AgentBond, spent per `lock`. An operator running against the deployed contract **must** grant a minimal per-job allowance, since the slice it authorises is the maximum an attacker can extract. Blanket allowances are unsafe on the deployed release. The symbolic spec proves the *accounting* of a slash, not the *justness* of the verdict, and arbiter honesty is a stated trust assumption, exactly as the verifier's is.
 
 **Defense (the fix, implemented, tested, NOT deployed):** branch [`fix/arbiter-griefing-optin`](https://github.com/Mnorbert87/bondwire/pull/1) (Draft PR #1):
 - **Per-commitment arbiter opt-in**, a verifier must `approveArbiter(arbiter, true)` before any staker may name that arbiter over its bond (mirrors `setSlashAllowance`: consent to the *judge*, not just the enforcer). Address-distinctness alone is no longer sufficient.
 - **Slice leverage cap**, `verifierSlice <= 3 × (amount + feeDeposit + arbiterFee)`: a dust stake can no longer lock a verifier's whole bond.
 - Full suite **88/88** green; the Halmos §7a routing spec is unchanged.
 
-**Why not deployed:** the live CommitStakeV2 (`0x1f1C…8CA9`) is exact-match verified on Arcscan; merging + redeploying would invalidate that verification this close to judging. The PR is the proof the fix is real and green, theft stays mathematically + symbolically excluded on the deployed contract, and this removes the residual griefing on the roadmap.
+**What that fix does and does not close (corrected 2026-07-24).** The opt-in kills the sockpuppet precondition and the leverage cap kills the dust-stake amplification, so together they remove the practical attack. They do **not** remove the underlying profit leg: `damage` reimburses `arbiterFee` out of the slice regardless of whether the arbiter was genuinely independent, which is not provable on-chain. A complete fix needs `arbiterFee` bounded relative to the slice (or excluded from `damage`). Tracked as open, not claimed as solved.
+
+**Why not deployed:** the live CommitStakeV2 (`0x1f1C…8CA9`) is exact-match verified on Arcscan; merging + redeploying would invalidate that verification this close to judging. The PR is the proof the fix is real and green. To be explicit about the trade-off: this means **the deployed contract carries the attack described above**, and the mitigation available to an operator today is allowance discipline, not contract logic.
 
 ## What this model does *not* cover
 
