@@ -69,7 +69,15 @@ const COMMIT_STAKE_ABI = [
   "function nextId() view returns (uint256)",
   "function totalEscrowed() view returns (uint256)",
   "function get(uint256 id) view returns (tuple(address staker,address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint256 bondObligationId,uint256 challengeBond,uint256 challengeBondPaid,uint256 arbiterFee,uint256 feeStreamId,uint64 deadline,uint64 challengeWindow,uint64 arbiterDeadline,uint64 resolvedAt,uint64 challengedAt,bool resolvedPass,uint8 status,uint8 outcome))",
-  "event Created(uint256 indexed id, address indexed staker, address indexed verifier, address beneficiary, uint256 amount, uint64 deadline)",
+  // Contract-derived sizing helpers (public pure) — the SDK uses these for safe defaults
+  // instead of hardcoded values, so commit()'s happy path can never revert on the §7a band.
+  "function recommendedSlice(uint256 amount, uint256 maxAccruableFee) pure returns (uint256)",
+  "function challengeBondFloor(uint256 verifierSlice, uint256 arbiterFee) pure returns (uint256)",
+  "function challengeBondCap(uint256 verifierSlice, uint256 arbiterFee) pure returns (uint256)",
+  // Must match the contract emit exactly (CommitStakeV2.sol:270-278): 7 fields, not 6.
+  // The previous 6-field ABI (…beneficiary,amount,deadline) never matched, so parseLog threw
+  // and commit() silently returned id=undefined.
+  "event Created(uint256 indexed id, address indexed staker, address indexed verifier, uint256 amount, uint256 verifierSlice, uint256 bondObligationId, string goal)",
 ];
 
 const MULTICALL3_ABI = [
@@ -85,7 +93,10 @@ const ERC20_ABI = [
 
 const OBLIGATION_STATUS = ["None", "Active", "Released", "Slashed"];
 const STREAM_STATUS = ["None", "Active", "Ended"];
-const COMMITMENT_STATUS = ["None", "Open", "Resolved", "Challenged", "Finalized"];
+// Must mirror CommitStakeV2.sol enum Status exactly (None,Active,Resolved,Challenged,Finalized,Expired).
+// The old ["None","Open","Resolved","Challenged","Finalized"] mislabelled index 1 (Active, not Open)
+// and dropped index 5 (Expired = liveness slash), so status reads were wrong past a slash.
+const COMMITMENT_STATUS = ["None", "Active", "Resolved", "Challenged", "Finalized", "Expired"];
 const COMMITMENT_OUTCOME = [
   "None", "CleanPass", "CleanFail", "UpheldPass", "UpheldFail",
   "OverturnedToPass", "OverturnedToFail", "SilencePass", "SilenceFail", "LivenessSlash",
@@ -95,9 +106,24 @@ const COMMITMENT_OUTCOME = [
  * A read-only JsonRpcProvider pinned to Arc testnet. batchMaxCount 1 because the
  * public Arc RPC rejects batched (array) JSON-RPC requests, which ethers v6 sends
  * by default when calls land in the same tick; staticNetwork skips chainId probes.
+ *
+ * Resilience (the load-balanced public RPC times out / 429s under load, which used to
+ * fail a whole read or write): each request gets a 20s timeout and up to 4 attempts with
+ * exponential backoff (0.5s, 1s, 2s) on transient network / 429 / 5xx responses. Reads are
+ * idempotent so retrying is free; a write's retry only re-sends if nothing was broadcast
+ * (ethers only invokes retryFunc when it has no successful response).
  */
 function arcProvider() {
-  return new ethers.JsonRpcProvider(BONDWIRE.rpcUrl, BONDWIRE.chainId, {
+  const req = new ethers.FetchRequest(BONDWIRE.rpcUrl);
+  req.timeout = 20000; // ms per attempt
+  req.retryFunc = async (_req, resp, attempt) => {
+    if (attempt >= 4) return false;
+    const transient = resp == null || resp.statusCode === 429 || resp.statusCode >= 500;
+    if (!transient) return false;
+    await new Promise((r) => setTimeout(r, 500 * 2 ** (attempt - 1))); // 0.5s,1s,2s backoff
+    return true;
+  };
+  return new ethers.JsonRpcProvider(req, BONDWIRE.chainId, {
     staticNetwork: true,
     batchMaxCount: 1,
   });
@@ -313,28 +339,56 @@ export class Bondwire {
    * and have granted CommitStakeV2 a slash allowance — its `verifierSlice` gets
    * locked behind the verdict, so a lying verifier loses real money.
    *
-   * Required: { verifier, beneficiary, amount }. Everything else has safe defaults:
-   * arbiter (0 = none), verifierSlice ("1"), deadline (+24h), challengeWindow (600s),
-   * challengeBond ("1"), arbiterDeadline (+48h), arbiterFee ("0"), goal ("").
+   * Required: { verifier, beneficiary, amount, arbiter }. `arbiter` is mandatory —
+   * CommitStakeV2 reverts with ARBITER_ZERO on a zero arbiter (contract line 332).
+   *
+   * Defaults are DERIVED FROM THE CONTRACT (public-pure helpers), not hardcoded, so the
+   * happy path can never trip the §7a bond band or the slice inequality:
+   *   verifierSlice  -> recommendedSlice(amount, feeDeposit + arbiterFee)  (> amount+fee+arbiterFee)
+   *   challengeBond  -> challengeBondFloor(verifierSlice, arbiterFee)      (band lower bound)
+   *   arbiterFee ("0"), feeDeposit ("0", opens a fee stream when > 0), goal ("").
+   *
+   * TIME CONVENTIONS (this pair is what hid the old bug):
+   *   deadline        = ABSOLUTE unix seconds (resolve-by wall-clock; default now+24h).
+   *   challengeWindow = DURATION in seconds after resolve (default 600).
+   *   arbiterDeadline = DURATION in seconds after a challenge (contract line 198; default 48h).
    * Returns { id, receipt }.
    */
   async commit(p, { approve = true } = {}) {
     const now = Math.floor(Date.now() / 1000);
+    if (!p.arbiter || p.arbiter === ethers.ZeroAddress) {
+      throw new Error("commit: 'arbiter' is required — CommitStakeV2 reverts (ARBITER_ZERO) on a zero arbiter");
+    }
+    const amount = this.toUnits(p.amount);
+    const arbiterFee = this.toUnits(p.arbiterFee ?? "0");
+    const feeDeposit = this.toUnits(p.feeDeposit ?? "0");
+    // maxAccruableFee ceiling = feeDeposit + arbiterFee; recommendedSlice guarantees
+    // slice > amount + maxAccruableFee, satisfying the contract's strict SLICE inequality.
+    const verifierSlice = p.verifierSlice != null
+      ? this.toUnits(p.verifierSlice)
+      : await this.commitStake.recommendedSlice(amount, feeDeposit + arbiterFee);
+    // Default the challenge bond to the exact §7a floor the contract enforces.
+    const challengeBond = p.challengeBond != null
+      ? this.toUnits(p.challengeBond)
+      : await this.commitStake.challengeBondFloor(verifierSlice, arbiterFee);
     const params = {
       verifier: p.verifier,
       beneficiary: p.beneficiary,
-      arbiter: p.arbiter ?? ethers.ZeroAddress,
-      amount: this.toUnits(p.amount),
-      verifierSlice: this.toUnits(p.verifierSlice ?? "1"),
-      deadline: BigInt(p.deadline ?? now + 24 * 3600),
-      challengeWindow: BigInt(p.challengeWindow ?? 600),
-      challengeBond: this.toUnits(p.challengeBond ?? "1"),
-      arbiterDeadline: BigInt(p.arbiterDeadline ?? now + 48 * 3600),
-      arbiterFee: this.toUnits(p.arbiterFee ?? "0"),
-      feeDeposit: 0n, feeStart: 0n, feeStop: 0n,
+      arbiter: p.arbiter,
+      amount,
+      verifierSlice,
+      deadline: BigInt(p.deadline ?? now + 24 * 3600),      // absolute unix seconds
+      challengeWindow: BigInt(p.challengeWindow ?? 600),    // duration (s)
+      challengeBond,
+      arbiterDeadline: BigInt(p.arbiterDeadline ?? 48 * 3600), // duration (s), NOT absolute
+      arbiterFee,
+      feeDeposit,
+      feeStart: BigInt(p.feeStart ?? (feeDeposit > 0n ? now : 0)),
+      feeStop: BigInt(p.feeStop ?? (feeDeposit > 0n ? now + 24 * 3600 : 0)),
       goal: p.goal ?? "",
     };
-    if (approve) await this.approveUsdc(this.addresses.CommitStakeV2, this.fromUnits(params.amount));
+    // The contract pulls amount + feeDeposit from the staker, so approve both.
+    if (approve) await this.approveUsdc(this.addresses.CommitStakeV2, this.fromUnits(amount + feeDeposit));
     const tx = await this.commitStake.create(params);
     const receipt = await tx.wait();
     const id = this._eventId(receipt, this.commitStake, "Created");
@@ -458,17 +512,25 @@ export class Bondwire {
     return `${BONDWIRE.explorer}/tx/${hash}`;
   }
 
-  /** Pull an id from the first matching event in a receipt. */
+  /** Pull an id from the first matching event in a receipt.
+   *  The inner try/catch is required: a receipt carries foreign logs (USDC Transfer,
+   *  AgentBond events, …) that this contract's interface cannot parse — those we skip.
+   *  But if NO matching event is found, we THROW rather than return undefined: a silent
+   *  undefined id (the old behaviour) let a write path "succeed" with no usable id when
+   *  the event ABI drifted from the contract emit. */
   _eventId(receipt, contract, eventName) {
     for (const log of receipt.logs) {
       try {
         const parsed = contract.interface.parseLog(log);
         if (parsed && parsed.name === eventName) return parsed.args.id;
       } catch {
-        /* not our event */
+        /* foreign log — not decodable by this contract's interface; skip it */
       }
     }
-    return undefined;
+    throw new Error(
+      `${eventName} event not found in receipt (tx ${receipt?.hash}). ` +
+      `The event ABI may not match the contract emit.`
+    );
   }
 }
 
