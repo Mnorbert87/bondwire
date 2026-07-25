@@ -1,0 +1,12 @@
+[submodule "contracts/stream-pay/lib/forge-std"]
+	path = contracts/stream-pay/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "contracts/commit-stake-v2/lib/forge-std"]
+	path = contracts/commit-stake-v2/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "contracts/agent-bond/lib/forge-std"]
+	path = contracts/agent-bond/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "contracts/commit-stake/lib/forge-std"]
+	path = contracts/commit-stake/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
