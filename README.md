@@ -221,7 +221,7 @@ Every contract in the stack ships with a unit + adversarial + fuzz + **invariant
 | [`contracts/commit-stake`](contracts/commit-stake/README.md) | 25 | 6 × 10,000 runs | 3 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 | [`contracts/commit-stake-v2`](contracts/commit-stake-v2/TEST_AUDIT.md) | 79 | 6 × 10,000 runs | 5 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 
-`commit-stake-v2` carries three layers the others don't: **6 Halmos symbolic proofs** (all-inputs
+`commit-stake-v2` carries three layers the others don't: **5 Halmos symbolic proofs** (all-inputs
 solvency / surplus-positivity / no-double-pay), a **Slither + Aderyn** pass with by-design findings
 annotated in-source and `--fail-pedantic` in CI, and a **mutation campaign** (100% revert-class kill).
 The full trail is in [its audit docs](#commitstakev2-who-pays-when-the-verifier-lies).
