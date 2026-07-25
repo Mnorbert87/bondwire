@@ -24,7 +24,12 @@ function needSigner() {
   if (signerBw) return signerBw;
   const pk = process.env.AGENT_PRIVATE_KEY;
   if (!pk) throw new Error("AGENT_PRIVATE_KEY is not set. Read only tools work without it; value moving tools need a dedicated Arc TESTNET burner key in the environment.");
-  signerBw = new Bondwire(new ethers.Wallet(pk, Bondwire.provider()));
+  // NonceManager: the MCP server can have several value-moving tool calls in flight at once
+  // (quote/execute pairs, concurrent agents). Without it they'd read the same "pending" nonce
+  // from the RPC and one tx would drop as "replacement underpriced" — the failure mode the
+  // comments already flagged. NonceManager assigns nonces locally and sequentially instead.
+  const wallet = new ethers.NonceManager(new ethers.Wallet(pk, Bondwire.provider()));
+  signerBw = new Bondwire(wallet);
   return signerBw;
 }
 
