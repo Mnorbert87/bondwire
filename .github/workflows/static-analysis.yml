@@ -31,15 +31,15 @@ jobs:
       run:
         working-directory: ${{ matrix.project }}
     steps:
+      # forge-std is a pinned submodule (v1.16.1) in all four projects — see .gitmodules
       - uses: actions/checkout@v5
+        with:
+          submodules: recursive
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: stable
-
-      - name: Install forge-std
-        run: git clone --depth 1 --branch v1.16.1 https://github.com/foundry-rs/forge-std lib/forge-std
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -80,15 +80,15 @@ jobs:
       run:
         working-directory: contracts/commit-stake-v2
     steps:
+      # forge-std is a pinned submodule (v1.16.1) in all four projects — see .gitmodules
       - uses: actions/checkout@v5
+        with:
+          submodules: recursive
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: stable
-
-      - name: Install forge-std
-        run: git clone --depth 1 --branch v1.16.1 https://github.com/foundry-rs/forge-std lib/forge-std
 
       - name: Set up Python
         uses: actions/setup-python@v5
