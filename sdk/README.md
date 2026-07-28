@@ -84,6 +84,13 @@ arbiter keep everyone honest. Try it live: [bonded verifier dApp](https://mnorbe
 | `finalizeCommitment(id)` | Settle after the window; routes stake, slice and bonds. |
 | `commitment(id)` | Decoded state: status, outcome, amounts, windows. |
 
+`commit()` sizes the verifier slice for you. If you skip the SDK and call `CommitStakeV2`
+directly, note that the on-chain helper `recommendedSlice(amount, maxAccruableFee)` takes only
+two arguments while `create` enforces `slice > amount + feeDeposit + arbiterFee`: pass
+`maxAccruableFee = feeDeposit + arbiterFee`. Passing only the fee deposit returns a slice that
+`create` rejects with `SLICE_TOO_SMALL` once `arbiterFee` reaches half the amount. See
+[VERIFIER_ECONOMICS §4](../VERIFIER_ECONOMICS.md).
+
 ### Agent Passport, portable reputation
 
 ```js
