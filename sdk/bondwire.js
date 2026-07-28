@@ -71,7 +71,7 @@ const COMMIT_STAKE_ABI = [
   "function get(uint256 id) view returns (tuple(address staker,address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint256 bondObligationId,uint256 challengeBond,uint256 challengeBondPaid,uint256 arbiterFee,uint256 feeStreamId,uint64 deadline,uint64 challengeWindow,uint64 arbiterDeadline,uint64 resolvedAt,uint64 challengedAt,bool resolvedPass,uint8 status,uint8 outcome))",
   // Contract-derived sizing helpers (public pure) — the SDK uses these for safe defaults
   // instead of hardcoded values, so commit()'s happy path can never revert on the §7a band.
-  "function recommendedSlice(uint256 amount, uint256 maxAccruableFee) pure returns (uint256)",
+  "function recommendedSlice(uint256 amount, uint256 feeDeposit, uint256 arbiterFee) pure returns (uint256)",
   "function challengeBondFloor(uint256 verifierSlice, uint256 arbiterFee) pure returns (uint256)",
   "function challengeBondCap(uint256 verifierSlice, uint256 arbiterFee) pure returns (uint256)",
   // Must match the contract emit exactly (CommitStakeV2.sol:270-278): 7 fields, not 6.
@@ -344,7 +344,7 @@ export class Bondwire {
    *
    * Defaults are DERIVED FROM THE CONTRACT (public-pure helpers), not hardcoded, so the
    * happy path can never trip the §7a bond band or the slice inequality:
-   *   verifierSlice  -> recommendedSlice(amount, feeDeposit + arbiterFee)  (> amount+fee+arbiterFee)
+   *   verifierSlice  -> recommendedSlice(amount, feeDeposit, arbiterFee)  (> amount+fee+arbiterFee)
    *   challengeBond  -> challengeBondFloor(verifierSlice, arbiterFee)      (band lower bound)
    *   arbiterFee ("0"), feeDeposit ("0", opens a fee stream when > 0), goal ("").
    *
@@ -362,11 +362,11 @@ export class Bondwire {
     const amount = this.toUnits(p.amount);
     const arbiterFee = this.toUnits(p.arbiterFee ?? "0");
     const feeDeposit = this.toUnits(p.feeDeposit ?? "0");
-    // maxAccruableFee ceiling = feeDeposit + arbiterFee; recommendedSlice guarantees
-    // slice > amount + maxAccruableFee, satisfying the contract's strict SLICE inequality.
+    // recommendedSlice takes both fee legs separately and guarantees
+    // slice > amount + feeDeposit + arbiterFee, the contract's strict SLICE inequality.
     const verifierSlice = p.verifierSlice != null
       ? this.toUnits(p.verifierSlice)
-      : await this.commitStake.recommendedSlice(amount, feeDeposit + arbiterFee);
+      : await this.commitStake.recommendedSlice(amount, feeDeposit, arbiterFee);
     // Default the challenge bond to the exact §7a floor the contract enforces.
     const challengeBond = p.challengeBond != null
       ? this.toUnits(p.challengeBond)

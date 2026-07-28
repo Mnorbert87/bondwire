@@ -243,7 +243,8 @@ contract CommitStakeV2 is ReentrancyGuard {
 
     /// @notice Recommended default slice: 150% of the stake (covers the sizing inequality
     ///         whenever the fee budget is below 50% of the stake). Informational — the enforced
-    ///         rule is the strict inequality `verifierSlice > amount + maxAccruableFee`.
+    ///         rule is the strict inequality
+    ///         `verifierSlice > amount + feeDeposit + arbiterFee`.
     uint256 public constant DEFAULT_SLICE_BPS = 15_000;
 
     /// @notice Buffer added to the AgentBond obligation deadline beyond the latest possible
@@ -258,6 +259,21 @@ contract CommitStakeV2 is ReentrancyGuard {
     ///         whole bond behind one job. Defense-in-depth alongside the per-commitment arbiter
     ///         opt-in: even an approved arbiter cannot be paired with disproportionate leverage.
     uint256 public constant MAX_SLICE_LEVERAGE = 3;
+
+    /// @notice Upper bounds on the three staker-chosen time parameters. The staker calls `create`
+    ///         and picks `deadline`, `challengeWindow` and `arbiterDeadline`; the verifier only
+    ///         granted a slashing allowance and never consented to these values. Without a
+    ///         ceiling a hostile staker could set `deadline = now + 10 years` and lock the
+    ///         verifier's slice for that long: `resolve` moves no bond, `finalize` cannot run
+    ///         before `resolvedAt + challengeWindow`, and the AgentBond self-release backstop is
+    ///         itself derived from these same parameters (`deadline + challengeWindow +
+    ///         arbiterDeadline + BOND_DEADLINE_BUFFER`), so it offers no escape either. That is
+    ///         denial of capital rather than theft, but it disables the verifier's whole business
+    ///         (free bond is its bookable capacity) at the cost of gas plus the attacker's own
+    ///         escrowed stake. These ceilings bound the worst case at 90 + 30 + 30 + 7 days.
+    uint64 public constant MAX_DEADLINE_HORIZON = 90 days;
+    uint64 public constant MAX_CHALLENGE_WINDOW = 30 days;
+    uint64 public constant MAX_ARBITER_DEADLINE = 30 days;
 
     IERC20 public immutable usdc;
     IAgentBond public immutable agentBond;
@@ -332,7 +348,9 @@ contract CommitStakeV2 is ReentrancyGuard {
     ///           the surplus burned is always positive (gate-4 HIGH fix);
     ///         - §7a post-burn challenge-bond band:
     ///           `arbiterFee + 10%×slice <= challengeBond <= arbiterFee + 25%×slice`;
-    ///         - the challenge window and arbiter deadline always exist (> 0);
+    ///         - the challenge window and arbiter deadline always exist (> 0) and are capped,
+    ///           along with the resolve deadline, by the `MAX_*` ceilings — the staker picks
+    ///           these three but the verifier's locked capital pays for them;
     ///         - a requested fee stream must not start accruing before the latest possible
     ///           challenge-window close (`deadline + challengeWindow`) — the §7 timing gate.
     ///           Accrual during a late arbiter path remains possible; that residue is exactly
@@ -360,6 +378,14 @@ contract CommitStakeV2 is ReentrancyGuard {
         require(p.deadline > block.timestamp, "DEADLINE_PAST");
         require(p.challengeWindow > 0, "WINDOW_ZERO");
         require(p.arbiterDeadline > 0, "ARBITER_DEADLINE_ZERO");
+        // Ceilings on the same three parameters: the staker picks them, the verifier's capital
+        // pays for them. Without these a hostile staker can lock the slice for years. See the
+        // MAX_* constants for the reasoning and the bounded worst case.
+        require(
+            p.deadline <= block.timestamp + MAX_DEADLINE_HORIZON, "DEADLINE_TOO_FAR"
+        );
+        require(p.challengeWindow <= MAX_CHALLENGE_WINDOW, "WINDOW_TOO_LONG");
+        require(p.arbiterDeadline <= MAX_ARBITER_DEADLINE, "ARBITER_DEADLINE_TOO_LONG");
         // Minimum slice for a SATISFIABLE bond band: below 4 micro-USDC the round-up floor
         // (ceil 10% × slice) exceeds the round-down cap (floor 25% × slice), leaving no legal
         // `challengeBond` and reverting with an inscrutable BOND_BELOW_FLOOR/ABOVE_CAP pair.
@@ -697,16 +723,22 @@ contract CommitStakeV2 is ReentrancyGuard {
         return arbiterFee + (verifierSlice * SPAM_MARGIN_MAX_BPS) / BPS_DENOM;
     }
 
-    /// @notice Recommended verifier slice for a given stake and fee budget: 150% of the stake,
-    ///         raised when the fee budget reaches 50% of the stake (the large-fee guard). Always
-    ///         satisfies the enforced strict inequality `slice > amount + maxAccruableFee`.
-    function recommendedSlice(uint256 amount, uint256 maxAccruableFee)
+    /// @notice Recommended verifier slice for a given stake, fee budget and arbiter fee: 150% of
+    ///         the stake, raised when the two fee legs together reach 50% of the stake (the
+    ///         large-fee guard). Always satisfies the strict inequality enforced at `create`,
+    ///         `slice > amount + feeDeposit + arbiterFee`.
+    /// @dev    Both fee legs are named arguments on purpose. The earlier two-argument form
+    ///         (`amount`, `maxAccruableFee`) predated the gate-4 fix that folded `arbiterFee`
+    ///         into the sizing rule, so a caller passing only the fee deposit got a slice that
+    ///         `create` then rejected with `SLICE_TOO_SMALL` as soon as `arbiterFee` reached
+    ///         half the stake. Splitting the legs makes that mistake unrepresentable.
+    function recommendedSlice(uint256 amount, uint256 feeDeposit, uint256 arbiterFee)
         public
         pure
         returns (uint256)
     {
         uint256 byDefault = (amount * DEFAULT_SLICE_BPS) / BPS_DENOM;
-        uint256 byGuard = amount + maxAccruableFee + 1;
+        uint256 byGuard = amount + feeDeposit + arbiterFee + 1;
         return byDefault > byGuard ? byDefault : byGuard;
     }
 
