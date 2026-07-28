@@ -139,15 +139,19 @@ below the slice (`damage = feeAccruedToLyingVerifier + arbiterFee ≤ maxAccruab
 arbiter would recapture it, see §9. **Enforced in code** as
 `require(verifierSlice > amount + feeDeposit + arbiterFee, "SLICE_TOO_SMALL")` at `create`.
 
-> **Using the `recommendedSlice` helper — read this first.** The public view
-> `recommendedSlice(uint256 amount, uint256 maxAccruableFee)` predates the `arbiterFee` term
-> above and takes only two arguments. Its second argument therefore has to carry **both** fee
-> legs: pass `maxAccruableFee = feeDeposit + arbiterFee`, not `feeDeposit` alone. Passing the
-> fee deposit by itself returns a slice the `SLICE_TOO_SMALL` gate will reject whenever
-> `arbiterFee ≥ 50% × amount` — e.g. `amount = 100 USDC, feeDeposit = 0, arbiterFee = 60 USDC`
-> returns `150 USDC` while `create` demands strictly more than `160 USDC`. The failure is
-> fail-closed (the transaction reverts, no funds move), and the SDK already folds both legs in
-> for you, so this only bites callers who hit the contract directly.
+> **`recommendedSlice` takes both fee legs.** The public view is
+> `recommendedSlice(uint256 amount, uint256 feeDeposit, uint256 arbiterFee)`, and its output
+> always clears the `SLICE_TOO_SMALL` gate above (fuzzed over both legs).
+>
+> The earlier two-argument form (`amount`, `maxAccruableFee`) predated the gate-4 fix that
+> folded `arbiterFee` into the sizing rule, so a caller who passed only the fee deposit got a
+> slice `create` then rejected once `arbiterFee` reached half the stake — e.g.
+> `amount = 100 USDC, feeDeposit = 0, arbiterFee = 60 USDC` returned `150 USDC` while `create`
+> demands strictly more than `160 USDC`. That failure was fail-closed (revert, no funds move)
+> and the SDK folded both legs in by hand, so only direct on-chain callers hit it. Naming the
+> legs separately makes the mistake unrepresentable. **This change is on
+> [`fix/commitstake-param-bounds`](https://github.com/Mnorbert87/bondwire/tree/fix/commitstake-param-bounds),
+> not on the deployed contract** — see the deployment note below.
 
 The **single-shot floor** assumes the lie is always caught and overturned (`P(overturn)=1`):
 under it, lying is a net loss in one play. But `P(overturn)` is **not observable on-chain**,

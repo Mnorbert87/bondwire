@@ -814,10 +814,86 @@ contract CommitStakeV2Test is V2TestBase {
 
     function test_RecommendedSlice_DefaultAndLargeFeeGuard() public view {
         // Fee below 50% of stake: the 150% default rules.
-        assertEq(cs.recommendedSlice(100e6, 0), 150e6);
-        assertEq(cs.recommendedSlice(100e6, 49e6), 150e6);
+        assertEq(cs.recommendedSlice(100e6, 0, 0), 150e6);
+        assertEq(cs.recommendedSlice(100e6, 49e6, 0), 150e6);
         // Fee at/above 50%: the guard takes over with a strict surplus.
-        assertEq(cs.recommendedSlice(100e6, 50e6), 150e6 + 1);
-        assertEq(cs.recommendedSlice(100e6, 80e6), 180e6 + 1);
+        assertEq(cs.recommendedSlice(100e6, 50e6, 0), 150e6 + 1);
+        assertEq(cs.recommendedSlice(100e6, 80e6, 0), 180e6 + 1);
+    }
+
+    /// The regression this signature change exists for: the old two-argument helper knew nothing
+    /// about `arbiterFee`, so a caller who passed only the fee deposit got a slice `create` then
+    /// rejected. The two legs must be summed, and the result must clear the enforced gate.
+    function test_RecommendedSlice_CountsArbiterFee() public view {
+        // The exact case that used to break: the arbiter fee alone crosses the 50% guard.
+        // Old form returned max(150e6, 100e6 + 0 + 1) = 150e6, while create demands > 160e6.
+        assertEq(cs.recommendedSlice(100e6, 0, 60e6), 160e6 + 1);
+        // Both legs are counted, not just the larger one.
+        assertEq(cs.recommendedSlice(100e6, 30e6, 40e6), 170e6 + 1);
+        // Below the guard the 150% default still wins, whichever leg carries the fee.
+        assertEq(cs.recommendedSlice(100e6, 0, 49e6), 150e6);
+        assertEq(cs.recommendedSlice(100e6, 25e6, 24e6), 150e6);
+    }
+
+    /// The helper's output must always satisfy the gate it exists to satisfy. Fuzzed over both
+    /// fee legs so this cannot pass by hitting a lucky constant.
+    function testFuzz_RecommendedSlice_AlwaysClearsCreateGate(
+        uint96 amount,
+        uint96 feeDeposit,
+        uint96 arbiterFee
+    ) public view {
+        vm.assume(amount > 0);
+        uint256 slice = cs.recommendedSlice(amount, feeDeposit, arbiterFee);
+        // Exactly the SLICE_TOO_SMALL condition enforced in create().
+        assertGt(slice, uint256(amount) + uint256(feeDeposit) + uint256(arbiterFee));
+    }
+
+    // --- staker-chosen time parameters are bounded (the verifier's capital pays for them) ---
+
+    function test_Create_RevertDeadlineTooFar() public {
+        CommitStakeV2.CreateParams memory p = defaultParams();
+        p.deadline = uint64(block.timestamp) + cs.MAX_DEADLINE_HORIZON() + 1;
+        vm.expectRevert(bytes("DEADLINE_TOO_FAR"));
+        vm.prank(staker);
+        cs.create(p);
+    }
+
+    function test_Create_RevertChallengeWindowTooLong() public {
+        CommitStakeV2.CreateParams memory p = defaultParams();
+        p.challengeWindow = cs.MAX_CHALLENGE_WINDOW() + 1;
+        vm.expectRevert(bytes("WINDOW_TOO_LONG"));
+        vm.prank(staker);
+        cs.create(p);
+    }
+
+    function test_Create_RevertArbiterDeadlineTooLong() public {
+        CommitStakeV2.CreateParams memory p = defaultParams();
+        p.arbiterDeadline = cs.MAX_ARBITER_DEADLINE() + 1;
+        vm.expectRevert(bytes("ARBITER_DEADLINE_TOO_LONG"));
+        vm.prank(staker);
+        cs.create(p);
+    }
+
+    /// Exactly at each ceiling the commitment must still be creatable — the bounds are inclusive,
+    /// so this pins that we capped the hostile case without breaking the legitimate long one.
+    function test_Create_AcceptsExactlyAtTheCeilings() public {
+        CommitStakeV2.CreateParams memory p = defaultParams();
+        p.deadline = uint64(block.timestamp) + cs.MAX_DEADLINE_HORIZON();
+        p.challengeWindow = cs.MAX_CHALLENGE_WINDOW();
+        p.arbiterDeadline = cs.MAX_ARBITER_DEADLINE();
+        vm.prank(staker);
+        uint256 id = cs.create(p);
+        assertGt(id, 0);
+    }
+
+    /// The attack the ceilings exist to stop: a 10-year deadline used to be accepted, which locked
+    /// the verifier's slice for 10 years because `finalize` cannot run before the window closes and
+    /// the AgentBond backstop is derived from these very parameters.
+    function test_Create_RevertTenYearDeadlineLock() public {
+        CommitStakeV2.CreateParams memory p = defaultParams();
+        p.deadline = uint64(block.timestamp) + 3650 days;
+        vm.expectRevert(bytes("DEADLINE_TOO_FAR"));
+        vm.prank(staker);
+        cs.create(p);
     }
 }

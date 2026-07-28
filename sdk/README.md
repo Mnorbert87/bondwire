@@ -84,12 +84,15 @@ arbiter keep everyone honest. Try it live: [bonded verifier dApp](https://mnorbe
 | `finalizeCommitment(id)` | Settle after the window; routes stake, slice and bonds. |
 | `commitment(id)` | Decoded state: status, outcome, amounts, windows. |
 
-`commit()` sizes the verifier slice for you. If you skip the SDK and call `CommitStakeV2`
-directly, note that the on-chain helper `recommendedSlice(amount, maxAccruableFee)` takes only
-two arguments while `create` enforces `slice > amount + feeDeposit + arbiterFee`: pass
-`maxAccruableFee = feeDeposit + arbiterFee`. Passing only the fee deposit returns a slice that
-`create` rejects with `SLICE_TOO_SMALL` once `arbiterFee` reaches half the amount. See
-[VERIFIER_ECONOMICS §4](../VERIFIER_ECONOMICS.md).
+`commit()` sizes the verifier slice for you. Calling `CommitStakeV2` directly, use
+`recommendedSlice(amount, feeDeposit, arbiterFee)` — both fee legs are separate arguments and
+the result always clears the `slice > amount + feeDeposit + arbiterFee` gate that `create`
+enforces. See [VERIFIER_ECONOMICS §4](../VERIFIER_ECONOMICS.md).
+
+`commit()` also derives the time parameters. Calling `create` directly, note that `deadline`,
+`challengeWindow` and `arbiterDeadline` are capped by `MAX_DEADLINE_HORIZON` (90 days),
+`MAX_CHALLENGE_WINDOW` (30 days) and `MAX_ARBITER_DEADLINE` (30 days): the staker picks them
+but the verifier's locked bond pays for them, so they cannot run away.
 
 ### Agent Passport, portable reputation
 
