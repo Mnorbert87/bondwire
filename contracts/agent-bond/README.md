@@ -15,7 +15,7 @@ The invariant handler drives random `deposit / withdraw / grant / lock / release
 
 ## Results (actual local run, forge 1.7.1 / solc 0.8.24)
 
-- **29 tests, 0 failed.** No invariant violation was found in any campaign.
+- **32 tests, 0 failed.** No invariant violation was found in any campaign.
 - Each of the 4 invariants: **10,000 runs × depth 15 = 150,000 randomized calls, 0 reverts** (`fail_on_revert = true`, the handler is never allowed to silently skip via revert).
 - Each of the 5 fuzz properties (`AgentBondFuzz.t.sol`): **10,000 runs**, exact round-trip, exact free-bound, exact slash payout, exact release restore, stranger access fuzz.
 - Plus 19 unit tests and a hostile-token reentrancy suite (`AgentBondAdversarial.t.sol`).
