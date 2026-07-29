@@ -25,6 +25,10 @@ interface IAgentBond {
         address creditor;
         uint256 amount;
         uint64 deadline;
+        // Grant generation the obligation was locked under. Present in AgentBond since the
+        // revoke-hardening change; it sits BEFORE `status` in the returned tuple, so omitting it
+        // here silently shifts the decode and makes `status` read back as the epoch number.
+        uint64 allowanceEpoch;
         ObligationStatus status;
     }
 
