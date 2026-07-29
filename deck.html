@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bondwire — pitch deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#060912; --bg-2:#0a0f1e; --ink:#eef3fb; --muted:#8c98af; --faint:#525d72;
+    --line:rgba(255,255,255,0.075); --line-2:rgba(122,170,255,0.22);
+    --glass:rgba(255,255,255,0.025); --glass-2:rgba(255,255,255,0.05);
+    --good:#4fd6a8; --bad:#ff7a7a; --warn:#ffc266; --gold:#ffd479; --blue:#7aaaff;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:#000; font-family:"Inter",system-ui,sans-serif; color:var(--ink); -webkit-font-smoothing:antialiased;}
+  .slide{
+    width:1280px; height:720px; position:relative; overflow:hidden;
+    background:radial-gradient(1100px 620px at 78% -12%, rgba(122,170,255,0.13), transparent 62%),
+               radial-gradient(760px 520px at 6% 108%, rgba(255,212,121,0.07), transparent 60%),
+               linear-gradient(168deg, var(--bg-2), var(--bg) 62%);
+    padding:52px 64px; display:flex; flex-direction:column;
+    page-break-after:always; break-after:page;
+  }
+  .slide::after{content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(90deg, rgba(122,170,255,0.35), rgba(255,212,121,0.28) 45%, transparent 80%);
+    height:2px; top:0;}
+  .num{position:absolute; right:34px; bottom:26px; font-family:"JetBrains Mono",monospace;
+    font-size:11px; color:var(--faint); letter-spacing:1px;}
+  .foot{position:absolute; left:64px; bottom:26px; font-family:"JetBrains Mono",monospace;
+    font-size:10.5px; color:var(--faint); letter-spacing:.6px;}
+  .eyebrow{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:2.6px;
+    text-transform:uppercase; color:var(--gold); margin-bottom:16px;}
+  h1.wordmark{font-family:"Space Grotesk"; font-weight:700; font-size:118px; line-height:.92;
+    letter-spacing:-5px; background:linear-gradient(180deg,#fff,#a9c3ee); -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;}
+  h2{font-family:"Space Grotesk"; font-weight:700; font-size:40px; line-height:1.08;
+    letter-spacing:-1.3px; margin-bottom:8px;}
+  h3{font-family:"Space Grotesk"; font-weight:600; font-size:19px; letter-spacing:-.3px; margin-bottom:8px;}
+  .sub{font-size:17px; color:var(--muted); line-height:1.5; max-width:960px;}
+  .lede{font-size:22px; line-height:1.42; color:#cfdcf0; max-width:1000px; font-weight:400;}
+  .rule{height:1px; background:var(--line); margin:22px 0;}
+  .grid{display:grid; gap:16px; margin-top:26px;}
+  .g3{grid-template-columns:repeat(3,1fr);} .g2{grid-template-columns:repeat(2,1fr);}
+  .g4{grid-template-columns:repeat(4,1fr);}
+  .card{background:var(--glass); border:1px solid var(--line); border-radius:14px; padding:20px 20px 18px;
+    position:relative;}
+  .card .role{font-family:"JetBrains Mono",monospace; font-size:10.5px; letter-spacing:1.6px;
+    text-transform:uppercase; color:var(--gold); margin-bottom:10px;}
+  .card p{font-size:14.5px; color:var(--muted); line-height:1.5;}
+  .card code{font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--blue);}
+  .stat{background:var(--glass); border:1px solid var(--line); border-radius:14px; padding:18px 18px 16px;}
+  .stat b{font-family:"Space Grotesk"; font-size:30px; display:block; letter-spacing:-1px; line-height:1;
+    margin-bottom:7px;}
+  .stat span{font-size:12.5px; color:var(--muted); line-height:1.4; display:block;}
+  ul.clean{list-style:none; margin-top:18px;}
+  ul.clean li{font-size:16px; color:#c6d3e8; line-height:1.5; padding-left:22px; position:relative; margin-bottom:12px;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--blue); font-size:13px; top:2px;}
+  ul.clean li b{color:var(--ink); font-weight:600;}
+  .mono{font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--blue);}
+  .pill{display:inline-block; font-family:"JetBrains Mono",monospace; font-size:10.5px;
+    letter-spacing:1.2px; text-transform:uppercase; padding:5px 11px; border-radius:999px;
+    border:1px solid var(--line-2); color:var(--blue); background:rgba(122,170,255,0.07); margin-right:8px;}
+  .pill.gold{color:var(--gold); border-color:rgba(255,212,121,0.3); background:rgba(255,212,121,0.07);}
+  .pill.good{color:var(--good); border-color:rgba(79,214,168,0.3); background:rgba(79,214,168,0.07);}
+  table{width:100%; border-collapse:collapse; margin-top:20px;}
+  th{font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:1.6px; text-transform:uppercase;
+    color:var(--faint); text-align:left; padding:0 12px 10px 0; font-weight:500;}
+  td{font-size:14px; color:#c6d3e8; padding:11px 12px 11px 0; border-top:1px solid var(--line); vertical-align:top;}
+  td.m{font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--blue);}
+  .note{margin-top:auto; border-left:2px solid var(--gold); padding:14px 0 14px 18px;
+    background:linear-gradient(90deg, rgba(255,212,121,0.05), transparent 70%);}
+  .note .h{font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:1.8px;
+    text-transform:uppercase; color:var(--gold); margin-bottom:7px;}
+  .note p{font-size:14.5px; color:#c6d3e8; line-height:1.55;}
+  .flow{display:flex; align-items:stretch; gap:10px; margin-top:26px;}
+  .step{flex:1; background:var(--glass); border:1px solid var(--line); border-radius:12px; padding:14px 13px;}
+  .step .n{font-family:"JetBrains Mono",monospace; font-size:10px; color:var(--faint); margin-bottom:8px;}
+  .step .t{font-family:"Space Grotesk"; font-size:14px; font-weight:600; margin-bottom:6px; letter-spacing:-.2px;}
+  .step .d{font-size:12px; color:var(--muted); line-height:1.45;}
+  .step .who{font-family:"JetBrains Mono",monospace; font-size:9.5px; color:var(--blue); margin-top:9px;
+    letter-spacing:.6px;}
+  .two{display:grid; grid-template-columns:1fr 1fr; gap:34px; margin-top:24px;}
+  .kv{display:flex; justify-content:space-between; padding:9px 0; border-top:1px solid var(--line); font-size:14px;}
+  .kv span:first-child{color:var(--muted);} .kv span:last-child{font-family:"JetBrains Mono",monospace; font-size:12.5px;}
+  .center{justify-content:center;}
+  .big-links{margin-top:30px; display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .link{background:var(--glass); border:1px solid var(--line); border-radius:12px; padding:15px 18px;}
+  .link .l{font-size:11px; color:var(--faint); font-family:"JetBrains Mono",monospace; letter-spacing:1.4px;
+    text-transform:uppercase; margin-bottom:6px;}
+  .link .v{font-family:"JetBrains Mono",monospace; font-size:13px; color:var(--blue); word-break:break-all;}
+</style>
+</head>
+<body>
+
+<!-- 1 ─────────────────────────────────────────── -->
+<section class="slide center">
+  <div class="eyebrow">Programmable Money · Agentic Economy · Arc</div>
+  <h1 class="wordmark">Bondwire</h1>
+  <p class="lede" style="margin-top:18px; max-width:820px;">
+    Trust and settlement primitives for autonomous agents, settled in USDC on Arc.
+  </p>
+  <div style="margin-top:28px;">
+    <span class="pill good">Live on Arc testnet</span>
+    <span class="pill">chain 5042002</span>
+    <span class="pill">Ownerless contracts</span>
+    <span class="pill gold">CommitStakeV2 exact match verified</span>
+  </div>
+  <div class="rule" style="margin-top:34px; max-width:760px;"></div>
+  <div class="mono" style="color:var(--muted); font-size:12.5px; line-height:1.9;">
+    github.com/Mnorbert87/bondwire<br>
+    mnorbert87.github.io/bondwire
+  </div>
+  <div class="foot">Bondwire · Arc testnet demo · not audited for production</div>
+  <div class="num">01</div>
+</section>
+
+<!-- 2 ─────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow">The problem</div>
+  <h2>Agents can already pay. They still cannot be trusted.</h2>
+  <p class="sub" style="margin-top:14px;">
+    Every agentic payment demo quietly assumes two things that do not exist on chain yet.
+  </p>
+  <div class="grid g2">
+    <div class="card">
+      <div class="role">Missing assumption 1</div>
+      <h3>You can trust the agent before it touches your money</h3>
+      <p>There is no cost to being a new agent. Reputation without stake is a signup form, and a burned identity is replaced for free.</p>
+    </div>
+    <div class="card">
+      <div class="role">Missing assumption 2</div>
+      <h3>You can pay it while it works, not after</h3>
+      <p>Invoicing assumes a relationship and a clock both parties accept. Autonomous counterparties have neither.</p>
+    </div>
+  </div>
+  <div class="note">
+    <div class="h">Where the field stops</div>
+    <p>x402 and most of the category solve one act: pay per call. The open question is the one after the payment leaves. <b style="color:var(--ink)">Who pays when the agent defaults, and who pays when the verifier lies?</b> That is the layer Bondwire ships.</p>
+  </div>
+  <div class="num">02</div>
+</section>
+
+<!-- 3 ─────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow">The product</div>
+  <h2>Three ownerless primitives that compose</h2>
+  <p class="sub" style="margin-top:12px;">No owner, no admin role, no proxy, no pause. The only roles are the ones in the protocol itself, scoped per obligation.</p>
+  <div class="grid g3">
+    <div class="card">
+      <div class="role">Trust layer</div>
+      <h3>AgentBond</h3>
+      <p>An agent deposits USDC as skin in the game. Any enforcer it approves can lock a slice behind an obligation and slash it on default. Free bond is a money backed credit score.</p>
+      <p style="margin-top:12px;"><code>0xB9b4…f8e0</code></p>
+    </div>
+    <div class="card">
+      <div class="role">Settlement layer</div>
+      <h3>StreamPay</h3>
+      <p>Continuous USDC settlement. Funds accrue per second, the recipient withdraws any time, either side cancels with a fair split. Pay per second of work, not per invoice.</p>
+      <p style="margin-top:12px;"><code>0x5057…2450</code></p>
+    </div>
+    <div class="card">
+      <div class="role">Mechanism</div>
+      <h3>CommitStakeV2</h3>
+      <p>Pay only on verified PASS. The verifier posts its verdict with its own bond slice locked behind it. A challenge window and an optional arbiter give recourse. Lying costs real money.</p>
+      <p style="margin-top:12px;"><code>0x1f1CA31b…698CA9</code></p>
+    </div>
+  </div>
+  <div class="note">
+    <div class="h">Why composable matters</div>
+    <p>The two primitives stand alone. Together they form a complete trust and pay rail: a stream can fund a bond, a fulfilled commitment can release one, and a false verdict burns a bonded slice. That composition is only free and permissionless on a shared ledger.</p>
+  </div>
+  <div class="num">03</div>
+</section>
+
+<!-- 4 ─────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow">Proof</div>
+  <h2>Every claim here is a transaction you can open</h2>
+  <p class="sub" style="margin-top:12px;">Not a Live badge over a mock. The anti collusion mechanism has fired on chain, twice.</p>
+  <table>
+    <tr><th style="width:36%">What</th><th style="width:14%">Amount</th><th>On chain</th></tr>
+    <tr><td>Overturn burn, the surplus left after the harmed party is paid</td><td class="m">1.45 USDC</td><td class="m">0x97f31e7a…c45435 · Transfer to 0x…dEaD</td></tr>
+    <tr><td>Liveness burn, the whole slice when a dispute deadlocks</td><td class="m">1.50 USDC</td><td class="m">0x7bf59845…4aa6bd · Transfer to 0x…dEaD</td></tr>
+    <tr><td>Cross chain capital onboarding, Base Sepolia to Arc via CCTP V2</td><td class="m">1 USDC</td><td class="m">3 transactions, all status 1, bond 36 to 37</td></tr>
+    <tr><td>Source on arcscan, byte for byte with this repo</td><td class="m">exact match</td><td class="m">testnet.arcscan.app/address/0x1f1CA31b…</td></tr>
+  </table>
+  <div class="note">
+    <div class="h">The tests bite, and we measured it rather than counting them</div>
+    <p>A green number proves nothing on its own, so both fixes on the open branch were mutation checked: <b style="color:var(--ink)">removing the three new ceilings fails four tests, and reverting the helper to ignore the arbiter fee fails the regression test and the new fuzz property, which found its counterexample in two runs.</b> That is what says the suite would catch the bug coming back.</p>
+  </div>
+  <div class="num">04</div>
+</section>
+
+<!-- 5 ─────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow">How it works</div>
+  <h2>One agent lifecycle, settled end to end in USDC</h2>
+  <div class="flow">
+    <div class="step"><div class="n">01</div><div class="t">Bond up</div><div class="d">The agent deposits USDC. Free bond becomes a public, slashable credit score.</div><div class="who">AgentBond</div></div>
+    <div class="step"><div class="n">02</div><div class="t">Get hired</div><div class="d">A counterparty reads the bond and prices the risk before any work starts.</div><div class="who">off chain</div></div>
+    <div class="step"><div class="n">03</div><div class="t">Lock collateral</div><div class="d">An agent authorized enforcer locks a slice behind the job as an obligation.</div><div class="who">AgentBond</div></div>
+    <div class="step"><div class="n">04</div><div class="t">Get paid per second</div><div class="d">A stream runs while the work runs. The recipient withdraws any time.</div><div class="who">StreamPay</div></div>
+    <div class="step"><div class="n">05</div><div class="t">Verified PASS</div><div class="d">A bonded verifier posts the verdict with its own slice at risk. Challenge window, then arbiter.</div><div class="who">CommitStakeV2</div></div>
+    <div class="step"><div class="n">06</div><div class="t">Release or slash</div><div class="d">Fulfilled releases the bond. Default routes it to the creditor. A lie burns the verifier's slice.</div><div class="who">composed</div></div>
+  </div>
+  <div class="two" style="margin-top:34px;">
+    <div>
+      <h3>Distinct wallets, not self dealing</h3>
+      <p class="sub" style="font-size:15px;">Agent, creditor, enforcer, verifier and arbiter are separate addresses on chain. AgentBond #7 was released by the enforcer, #8 was slashed and the <b>creditor</b> received the 2 USDC. The agent cannot release or slash its own bond.</p>
+    </div>
+    <div>
+      <h3>Ten terminal outcomes, all invariant tested</h3>
+      <p class="sub" style="font-size:15px;">Fulfilled, defaulted, expired, overturned, deadlocked, abandoned. The solvency invariant holds across all of them: the contract can never owe more than it holds.</p>
+    </div>
+  </div>
+  <div class="num">05</div>
+</section>
+
+<!-- 6 ─────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow">Already wired in</div>
+  <h2>It plugs into the stack agents actually use</h2>
+  <div class="grid g2">
+    <div class="card">
+      <div class="role">Circle CCTP V2 · Bridge Kit</div>
+      <h3>Capital does not have to start on Arc</h3>
+      <p>1 USDC on Base Sepolia, bridged with Bridge Kit and deposited straight into AgentBond. Arc is already in the chain list, CCTP domain 26, so the cross chain leg is one kit.bridge() call. Three transactions, all status 1, runnable with npm run onboard.</p>
+    </div>
+    <div class="card">
+      <div class="role">ERC-8004</div>
+      <h3>Real on chain identity, plus the money layer it lacks</h3>
+      <p>Both demo agents hold identity NFTs in Arc's IdentityRegistry, with real third party feedback through ReputationRegistry and a separate execution wallet bound over EIP-712. ERC-8004 says who an agent is. It does not say what happens to the money when the agent lies. That is the gap we fill.</p>
+    </div>
+    <div class="card">
+      <div class="role">x402</div>
+      <h3>Pay per call, settled per second underneath</h3>
+      <p>A runnable demo gates an HTTP API behind a live StreamPay stream. The agent pays over HTTP 402 and the settlement is continuous rather than per invoice.</p>
+    </div>
+    <div class="card">
+      <div class="role">SDK · MCP server</div>
+      <h3>An agent can bond from inside its own tool loop</h3>
+      <p>Single file ethers v6 wrapper with human USDC amounts, and an MCP server so any AI agent can check a passport, post a bond and open a bonded escrow, with quote before execute on every value moving call.</p>
+    </div>
+  </div>
+  <div class="num">06</div>
+</section>
+
+<!-- 7 ─────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow">What is shipped</div>
+  <h2>Not a prototype. A deployed, tested, documented stack.</h2>
+  <div class="grid g4" style="margin-top:22px;">
+    <div class="stat"><b>4</b><span>contracts live on Arc testnet, ownerless, source verified</span></div>
+    <div class="stat"><b>187</b><span>Solidity tests: unit, adversarial, cold audit, fuzz</span></div>
+    <div class="stat"><b>5</b><span>Halmos symbolic proofs over the money paths</span></div>
+    <div class="stat"><b>150k</b><span>calls per invariant campaign (10k runs × depth 15), zero solvency violations</span></div>
+  </div>
+  <div class="grid g4" style="margin-top:16px;">
+    <div class="stat"><b>7</b><span>static dApp pages, no backend, live RPC reads</span></div>
+    <div class="stat"><b>3</b><span>runnable demos: commerce, x402, CCTP</span></div>
+    <div class="stat"><b>84.5%</b><span>measured mutation score, survivors classified one by one</span></div>
+    <div class="stat"><b>0</b><span>admin keys, proxies or pause switches</span></div>
+  </div>
+  <div class="note">
+    <div class="h">And the documentation a reviewer actually needs</div>
+    <p>THREAT_MODEL, SECURITY_AUDIT, VERIFIER_ECONOMICS, TEST_AUDIT, HALMOS_VERIFICATION, MUTATION_TESTING and a two minute JUDGES walkthrough. CI is green on every push and runs the same command a judge would.</p>
+  </div>
+  <div class="num">07</div>
+</section>
+
+<!-- 8 ─────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow">Honesty as a feature</div>
+  <h2>What is still wrong with it, in our own words</h2>
+  <p class="sub" style="margin-top:12px;">Three findings are fixed on public branches and deliberately <b style="color:var(--ink)">not deployed</b>: changing a single character in a comment alters the solc metadata hash and breaks the live exact match verification. We measured that rather than assumed it.</p>
+  <table>
+    <tr><th style="width:30%">Finding</th><th style="width:34%">Status</th><th>Branch</th></tr>
+    <tr><td>Sockpuppet arbiter can reclaim the verifier's slice</td><td>Fixed and tested, opt in griefing guard</td><td class="m">fix/arbiter-griefing-optin</td></tr>
+    <tr><td>AgentBond allowance race, revoke is not final</td><td>Fixed and tested, allowance epochs</td><td class="m">fix/agentbond-allowance-epoch</td></tr>
+    <tr><td>Staker chosen time parameters were unbounded</td><td>Fixed and tested, three ceilings, 109 tests</td><td class="m">fix/commitstake-param-bounds</td></tr>
+  </table>
+  <div class="two" style="margin-top:22px;">
+    <div>
+      <h3>Self correction, in public</h3>
+      <p class="sub" style="font-size:15px;">Section 8 of the security document claimed the sockpuppet arbiter did not profit. It was wrong. We corrected it in the repo and on the page people actually read, rather than quietly deleting the claim.</p>
+    </div>
+    <div class="note" style="margin-top:0;">
+      <div class="h">The limit of our own evidence</div>
+      <p>The invariant campaign bounds deadlines to thirty days, so a green campaign was never evidence against the unbounded lock finding. We wrote that into the public threat model as a limit of the thing we are otherwise proud of.</p>
+    </div>
+  </div>
+  <div class="num">08</div>
+</section>
+
+<!-- 9 ─────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow">Why Arc, and what is next</div>
+  <h2>USDC as gas is what makes this economically possible</h2>
+  <div class="two" style="margin-top:6px;">
+    <div>
+      <h3>The chain is part of the design</h3>
+      <ul class="clean">
+        <li><b>One asset end to end.</b> Gas, bond, stream and slash are all USDC. An agent holds no volatile second token just to be able to act.</li>
+        <li><b>Micro settlement stays viable.</b> Per second streams and dust sized slices only make sense where fees are stable and denominated in the same unit as the value.</li>
+        <li><b>Neutral settlement between distrusting parties.</b> A shared database needs a trusted operator. These agents are not cooperating, so the ledger has to be.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Roadmap</h3>
+      <ul class="clean">
+        <li><b>Uncollateralized agent credit.</b> The headline use case: early agents borrow the bond against future cash flow. These primitives are the enforcement substrate that makes that recoverable.</li>
+        <li><b>Verifier set, not a verifier.</b> Stake backed set, dispute window, slashing for provably wrong attestations. The role is already an isolated address, so it is an interface change, not a redesign.</li>
+        <li><b>Enforcer accountability.</b> The same primitive turned on itself: the enforcer posts a bond and is slashable for a wrongful slash.</li>
+        <li><b>Redeploy and mainnet.</b> The three fix branches ship together, with re verification.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="num">09</div>
+</section>
+
+<!-- 10 ────────────────────────────────────────── -->
+<section class="slide center">
+  <div class="eyebrow">Check it yourself in two minutes</div>
+  <h2 style="font-size:46px;">Open a transaction. Run the suite. Nothing here needs your trust.</h2>
+  <div class="big-links">
+    <div class="link"><div class="l">Repository</div><div class="v">github.com/Mnorbert87/bondwire</div></div>
+    <div class="link"><div class="l">Live dApps, no backend</div><div class="v">mnorbert87.github.io/bondwire</div></div>
+    <div class="link"><div class="l">Bonded verifier flow, real transactions</div><div class="v">mnorbert87.github.io/bondwire/bonded-verifier</div></div>
+    <div class="link"><div class="l">Two minute judge walkthrough</div><div class="v">JUDGES.md</div></div>
+  </div>
+  <div class="rule" style="margin-top:30px;"></div>
+  <div class="mono" style="font-size:12.5px; color:var(--muted); line-height:1.9;">
+    git clone https://github.com/Mnorbert87/bondwire<br>
+    cd bondwire/contracts/commit-stake-v2 &amp;&amp; forge test -vv
+  </div>
+  <div class="foot">Arc testnet · chain 5042002 · USDC as gas · MIT</div>
+  <div class="num">10</div>
+</section>
+
+</body>
+</html>

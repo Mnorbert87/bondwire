@@ -80,13 +80,14 @@
 <table>
   <tr><th>Contract</th><th>Address</th><th>Verified</th></tr>
   <tr><td>CommitStakeV2</td><td class="mono">0x1f1CA31bC36a95a3909628F1bA97970E20698CA9</td><td>exact-match ✅</td></tr>
-  <tr><td>AgentBond</td><td class="mono">0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0</td><td>✅</td></tr>
-  <tr><td>StreamPay</td><td class="mono">0x505739d33D85AD85D0f9eeE64856309782382450</td><td>✅</td></tr>
+  <tr><td>AgentBond</td><td class="mono">0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0</td><td>source-verified ✅*</td></tr>
+  <tr><td>StreamPay</td><td class="mono">0x505739d33D85AD85D0f9eeE64856309782382450</td><td>source-verified ✅*</td></tr>
 </table>
+<p style="font-size:0.85em;">* Exact match (recompile the repo, compare byte for byte) holds for CommitStakeV2. AgentBond and StreamPay are source-verified on the explorer; their runtime code body is identical to the repo (only the immutable addresses differ), while the metadata trailer reflects an earlier compilation state.</p>
 <ul>
   <li>Browse the live hub, no wallet needed: <a href="https://mnorbert87.github.io/bondwire/">mnorbert87.github.io/bondwire</a>.</li>
   <li>Two on-chain burns show the anti-collusion mechanism firing: 1.45 USDC from an overturn and 1.50 USDC from a liveness fail-closed, each a real <span class="mono">Transfer</span> to <span class="mono">0x…dEaD</span> you can open on the explorer.</li>
-  <li>The 79-test suite (unit, adversarial, cold-audit, fuzz, 10k-run invariants, and a Halmos symbolic spec) is green and reproduces with one command. Mutation testing kills 84.5% of the mutants and 100% of the revert-class ones.</li>
+  <li>The 102-test suite (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants) is green and reproduces with one command; the 5 Halmos symbolic proofs run separately. Mutation testing kills 84.5% of the mutants and 100% of the revert-class ones.</li>
   <li>Halmos proves the hard properties at the property level, for all inputs, not just the cases a fuzzer happens to hit: solvency, surplus-positivity, no-double-pay, and the fee-residue bound. The two burns above are those same properties firing on chain.</li>
 </ul>
 

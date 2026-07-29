@@ -6,7 +6,7 @@ Everything here is something you can click or run. I am not asking you to trust 
 
 1. **The burn is real.** Click the first transaction below. You will see a USDC `Transfer` of 1.45 USDC straight to `0x…dEaD`. That is the surplus burn that makes it pointless for a verifier to collude, and it actually happened on chain.
 2. **The code is verified.** `CommitStakeV2` at [`0x1f1CA31b…698CA9`](https://testnet.arcscan.app/address/0x1f1CA31bC36a95a3909628F1bA97970E20698CA9) is Blockscout exact-match verified. The source in this repo is the deployed bytecode, byte for byte.
-3. **The tests pass.** One copy-paste command runs 79 tests (unit, adversarial, cold-audit, fuzz, 10k-run invariants, and a symbolic spec). They pass on your machine, not just mine.
+3. **The tests pass.** One copy-paste command runs 102 tests (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants). They pass on your machine, not just mine.
 
 ---
 
@@ -52,7 +52,7 @@ On where this sits: ERC-8004 answers who an agent is and what job it took on. It
 
 ---
 
-## 4. Run the 79-test suite (~2 min)
+## 4. Run the 102-test suite (~2 min)
 
 This is exactly what CI runs ([the green run is here](https://github.com/Mnorbert87/bondwire/actions/workflows/test.yml)). You need [Foundry](https://getfoundry.sh) and nothing else.
 
@@ -66,7 +66,7 @@ forge test -vv
 The last line should read:
 
 ```
-Ran 6 test suites: 79 tests passed, 0 failed, 0 skipped (79 total tests)
+Ran 7 test suites: 102 tests passed, 0 failed, 0 skipped (102 total tests)
 ```
 
 The suite compiles the real `agent-bond` and `stream-pay` from source, not vendored copies, so there is no drift between what is tested and what is deployed. Each of those two has its own green suite (32 and 25 tests). Run `forge test` in their folders the same way if you want them too.
@@ -78,8 +78,10 @@ The suite compiles the real `agent-bond` and `stream-pay` from source, not vendo
 | Contract | Address (opens the explorer) | Verified |
 |---|---|---|
 | CommitStakeV2, the mechanism | [`0x1f1CA31bC36a95a3909628F1bA97970E20698CA9`](https://testnet.arcscan.app/address/0x1f1CA31bC36a95a3909628F1bA97970E20698CA9) | exact-match ✅ |
-| AgentBond, the trust layer | [`0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0`](https://testnet.arcscan.app/address/0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0) | ✅ |
-| StreamPay, the settlement layer | [`0x505739d33D85AD85D0f9eeE64856309782382450`](https://testnet.arcscan.app/address/0x505739d33D85AD85D0f9eeE64856309782382450) | ✅ |
+| AgentBond, the trust layer | [`0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0`](https://testnet.arcscan.app/address/0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0) | source-verified ✅* |
+| StreamPay, the settlement layer | [`0x505739d33D85AD85D0f9eeE64856309782382450`](https://testnet.arcscan.app/address/0x505739d33D85AD85D0f9eeE64856309782382450) | source-verified ✅* |
+
+\* Exact match (recompile this repo, compare byte for byte) holds for CommitStakeV2. For AgentBond and StreamPay the runtime code body is identical to this repo — only the constructor-set immutable addresses differ — but the solc metadata trailer reflects an earlier compilation state, so a recompile of today's source will not reproduce the last ~30 metadata bytes. The explorer serves them as verified against that earlier source.
 
 - RPC: `https://rpc.testnet.arc.network`. Explorer: `https://testnet.arcscan.app`.
 - USDC is the native gas token on Arc. Value transfers use the 6-decimal ERC-20 at `0x3600…0000`.

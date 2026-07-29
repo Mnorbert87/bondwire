@@ -43,6 +43,8 @@ No backend. The frontends read live state straight from the public Arc RPC and w
 | StreamPay | [`0x505739d33D85AD85D0f9eeE64856309782382450`](https://testnet.arcscan.app/address/0x505739d33D85AD85D0f9eeE64856309782382450) |
 | CommitStakeV2 | [`0x1f1CA31bC36a95a3909628F1bA97970E20698CA9`](https://testnet.arcscan.app/address/0x1f1CA31bC36a95a3909628F1bA97970E20698CA9) · exact-match verified |
 
+> Verification status, precisely: **CommitStakeV2 recompiles from this repo to the deployed bytecode byte for byte** (exact match). AgentBond and StreamPay are source-verified on the explorer and their runtime body is identical to this repo (only the constructor-set immutable addresses differ), but their metadata hash reflects an earlier compilation state, so a recompile of today's source matches the code body, not the metadata trailer.
+
 - **RPC:** `https://rpc.testnet.arc.network`
 - **Explorer:** `https://testnet.arcscan.app`
 - **Gas / settlement token:** USDC (native gas on Arc; 6-decimal ERC-20 for value)
@@ -149,7 +151,7 @@ The spec ([VERIFIER_ECONOMICS.md](./VERIFIER_ECONOMICS.md)) was already public; 
 | Mutation | [MUTATION_TESTING.md](./contracts/commit-stake-v2/MUTATION_TESTING.md) | 100% revert-class kill; survivors triaged equivalent / invariant-caught |
 | Gas | [GAS_PROFILE.md](./contracts/commit-stake-v2/GAS_PROFILE.md) | the full slash+burn path costs ~0.008 USDC over a plain finalize |
 
-`CommitStakeV2` `0x1f1CA31bC36a95a3909628F1bA97970E20698CA9`, Blockscout exact-match verified, 79-test
+`CommitStakeV2` `0x1f1CA31bC36a95a3909628F1bA97970E20698CA9`, Blockscout exact-match verified, 102-test
 suite (unit + adversarial + cold-audit + edge + fuzz + 10k-run invariants + symbolic spec) green.
 
 ---
@@ -216,10 +218,10 @@ Every contract in the stack ships with a unit + adversarial + fuzz + **invariant
 
 | Project | Tests | Fuzz properties | Invariants | Invariant campaign | Result |
 |---|---|---|---|---|---|
-| [`contracts/agent-bond`](contracts/agent-bond/README.md) | 29 | 5 × 10,000 runs | 4 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
+| [`contracts/agent-bond`](contracts/agent-bond/README.md) | 32 | 5 × 10,000 runs | 4 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 | [`contracts/stream-pay`](contracts/stream-pay/README.md) | 25 | 5 × 10,000 runs | 3 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
-| [`contracts/commit-stake`](contracts/commit-stake/README.md) | 25 | 6 × 10,000 runs | 3 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
-| [`contracts/commit-stake-v2`](contracts/commit-stake-v2/TEST_AUDIT.md) | 79 | 6 × 10,000 runs | 5 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
+| [`contracts/commit-stake`](contracts/commit-stake/README.md) | 28 | 6 × 10,000 runs | 3 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
+| [`contracts/commit-stake-v2`](contracts/commit-stake-v2/TEST_AUDIT.md) | 102 | 6 × 10,000 runs | 5 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 
 `commit-stake-v2` carries three layers the others don't: **5 Halmos symbolic proofs** (all-inputs
 solvency / surplus-positivity / no-double-pay), a **Slither + Aderyn** pass with by-design findings

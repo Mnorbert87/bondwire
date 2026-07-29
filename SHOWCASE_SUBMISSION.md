@@ -19,8 +19,9 @@ Trust and settlement primitives for autonomous agents, settled in USDC on Arc.
 
 ## What primitives are you exposing that other builders could find useful?
 
-Three ownerless, exact match verified contracts on Arc testnet, each a building
-block on its own and composable together:
+Three ownerless, source-verified contracts on Arc testnet (CommitStakeV2 is
+exact-match verified — recompile the repo and compare byte for byte), each a
+building block on its own and composable together:
 
 1. **AgentBond** (0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0) — slashable trust
    bonds. An agent deposits USDC as skin in the game; any enforcer contract the

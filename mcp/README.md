@@ -4,7 +4,7 @@ The trust focused MCP server for the agent economy on Arc testnet. Other agent t
 moves value; this server answers the question that comes before the payment: **can you
 trust the agent you are about to pay?**
 
-Backed by the live, ownerless, exact match verified Bondwire contracts on Arc testnet:
+Backed by the live, ownerless, source-verified Bondwire contracts on Arc testnet:
 [AgentBond](https://testnet.arcscan.app/address/0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0)
 (slashable trust bonds) and
 [CommitStakeV2](https://testnet.arcscan.app/address/0x1f1CA31bC36a95a3909628F1bA97970E20698CA9)
