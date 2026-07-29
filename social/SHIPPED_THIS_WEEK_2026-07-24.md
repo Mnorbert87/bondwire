@@ -1,5 +1,7 @@
 # Shipped this week draft (Discord #user-made-things + X)
 
+> **Correction, 2026-07-29:** exact match verification holds for CommitStakeV2; AgentBond and StreamPay are source-verified, runtime body identical, metadata trailer from an earlier compilation. The post below is kept as published.
+
 Publikálás: pénteken, Főnök jóváhagyása után. A [npm URL] placeholder az `npm publish` után él.
 Kötőjel-scan: futtasd le küldés előtt még egyszer. Minden bullet végén élő link.
 
