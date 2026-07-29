@@ -252,6 +252,13 @@ contract CommitStakeV2 is ReentrancyGuard {
     ///         hostage. In the normal flow CommitStakeV2 always resolves the obligation first.
     uint64 public constant BOND_DEADLINE_BUFFER = 7 days;
 
+    /// @notice Slice leverage cap: `verifierSlice <= MAX_SLICE_LEVERAGE × (amount + feeDeposit +
+    ///         arbiterFee)`. Bounds how much of a verifier's bond a single commitment can lock
+    ///         relative to the value actually at stake, so a dust stake can never lock a verifier's
+    ///         whole bond behind one job. Defense-in-depth alongside the per-commitment arbiter
+    ///         opt-in: even an approved arbiter cannot be paired with disproportionate leverage.
+    uint256 public constant MAX_SLICE_LEVERAGE = 3;
+
     IERC20 public immutable usdc;
     IAgentBond public immutable agentBond;
     IStreamPay public immutable streamPay;
@@ -388,6 +395,12 @@ contract CommitStakeV2 is ReentrancyGuard {
         // inequality subsumes the old `slice > amount + feeDeposit` rule.
         require(
             p.verifierSlice > p.amount + p.feeDeposit + p.arbiterFee, "SLICE_TOO_SMALL"
+        );
+        // Leverage cap (defense-in-depth): the slice locked behind a job is bounded relative to the
+        // value at stake, so a dust stake cannot lock a verifier's whole bond. See MAX_SLICE_LEVERAGE.
+        require(
+            p.verifierSlice <= MAX_SLICE_LEVERAGE * (p.amount + p.feeDeposit + p.arbiterFee),
+            "SLICE_ABOVE_LEVERAGE_CAP"
         );
 
         id = nextId++;

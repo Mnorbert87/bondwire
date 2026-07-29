@@ -10,7 +10,7 @@ import {CommitStakeV2} from "../src/CommitStakeV2.sol";
 ///      it overturn a CORRECT verdict, and burn an honest verifier's slice — griefing: profitless
 ///      to the attacker (~gas) but harmful to the honest verifier. The fix requires the verifier to
 ///      opt in to the exact arbiter address before a staker may name it on the verifier's bond.
-contract CommitStakeV2ArbiterOptInTest is V2TestBase {
+contract CommitStakeV2GriefFixTest is V2TestBase {
     address internal sockpuppet = address(0xBAD);
 
     /// The core attack: a staker pairs the verifier's bond with an arbiter the verifier never
@@ -90,5 +90,31 @@ contract CommitStakeV2ArbiterOptInTest is V2TestBase {
         emit CommitStakeV2.ArbiterApproved(verifier, sockpuppet, true);
         vm.prank(verifier);
         cs.approveArbiter(sockpuppet, true);
+    }
+
+    // --- slice leverage cap (defense-in-depth: a dust stake can't lock a whole bond) ---
+
+    /// A tiny stake paired with a disproportionate slice is rejected: slice may be at most
+    /// MAX_SLICE_LEVERAGE × (amount + feeDeposit + arbiterFee).
+    function test_sliceLeverageCap_blocksDustStakeWholeBondLock() public {
+        CommitStakeV2.CreateParams memory p = defaultParams();
+        p.amount = 1e6; // dust stake
+        // base = amount + 0 + arbiterFee = 1e6 + 5e6 = 6e6; cap = 3 × 6e6 = 18e6.
+        p.verifierSlice = cs.MAX_SLICE_LEVERAGE() * (p.amount + p.feeDeposit + p.arbiterFee) + 1;
+        p.challengeBond = cs.challengeBondFloor(p.verifierSlice, p.arbiterFee);
+        vm.prank(staker);
+        vm.expectRevert(bytes("SLICE_ABOVE_LEVERAGE_CAP"));
+        cs.create(p);
+    }
+
+    /// Exactly at the cap is allowed (boundary).
+    function test_sliceLeverageCap_atBoundaryAllowed() public {
+        CommitStakeV2.CreateParams memory p = defaultParams();
+        p.amount = 50e6;
+        p.verifierSlice = cs.MAX_SLICE_LEVERAGE() * (p.amount + p.feeDeposit + p.arbiterFee);
+        p.challengeBond = cs.challengeBondFloor(p.verifierSlice, p.arbiterFee);
+        vm.prank(staker);
+        uint256 id = cs.create(p);
+        assertEq(cs.get(id).verifierSlice, p.verifierSlice, "slice at cap accepted");
     }
 }
