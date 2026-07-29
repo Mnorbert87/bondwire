@@ -42,7 +42,12 @@ export const AGENT_BOND_ABI = [
   "function freeBondOf(address) view returns (uint256)",
   "function slashAllowance(address agent, address enforcer) view returns (uint256)",
   "function nextObligationId() view returns (uint256)",
-  "function getObligation(uint256 id) view returns (tuple(address agent, address enforcer, address creditor, uint256 amount, uint64 deadline, uint8 status))",
+  // NOTE: 7 fields. `allowanceEpoch` (grant generation) sits BEFORE `status` in AgentBond as of
+  // the revoke-hardening change on this branch. Omitting it does NOT revert — ABI decoding of a
+  // static tuple is positional, so `status` would silently read back the epoch number. This ABI
+  // therefore tracks THIS BRANCH's contracts; the deployed AgentBond is still the 6-field build,
+  // and main's SDK stays 6-field until the redeploy lands.
+  "function getObligation(uint256 id) view returns (tuple(address agent, address enforcer, address creditor, uint256 amount, uint64 deadline, uint64 allowanceEpoch, uint8 status))",
   "function usdc() view returns (address)",
   "event Locked(uint256 indexed id, address indexed agent, address indexed enforcer, address creditor, uint256 amount, uint64 deadline)",
 ];
