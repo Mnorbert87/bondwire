@@ -30,7 +30,7 @@ export const BONDWIRE = Object.freeze({
   }),
 });
 
-const AGENT_BOND_ABI = [
+export const AGENT_BOND_ABI = [
   "function deposit(uint256 amount)",
   "function withdraw(uint256 amount)",
   "function setSlashAllowance(address enforcer, uint256 amount)",
@@ -47,7 +47,7 @@ const AGENT_BOND_ABI = [
   "event Locked(uint256 indexed id, address indexed agent, address indexed enforcer, address creditor, uint256 amount, uint64 deadline)",
 ];
 
-const STREAM_PAY_ABI = [
+export const STREAM_PAY_ABI = [
   "function createStream(address recipient, uint256 deposit, uint64 start, uint64 stop, string memo) returns (uint256 id)",
   "function withdraw(uint256 id, uint256 amount)",
   "function cancel(uint256 id)",
@@ -60,7 +60,7 @@ const STREAM_PAY_ABI = [
   "event Created(uint256 indexed id, address indexed sender, address indexed recipient, uint256 deposit, uint64 start, uint64 stop, string memo)",
 ];
 
-const COMMIT_STAKE_ABI = [
+export const COMMIT_STAKE_ABI = [
   "function create((address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint64 deadline,uint64 challengeWindow,uint256 challengeBond,uint64 arbiterDeadline,uint256 arbiterFee,uint256 feeDeposit,uint64 feeStart,uint64 feeStop,string goal) p) returns (uint256)",
   "function resolve(uint256 id, bool passed)",
   "function challenge(uint256 id)",
