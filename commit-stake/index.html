@@ -477,7 +477,7 @@ const ERC20_ABI = [
 ];
 const STATUS = ["None", "Active", "Passed", "Claimed", "Slashed"];
 
-const read = new ethers.JsonRpcProvider((() => { const r = new ethers.FetchRequest(RPC); r.timeout = 20000; r.retryFunc = async (_q, resp, a) => { if (a >= 4) return false; const t = resp == null || resp.statusCode === 429 || resp.statusCode >= 500; if (!t) return false; await new Promise(s => setTimeout(s, 500 * 2 ** (a - 1))); return true; }; return r; })(), CHAIN_ID, { batchMaxCount: 1, staticNetwork: true });
+const read = (() => { const r = new ethers.FetchRequest(RPC); r.timeout = 20000; r.retryFunc = async (_q, resp, a) => { if (a >= 4) return false; const t = resp == null || resp.statusCode === 429 || resp.statusCode >= 500; if (!t) return false; await new Promise(s => setTimeout(s, 500 * 2 ** (a - 1))); return true; }; const p = new ethers.JsonRpcProvider(r, CHAIN_ID, { batchMaxCount: 1, staticNetwork: true }); /* the public Arc RPC drops concurrent bursts, so send one request at a time */ let q = Promise.resolve(); const send = p.send.bind(p); p.send = (mth, arg) => { const run = q.then(() => send(mth, arg)); q = run.catch(() => {}); return run; }; return p; })();
 let provider, signer, account, usdcAddr, usdcDecimals = 6;
 
 const $ = (id) => document.getElementById(id);
@@ -769,7 +769,7 @@ const SEED = [
 const $ = (id) => document.getElementById(id);
 const short = (a) => a ? a.slice(0,6) + "…" + a.slice(-4) : ", ";
 const txLink = (label,h) => `<a href="${EXPLORER}/tx/${h}" target="_blank" rel="noopener" style="color:var(--c2); text-decoration:none; white-space:nowrap;">${label} ↗</a>`;
-const read = new ethers.JsonRpcProvider((() => { const r = new ethers.FetchRequest(RPC); r.timeout = 20000; r.retryFunc = async (_q, resp, a) => { if (a >= 4) return false; const t = resp == null || resp.statusCode === 429 || resp.statusCode >= 500; if (!t) return false; await new Promise(s => setTimeout(s, 500 * 2 ** (a - 1))); return true; }; return r; })(), CHAIN_ID, { batchMaxCount: 1, staticNetwork: true });
+const read = (() => { const r = new ethers.FetchRequest(RPC); r.timeout = 20000; r.retryFunc = async (_q, resp, a) => { if (a >= 4) return false; const t = resp == null || resp.statusCode === 429 || resp.statusCode >= 500; if (!t) return false; await new Promise(s => setTimeout(s, 500 * 2 ** (a - 1))); return true; }; const p = new ethers.JsonRpcProvider(r, CHAIN_ID, { batchMaxCount: 1, staticNetwork: true }); /* the public Arc RPC drops concurrent bursts, so send one request at a time */ let q = Promise.resolve(); const send = p.send.bind(p); p.send = (mth, arg) => { const run = q.then(() => send(mth, arg)); q = run.catch(() => {}); return run; }; return p; })();
 let dec = 6;
 const fmt = (v) => Number(ethers.formatUnits(v, dec));
 const usd = (v) => fmt(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});

@@ -50,7 +50,7 @@ const usd = (v) => (Number(v) / 1e6).toFixed(6);
 const pk = process.env.SERVER_PRIVATE_KEY;
 if (!pk) { console.error("Set SERVER_PRIVATE_KEY (the server's testnet key)."); process.exit(1); }
 
-const provider = new ethers.JsonRpcProvider((() => { const r = new ethers.FetchRequest(RPC); r.timeout = 20000; r.retryFunc = async (_q, resp, a) => { if (a >= 4) return false; const t = resp == null || resp.statusCode === 429 || resp.statusCode >= 500; if (!t) return false; await new Promise(s => setTimeout(s, 500 * 2 ** (a - 1))); return true; }; return r; })(), CHAIN_ID, { batchMaxCount: 1, staticNetwork: true });
+const provider = (() => { const r = new ethers.FetchRequest(RPC); r.timeout = 20000; r.retryFunc = async (_q, resp, a) => { if (a >= 4) return false; const t = resp == null || resp.statusCode === 429 || resp.statusCode >= 500; if (!t) return false; await new Promise(s => setTimeout(s, 500 * 2 ** (a - 1))); return true; }; const p = new ethers.JsonRpcProvider(r, CHAIN_ID, { batchMaxCount: 1, staticNetwork: true }); /* the public Arc RPC drops concurrent bursts, so send one request at a time */ let q = Promise.resolve(); const send = p.send.bind(p); p.send = (mth, arg) => { const run = q.then(() => send(mth, arg)); q = run.catch(() => {}); return run; }; return p; })();
 const wallet = new ethers.Wallet(pk, provider);
 const SERVER_ADDR = wallet.address;
 const sp = new ethers.Contract(STREAM_PAY, SP_ABI, wallet);
