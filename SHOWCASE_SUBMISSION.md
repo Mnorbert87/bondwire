@@ -70,7 +70,7 @@ MIT, open now and going forward.
 
 ## Notes for the submitter
 
-- Push the 11 pending commits first (gh auth login), so the MCP + demo-flow are
-  public before reviewers click.
+- Everything is pushed; `main` and `origin/main` are level, so the MCP server and the
+  demo flow are already public when a reviewer clicks.
 - The arc-canteen login is interactive — Főnök or Kocka runs it.
 - Zero hyphen check done on this copy.

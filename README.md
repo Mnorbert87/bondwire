@@ -380,6 +380,33 @@ We deliberately built on **USDC + Arc** for the trust path, used **Circle Wallet
 
 ---
 
+## `bondwire-mcp`, the agent-facing surface
+
+Everything above is a contract or a page a human clicks. This is the part an **LLM agent uses
+directly, from inside its own tool loop** — no frontend, no wallet UI.
+
+[`mcp/`](./mcp/) is a Model Context Protocol server exposing the stack as eight tools:
+
+| Read-only | What it answers |
+|---|---|
+| `bondwire_stats` | live counters: obligations, streams, commitments, USDC escrowed |
+| `bondwire_passport` | **Agent Passport** — score, tier, bond depth, slash history for any address |
+| `bondwire_bond_status` | total / locked / free bond and the escrow's slash allowance |
+| `bondwire_commitment` | decoded state of one bonded-verifier commitment |
+
+| Value-moving | Safety model |
+|---|---|
+| `bondwire_commit_quote` → `bondwire_commit_execute` | **quote before execute**: the quote signs nothing and returns a `previewId` plus a live passport check on the verifier; the execute refuses without `confirmed: true` and that exact id, then signs precisely the previewed parameters |
+| `bondwire_resolve` | verifier posts its verdict, with its own bond slice behind it |
+| `bondwire_finalize` | anyone settles a commitment whose window has closed |
+
+Read-only tools need no key. The value-moving ones need `AGENT_PRIVATE_KEY` — a dedicated Arc
+**testnet** burner, never a mainnet key.
+
+> Not to be confused with **Arc's own MCP server**, mentioned further down under what Circle
+> already ships. That one is Circle's; this one is ours, and it is the piece that turns three
+> contracts into something an autonomous agent can actually hire another agent through.
+
 ## Repository layout
 
 ```
@@ -389,11 +416,18 @@ bondwire/
 ├── agent-bond/             # AgentBond frontend (index.html)
 ├── stream-pay/             # StreamPay frontend (index.html)
 ├── use-case/               # "Hire an AI service agent" walkthrough (index.html)
+├── bonded-verifier/        # the full CommitStakeV2 flow, live (create → resolve → challenge → finalize)
+├── app/                    # the combined dApp shell
+├── agent-passport/         # money-backed reputation lookup for any agent address
+├── ledger/                 # on-chain activity ledger, read straight from the RPC
 ├── sdk/                    # ethers v6 SDK (bond + stream in ~10 lines)
+├── mcp/                    # bondwire-mcp: the MCP server an LLM agent calls from its own tool loop
+├── agents/                 # ERC-8004 agent cards (aiden.json, verifier.json)
 ├── agent/                  # Aiden, runs the lifecycle; Circle-Wallet-signed Arc txs
 ├── demo/                   # commerce-scenario.js, runnable end-to-end flow
 ├── x402-demo/              # x402 pay-per-call API, settled per second on StreamPay
 ├── cctp-demo/              # cross-chain capital onboarding (Bridge Kit / CCTP V2 → AgentBond)
+├── social/                 # dated announcement archive (kept as published)
 └── contracts/              # Foundry projects (src, test, script)
     ├── agent-bond/         # AgentBond, trust primitive
     ├── stream-pay/         # StreamPay, settlement primitive

@@ -2,11 +2,14 @@
 
 Everything here is something you can click or run. I am not asking you to trust a screenshot or a "deployed, promise."
 
-## If you have 30 seconds, look at three things
+## If you have 30 seconds, look at four things
 
 1. **The burn is real.** Click the first transaction below. You will see a USDC `Transfer` of 1.45 USDC straight to `0x…dEaD`. That is the surplus burn that makes it pointless for a verifier to collude, and it actually happened on chain.
 2. **The code is verified.** `CommitStakeV2` at [`0x1f1CA31b…698CA9`](https://testnet.arcscan.app/address/0x1f1CA31bC36a95a3909628F1bA97970E20698CA9) is Blockscout exact-match verified. The source in this repo is the deployed bytecode, byte for byte.
-3. **The tests pass.** One copy-paste command runs 102 tests (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants). They pass on your machine, not just mine.
+3. **An agent can drive it without a UI.** [`mcp/`](./mcp/) is an MCP server: an LLM agent checks a
+   counterparty's Agent Passport and opens a bonded escrow from its own tool loop. Every
+   value-moving tool is quote-before-execute, so nothing signs without an explicit confirmation.
+4. **The tests pass.** One copy-paste command runs 102 tests (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants). They pass on your machine, not just mine.
 
 ---
 
