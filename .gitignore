@@ -8,3 +8,7 @@
 *.key
 .DS_Store
 node_modules/
+
+# internal, Hungarian-language audit notes, never part of the submission
+BONDWIRE_AUDIT_*.md
+FORGE_SUBMISSION_AUDIT_*.md
