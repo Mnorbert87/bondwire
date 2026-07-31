@@ -152,19 +152,19 @@
       <div class="role">Trust layer</div>
       <h3>AgentBond</h3>
       <p>An agent deposits USDC as skin in the game. Any enforcer it approves can lock a slice behind an obligation and slash it on default. Free bond is a money backed credit score.</p>
-      <p style="margin-top:12px;"><code>0xB9b4…f8e0</code></p>
+      <p style="margin-top:12px;"><code>0x4383…702c</code></p>
     </div>
     <div class="card">
       <div class="role">Settlement layer</div>
       <h3>StreamPay</h3>
       <p>Continuous USDC settlement. Funds accrue per second, the recipient withdraws any time, either side cancels with a fair split. Pay per second of work, not per invoice.</p>
-      <p style="margin-top:12px;"><code>0x5057…2450</code></p>
+      <p style="margin-top:12px;"><code>0x6C2A…B262</code></p>
     </div>
     <div class="card">
       <div class="role">Mechanism</div>
       <h3>CommitStakeV2</h3>
       <p>Pay only on verified PASS. The verifier posts its verdict with its own bond slice locked behind it. A challenge window and an optional arbiter give recourse. Lying costs real money.</p>
-      <p style="margin-top:12px;"><code>0x1f1CA31b…698CA9</code></p>
+      <p style="margin-top:12px;"><code>0xf3457ABf…af1474</code></p>
     </div>
   </div>
   <div class="note">
@@ -184,7 +184,7 @@
     <tr><td>Overturn burn, the surplus left after the harmed party is paid</td><td class="m">1.45 USDC</td><td class="m">0x97f31e7a…c45435 · Transfer to 0x…dEaD</td></tr>
     <tr><td>Liveness burn, the whole slice when a dispute deadlocks</td><td class="m">1.50 USDC</td><td class="m">0x7bf59845…4aa6bd · Transfer to 0x…dEaD</td></tr>
     <tr><td>Cross chain capital onboarding, Base Sepolia to Arc via CCTP V2</td><td class="m">1 USDC</td><td class="m">3 transactions, all status 1, bond 36 to 37</td></tr>
-    <tr><td>Source on arcscan, byte for byte with this repo</td><td class="m">exact match</td><td class="m">testnet.arcscan.app/address/0x1f1CA31b…</td></tr>
+    <tr><td>Source on arcscan, byte for byte with this repo</td><td class="m">exact match</td><td class="m">testnet.arcscan.app/address/0xf3457ABf…</td></tr>
   </table>
   <div class="note">
     <div class="h">The tests bite, and we measured it rather than counting them</div>
@@ -274,7 +274,7 @@
 <section class="slide">
   <div class="eyebrow">Honesty as a feature</div>
   <h2>What is still wrong with it, in our own words</h2>
-  <p class="sub" style="margin-top:12px;">Three findings are fixed on public branches and deliberately <b style="color:var(--ink)">not deployed</b>: changing a single character in a comment alters the solc metadata hash and breaks the live exact match verification. We measured that rather than assumed it.</p>
+  <p class="sub" style="margin-top:12px;">Three findings were fixed on public branches and, on 2026-07-31, <b style="color:var(--ink)">deployed</b>. Holding them back would have preserved the old deployment's exact match verification, so we redeployed and re verified instead: all three contracts are exact match again, at new addresses. We measured that rather than assumed it.</p>
   <table>
     <tr><th style="width:30%">Finding</th><th style="width:34%">Status</th><th>Branch</th></tr>
     <tr><td>Sockpuppet arbiter can reclaim the verifier's slice</td><td>Fixed and tested, opt in griefing guard</td><td class="m">fix/arbiter-griefing-optin</td></tr>

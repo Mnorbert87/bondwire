@@ -138,7 +138,7 @@ opt-in to the named arbiter (or an AgentBond arbiter allowlist), plus a stake-pr
 `verifierSlice ≤ k·(amount + feeDeposit + arbiterFee)`. We state this because a careful reviewer
 reaches it: the symbolic spec proves the *accounting* of a slash, not the *justness* of the verdict
 ,  arbiter honesty is an assumption, exactly as the verifier's is. The fix is implemented, tested
-(88/88 green), and not deployed (to preserve the on-chain exact-match verification): see
+(88/88 green), and deployed in the hardened redeploy of 2026-07-31: see
 [THREAT_MODEL §8](./THREAT_MODEL.md) and Draft [PR #1](https://github.com/Mnorbert87/bondwire/pull/1).
 
 The spec ([VERIFIER_ECONOMICS.md](./VERIFIER_ECONOMICS.md)) was already public; with this the

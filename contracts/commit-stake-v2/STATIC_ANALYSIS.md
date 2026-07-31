@@ -66,7 +66,7 @@ This choice is deliberate and load-bearing:
 - **Why not inline directives:** a `// slither-disable-next-line` comment changes the contract
   source, which changes the Solidity metadata hash, which changes the deployed bytecode's metadata
   trailer. That would break the **exact-match** between this repo's source and the on-chain
-  `CommitStakeV2` (`0x1f1CA31…698CA9`), the very claim JUDGES.md / README make. The triage DB lives
+  `CommitStakeV2` (`0xf3457AB…af1474`), the very claim JUDGES.md / README make. The triage DB lives
   *outside* the compiled source, so `src/CommitStakeV2.sol` stays **byte-identical to the deployed,
   Blockscout-exact-verified source** (`git diff <deploy-commit> -- src/CommitStakeV2.sol` is empty).
 - **Why not `detectors_to_exclude`:** a global exclude would also silence a *future, genuine*
