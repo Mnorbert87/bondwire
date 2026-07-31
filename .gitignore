@@ -12,3 +12,7 @@ node_modules/
 # internal, Hungarian-language audit notes, never part of the submission
 BONDWIRE_AUDIT_*.md
 FORGE_SUBMISSION_AUDIT_*.md
+
+# local symlinks to sdk/node_modules for running the demo scripts
+agent/node_modules
+demo/node_modules

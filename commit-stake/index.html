@@ -413,8 +413,8 @@
 
     <!-- §7a routing table, each row bound to a live branch + its real tx -->
     <div class="panel">
-      <h3>§7a routing, three branches proven on-chain</h3>
-      <p class="hint">Three seeded branches link to their real Arc transactions in the <b>proof</b> column; their <b>outcome</b> is read live from <code>get(id)</code> (the 🔥 burn transfers go to <code>0x…dEaD</code>). The remaining routing outcomes are shown as <b>mechanism, not seeded in this demo</b>, with no on-chain proof.</p>
+      <h3>§7a routing, four branches proven on-chain</h3>
+      <p class="hint">Four seeded branches link to their real Arc transactions in the <b>proof</b> column; their <b>outcome</b> is read live from <code>get(id)</code> (the 🔥 burn transfers go to <code>0x…dEaD</code>). The remaining routing outcomes are shown as <b>mechanism, not seeded in this demo</b>, with no on-chain proof.</p>
       <div style="overflow-x:auto;">
         <table id="v2table" style="width:100%; border-collapse:collapse; font-size:13px;">
           <thead>
@@ -760,9 +760,10 @@ const OUTCOME2 = ["None","CleanPass","CleanFail","UpheldPass","UpheldFail","Over
 
 // Proof transactions for the current seed (historical artifacts; the on-chain STATE below is read live).
 const SEED = [
-  { id:1, name:"A · Positive",  txs:[["create","0xe98820e0290f483708e15b30f1139852548738341da5d8685d7a3db6d9c07ebc"],["resolve(true)","0xa415cc6c59ce5233bf5372423b55f15c0f0bf9f518e3058bf91f98f808d5fa27"],["finalize","0xb527eee462ce25f4043352da8e8ce5c4aec1ce5aafb7cbaba9e22863df966e29"]] },
-  { id:2, name:"B · Liveness",  burn:"0x7bf59845abadf3847061b5997e96e303a959d722c8a7283b160b3c82b14aa6bd", txs:[["create","0xf37ccad6db28a858874bc4a47e06d19fce4f5cfdc9f88407b7f8ebf862e7e80b"],["slashVerifierExpired 🔥","0x7bf59845abadf3847061b5997e96e303a959d722c8a7283b160b3c82b14aa6bd"]] },
-  { id:3, name:"C · Overturn",  burn:"0x97f31e7a590af4ecc2f88c8f34943fe95be41391c9c3a4e3895d9a3d13c45435", txs:[["create","0x2ae5b324f4b47343dd99dd12902ddf09dd657d651acf0e964d6da076e1c8db08"],["resolve(false)","0x8ad46893ab71f04dce12c37cb47d4f0d4eb21b714870d811139d427aa0695692"],["challenge","0x0eab5b82beb96233d2da95488ae84e9b6a36d4be2866aa304aeb19837892d999"],["arbitrate(overturn) 🔥","0x97f31e7a590af4ecc2f88c8f34943fe95be41391c9c3a4e3895d9a3d13c45435"]] }
+  { id:1, name:"A · Positive",  txs:[["create","0x9507cc6a62ce3f3f554971e2f7c6001a9ff2d78949bdb9752e060e21f7769f45"],["resolve(true)","0xc217c1d5beb12e97cb3e73dac1cb3f5a581dcdf66b6cb70ce237402f72624731"],["finalize","0x7e0e1ed99d1793cef7dd9940982ba0b4966e0bf91ce39a42ddd6a07550966891"]] },
+  { id:2, name:"B · Liveness",  burn:"0xae25f95183bd6af798cf1f6a82222aeca35eae73553575449a403c8b03b5a364", txs:[["create","0x824a9baa6156f912d7263704c240534a2bbb963db275e9d0dd9e598235aec649"],["slashVerifierExpired 🔥","0xae25f95183bd6af798cf1f6a82222aeca35eae73553575449a403c8b03b5a364"]] },
+  { id:3, name:"C · Overturn",  burn:"0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d", txs:[["create","0xcb3b4a7a59d87acdba4557010cbfccdf56e91b35cf267cba26a56c19a5ddbe99"],["resolve(false)","0xbc78ab3c822a8a475f6ac9308be55bf63282ae7cd18961d250b8b309dfdddafb"],["challenge","0x6f8205cb60d525bc5dfc601d7bcdb82dfd7eee133b9e16bae04695237e8d3bd1"],["arbitrate(overturn) 🔥","0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d"]] }
+  { id:4, name:"D · Arbiter silence", txs:[["create","0xf695f8fa620a3a0ce8098fc0f7c8a59fb48745a3ad54b919eb320f6b15e07901"],["resolve(false)","0x771ec5d664502954a2299ec765ecd4a1fbe15aeef49890536f6559e1abc8b75e"],["challenge","0xdbbef0e9bb03d8289e0eb8b1974265a2c7375e93239c44f7f9c09e9695c87175"],["finalize","0x316c63db10e7b9996f9d9bcbbf5456e98da22510b4047349760c87388fe7f704"]] },
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -789,6 +790,10 @@ function routing(outcome, c) {
     case "LivenessSlash": return { stake:"returned → staker", slice:`damage 0 → staker · <b style="color:var(--bad)">${usd(c.verifierSlice)} burned</b>`, burned:c.verifierSlice };
     case "OverturnedToPass": { const b=c.verifierSlice - c.arbiterFee; return { stake:"→ staker (corrected)", slice:`damage ${usd(c.arbiterFee)} → staker · <b style="color:var(--bad)">${usd(b)} burned</b>`, burned:b }; }
     case "OverturnedToFail": { const b=c.verifierSlice - c.arbiterFee; return { stake:"→ beneficiary (corrected)", slice:`damage ${usd(c.arbiterFee)} → beneficiary · <b style="color:var(--bad)">${usd(b)} burned</b>`, burned:b }; }
+    case "SilenceFail": return { stake:"→ beneficiary (verdict stands)", slice:"released to verifier · no burn · challenge bond returned", burned:0n };
+    case "SilencePass": return { stake:"→ staker (verdict stands)", slice:"released to verifier · no burn · challenge bond returned", burned:0n };
+    case "UpheldPass":  return { stake:"→ staker (upheld)", slice:"released to verifier · no burn · challenger bond slashed", burned:0n };
+    case "UpheldFail":  return { stake:"→ beneficiary (upheld)", slice:"released to verifier · no burn · challenger bond slashed", burned:0n };
     default: return { stake:", ", slice:", ", burned:0n };
   }
 }

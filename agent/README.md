@@ -18,10 +18,10 @@ Signed by Circle wallet `0xdFDaDEb7440f1CE4Cc2f62Aa21BCCe3374bDF46b` (provisione
 
 | Step | Call | Tx |
 |---|---|---|
-| Approve | `USDC.approve(StreamPay)` | [`0x053495…be03`](https://testnet.arcscan.app/tx/0x05349563271e35e9b79d66116cd5d84ca65cff8032bce41fa937ff29dca8be03) |
-| Approve | `USDC.approve(AgentBond)` | [`0xfb90ad…4277`](https://testnet.arcscan.app/tx/0xfb90ad375c089cf1db78f59beaf4c5ad9f07958311248c9815b4bb2291c74277) |
-| Bond | `AgentBond.deposit(1 USDC)` | [`0x59a8a0…20ab`](https://testnet.arcscan.app/tx/0x59a8a0d095ca745ee2f37f0abfcdc631852707ced7d8e8a1128ebd42f09220ab) |
-| Stream | `StreamPay.createStream(1 USDC / 120s)` | [`0x2f96d1…7302`](https://testnet.arcscan.app/tx/0x2f96d176d5904278806259cd4b96a38d1f0550e078fc953878028bb7b55d7302) |
+| Approve | `USDC.approve(StreamPay)` | [`0x7ec0f1…0a28`](https://testnet.arcscan.app/tx/0x7ec0f1bcaa668eed2eb9ab5ed058130dc0a18c058a2ec489563bdd60cebc0a28) |
+| Approve | `USDC.approve(AgentBond)` | [`0xba3472…2b34`](https://testnet.arcscan.app/tx/0xba3472a541bf5f728dc7a1665baae677242dee9dfbac5670bbfbbcae845f2b34) |
+| Bond | `AgentBond.deposit(2.5 USDC)` | [`0xbac7c1…4a01`](https://testnet.arcscan.app/tx/0xbac7c17559b7150a94dfbb8405120de78ac91066e10fc71895859762ae134a01) |
+| Stream | `StreamPay.createStream(1 USDC / 120s)` | [`0x6bc4b0…68ac`](https://testnet.arcscan.app/tx/0x6bc4b021aed338dbabb96f1157243b3a39473f101dc395f0b83b338d330368ac) |
 
 Circle's `estimateContractExecutionFee` and `createContractExecutionTransaction` worked against
 Arc's USDC-as-gas model with no special-casing beyond the `BONDWIRE-TESTNET` chain id.

@@ -110,9 +110,9 @@ Three claims, each backed by something you can re-run:
 3. **Symbolically-verified surplus-burn, proven live.** Halmos proves solvency, surplus-positivity,
    no-double-pay and the fee-residue bound **for all inputs**; two on-chain artifacts show the burn
    actually happening: an overturn burn of **1.45 USDC**
-   ([tx](https://testnet.arcscan.app/tx/0x97f31e7a590af4ecc2f88c8f34943fe95be41391c9c3a4e3895d9a3d13c45435))
+   ([tx](https://testnet.arcscan.app/tx/0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d))
    and a liveness burn of the **whole 1.50 USDC slice**
-   ([tx](https://testnet.arcscan.app/tx/0x7bf59845abadf3847061b5997e96e303a959d722c8a7283b160b3c82b14aa6bd))
+   ([tx](https://testnet.arcscan.app/tx/0xae25f95183bd6af798cf1f6a82222aeca35eae73553575449a403c8b03b5a364))
    to `0x…dEaD`.
 
 **Trust boundary, what the burn buys, stated up front.** Closing the recapture path means a
@@ -263,7 +263,10 @@ native Bridge-Kit chain (chainId `5042002`, CCTP domain `26`). Verified on testn
 |---|---|---|
 | `depositForBurn` | Base Sepolia | [`0x6232b1…25d8`](https://sepolia.basescan.org/tx/0x6232b181d8f3234162f8d617ba5a5215b62eb9c902e5f70b0f6312cb0e8725d8) |
 | `receiveMessage` (mint) | Arc | [`0xcae264…26d2b`](https://testnet.arcscan.app/tx/0xcae2649abaee2544144a7cedc73b38915ef62d2fce545b566168f30735326d2b) |
-| `AgentBond.deposit` | Arc | [`0xf17ca3…96bc`](https://testnet.arcscan.app/tx/0xf17ca3a4004b8b969cdb633d1d7f42703a7618f34a56092fc1e9b82eba5f96bc) |
+| `AgentBond.deposit` | Arc | [`0x0eb3f7…1b3c`](https://testnet.arcscan.app/tx/0x0eb3f7e0fa6e52c0df47610de7e3155a250e7ac6ab41b6f4c2b5c93042b11b3c) |
+
+The two bridge legs above are from the original run and are unaffected by the 2026-07-31 redeploy (they are Base Sepolia and CCTP transactions, not Bondwire ones). The `AgentBond.deposit` leg was re-executed against the redeployed AgentBond so every Bondwire link on this page points at a live contract.
+
 
 AgentBond bond `36 → 37 USDC`; the bridged dollar is now slashable collateral. Full transcript:
 [`cctp-demo/SAMPLE_RUN.md`](./cctp-demo/SAMPLE_RUN.md). A raw-CCTP-V2 (no-SDK) reference flow is in
@@ -275,10 +278,10 @@ A Circle Developer-Controlled Wallet (`0xdFDaDEb7440f1CE4Cc2f62Aa21BCCe3374bDF46
 
 | Step | Contract call | Tx |
 |---|---|---|
-| Approve | `USDC.approve(StreamPay)` | [`0x053495…be03`](https://testnet.arcscan.app/tx/0x05349563271e35e9b79d66116cd5d84ca65cff8032bce41fa937ff29dca8be03) |
-| Approve | `USDC.approve(AgentBond)` | [`0xfb90ad…4277`](https://testnet.arcscan.app/tx/0xfb90ad375c089cf1db78f59beaf4c5ad9f07958311248c9815b4bb2291c74277) |
-| Bond | `AgentBond.deposit(1 USDC)` | [`0x59a8a0…20ab`](https://testnet.arcscan.app/tx/0x59a8a0d095ca745ee2f37f0abfcdc631852707ced7d8e8a1128ebd42f09220ab) |
-| Stream | `StreamPay.createStream(1 USDC / 120s)` | [`0x2f96d1…7302`](https://testnet.arcscan.app/tx/0x2f96d176d5904278806259cd4b96a38d1f0550e078fc953878028bb7b55d7302) |
+| Approve | `USDC.approve(StreamPay)` | [`0x7ec0f1…0a28`](https://testnet.arcscan.app/tx/0x7ec0f1bcaa668eed2eb9ab5ed058130dc0a18c058a2ec489563bdd60cebc0a28) |
+| Approve | `USDC.approve(AgentBond)` | [`0xba3472…2b34`](https://testnet.arcscan.app/tx/0xba3472a541bf5f728dc7a1665baae677242dee9dfbac5670bbfbbcae845f2b34) |
+| Bond | `AgentBond.deposit(2.5 USDC)` | [`0xbac7c1…4a01`](https://testnet.arcscan.app/tx/0xbac7c17559b7150a94dfbb8405120de78ac91066e10fc71895859762ae134a01) |
+| Stream | `StreamPay.createStream(1 USDC / 120s)` | [`0x6bc4b0…68ac`](https://testnet.arcscan.app/tx/0x6bc4b021aed338dbabb96f1157243b3a39473f101dc395f0b83b338d330368ac) |
 
 Circle's `estimateContractExecutionFee` and `createContractExecutionTransaction` work against Arc's USDC-as-gas model with no special-casing beyond the `BONDWIRE-TESTNET` chain identifier.
 
