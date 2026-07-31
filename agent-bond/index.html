@@ -454,7 +454,7 @@ const ERC20_ABI = [
 ];
 const STATUS = ["None", "Active", "Released", "Slashed"];
 
-const read = new ethers.JsonRpcProvider(RPC, CHAIN_ID);
+const read = new ethers.JsonRpcProvider(RPC, CHAIN_ID, { batchMaxCount: 1, staticNetwork: true });
 let provider, signer, account, usdcAddr, usdcDecimals = 6;
 
 const $ = (id) => document.getElementById(id);

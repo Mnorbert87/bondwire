@@ -14,7 +14,7 @@ const TOPUP = ethers.parseUnits(process.env.SERVER_TOPUP_USDC || "0.6", 18);
 async function main() {
   const apk = process.env.AGENT_PRIVATE_KEY, spk = process.env.SERVER_PRIVATE_KEY;
   if (!apk || !spk) throw new Error("Set AGENT_PRIVATE_KEY and SERVER_PRIVATE_KEY.");
-  const provider = new ethers.JsonRpcProvider(RPC, CHAIN_ID);
+  const provider = new ethers.JsonRpcProvider(RPC, CHAIN_ID, { batchMaxCount: 1, staticNetwork: true });
   const agent = new ethers.Wallet(apk, provider);
   const serverAddr = new ethers.Wallet(spk).address;
 

@@ -158,7 +158,7 @@ function logTx(label, hash){
 $("csLink").href = `${EXPLORER}/address/${ADDR.CommitStakeV2}`;
 $("csLink").textContent = ADDR.CommitStakeV2;
 
-async function readOnly(){ if(!ro) ro = new ethers.JsonRpcProvider(RPC); return ro; }
+async function readOnly(){ if(!ro) ro = new ethers.JsonRpcProvider(RPC, undefined, { batchMaxCount: 1, staticNetwork: true }); return ro; }
 async function refresh(){
   try{
     const p = await readOnly();

@@ -265,7 +265,7 @@ const EXPLORER = "https://testnet.arcscan.app";
 const AB_ADDR = "0x4383Ea48837eF7e60fC22BD67945BCBf0551702c";
 const SP_ADDR = "0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262";
 
-const read = new ethers.JsonRpcProvider(RPC, CHAIN_ID);
+const read = new ethers.JsonRpcProvider(RPC, CHAIN_ID, { batchMaxCount: 1, staticNetwork: true });
 const $ = (id) => document.getElementById(id);
 const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : ", ";
 

@@ -50,7 +50,7 @@ const usd = (v) => (Number(v) / 1e6).toFixed(6);
 const pk = process.env.SERVER_PRIVATE_KEY;
 if (!pk) { console.error("Set SERVER_PRIVATE_KEY (the server's testnet key)."); process.exit(1); }
 
-const provider = new ethers.JsonRpcProvider(RPC, CHAIN_ID);
+const provider = new ethers.JsonRpcProvider(RPC, CHAIN_ID, { batchMaxCount: 1, staticNetwork: true });
 const wallet = new ethers.Wallet(pk, provider);
 const SERVER_ADDR = wallet.address;
 const sp = new ethers.Contract(STREAM_PAY, SP_ABI, wallet);

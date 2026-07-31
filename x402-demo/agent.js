@@ -65,7 +65,7 @@ async function main() {
   const pk = process.env.AGENT_PRIVATE_KEY;
   if (!pk) throw new Error("Set AGENT_PRIVATE_KEY (the buyer agent's testnet key).");
 
-  const provider = new ethers.JsonRpcProvider(RPC, CHAIN_ID);
+  const provider = new ethers.JsonRpcProvider(RPC, CHAIN_ID, { batchMaxCount: 1, staticNetwork: true });
   const wallet = new ethers.Wallet(pk, provider);
   const me = wallet.address;
   const usdc = new ethers.Contract(USDC, ERC20, wallet);

@@ -436,7 +436,7 @@ const ERC20_ABI = [
   "function decimals() view returns (uint8)"
 ];
 
-const read = new ethers.JsonRpcProvider(RPC, CHAIN_ID);
+const read = new ethers.JsonRpcProvider(RPC, CHAIN_ID, { batchMaxCount: 1, staticNetwork: true });
 const $ = (id) => document.getElementById(id);
 const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : ", ";
 
