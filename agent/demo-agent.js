@@ -84,7 +84,7 @@ async function main() {
 
   // The public Arc RPC rejects batched JSON RPC, and ethers batches by default — pin it to one
   // request per call or every read comes back as "missing revert data".
-  const provider = new ethers.JsonRpcProvider(RPC, CHAIN_ID, { batchMaxCount: 1, staticNetwork: true });
+  const provider = new ethers.JsonRpcProvider((() => { const r = new ethers.FetchRequest(RPC); r.timeout = 20000; r.retryFunc = async (_q, resp, a) => { if (a >= 4) return false; const t = resp == null || resp.statusCode === 429 || resp.statusCode >= 500; if (!t) return false; await new Promise(s => setTimeout(s, 500 * 2 ** (a - 1))); return true; }; return r; })(), CHAIN_ID, { batchMaxCount: 1, staticNetwork: true });
   const wallet = new ethers.Wallet(pk, provider);
   const me = wallet.address;
   const usdc = new ethers.Contract(USDC, ERC20, wallet);
