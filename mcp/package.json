@@ -35,5 +35,9 @@
     "@modelcontextprotocol/sdk": "^1.12.0",
     "ethers": "^6.13.0",
     "zod": "^3.24.0"
+  },
+  "scripts": {
+    "prepack": "node -e \"require('fs').copyFileSync('../sdk/bondwire.js','lib/bondwire.impl.js')\"",
+    "postpack": "node -e \"try{require('fs').unlinkSync('lib/bondwire.impl.js')}catch(e){}\""
   }
 }

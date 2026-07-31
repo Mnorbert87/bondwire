@@ -214,14 +214,14 @@ Yes, by design, because on-chain you can only verify *outcomes*, not *intent*. A
 
 ## Verification, tests, fuzz, invariants, threat model
 
-Every contract in the stack ships with a unit + adversarial + fuzz + **invariant** suite, run on every push by [CI](.github/workflows/test.yml). The invariants are checked against *ghost ledgers built from real ERC-20 balance movements*, the tests never trust the contract's own bookkeeping. Actual numbers from the current suite (forge 1.7.1, same config enforced in CI):
+Every contract in the stack ships with a unit + adversarial + fuzz + **invariant** suite, run on every push by [CI](.github/workflows/test.yml). The invariants are checked against *ghost ledgers built from real ERC-20 balance movements*, the tests never trust the contract's own bookkeeping. Actual numbers from the current suite on this branch (forge 1.7.1, same config enforced in CI). **Tests** is the `forge test` total per project; **Fuzz properties** counts `testFuzz_` functions and **Invariants** counts `invariant_` functions, wherever in the suite they live — some sit outside the dedicated `*Fuzz`/`*Invariant` files:
 
 | Project | Tests | Fuzz properties | Invariants | Invariant campaign | Result |
 |---|---|---|---|---|---|
 | [`contracts/agent-bond`](contracts/agent-bond/README.md) | 32 | 5 × 10,000 runs | 4 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 | [`contracts/stream-pay`](contracts/stream-pay/README.md) | 25 | 5 × 10,000 runs | 3 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
-| [`contracts/commit-stake`](contracts/commit-stake/README.md) | 28 | 6 × 10,000 runs | 3 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
-| [`contracts/commit-stake-v2`](contracts/commit-stake-v2/TEST_AUDIT.md) | 102 | 6 × 10,000 runs | 5 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
+| [`contracts/commit-stake`](contracts/commit-stake/README.md) | 28 | 6 × 10,000 runs | 4 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
+| [`contracts/commit-stake-v2`](contracts/commit-stake-v2/TEST_AUDIT.md) | 102 | 7 × 10,000 runs | 5 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 
 `commit-stake-v2` carries three layers the others don't: **5 Halmos symbolic proofs** (all-inputs
 solvency / surplus-positivity / no-double-pay), a **Slither + Aderyn** pass with by-design findings
@@ -380,6 +380,33 @@ We deliberately built on **USDC + Arc** for the trust path, used **Circle Wallet
 
 ---
 
+## `bondwire-mcp`, the agent-facing surface
+
+Everything above is a contract or a page a human clicks. This is the part an **LLM agent uses
+directly, from inside its own tool loop** — no frontend, no wallet UI.
+
+[`mcp/`](./mcp/) is a Model Context Protocol server exposing the stack as eight tools:
+
+| Read-only | What it answers |
+|---|---|
+| `bondwire_stats` | live counters: obligations, streams, commitments, USDC escrowed |
+| `bondwire_passport` | **Agent Passport** — score, tier, bond depth, slash history for any address |
+| `bondwire_bond_status` | total / locked / free bond and the escrow's slash allowance |
+| `bondwire_commitment` | decoded state of one bonded-verifier commitment |
+
+| Value-moving | Safety model |
+|---|---|
+| `bondwire_commit_quote` → `bondwire_commit_execute` | **quote before execute**: the quote signs nothing and returns a `previewId` plus a live passport check on the verifier; the execute refuses without `confirmed: true` and that exact id, then signs precisely the previewed parameters |
+| `bondwire_resolve` | verifier posts its verdict, with its own bond slice behind it |
+| `bondwire_finalize` | anyone settles a commitment whose window has closed |
+
+Read-only tools need no key. The value-moving ones need `AGENT_PRIVATE_KEY` — a dedicated Arc
+**testnet** burner, never a mainnet key.
+
+> Not to be confused with **Arc's own MCP server**, mentioned further down under what Circle
+> already ships. That one is Circle's; this one is ours, and it is the piece that turns three
+> contracts into something an autonomous agent can actually hire another agent through.
+
 ## Repository layout
 
 ```
@@ -389,11 +416,18 @@ bondwire/
 ├── agent-bond/             # AgentBond frontend (index.html)
 ├── stream-pay/             # StreamPay frontend (index.html)
 ├── use-case/               # "Hire an AI service agent" walkthrough (index.html)
+├── bonded-verifier/        # the full CommitStakeV2 flow, live (create → resolve → challenge → finalize)
+├── app/                    # the combined dApp shell
+├── agent-passport/         # money-backed reputation lookup for any agent address
+├── ledger/                 # on-chain activity ledger, read straight from the RPC
 ├── sdk/                    # ethers v6 SDK (bond + stream in ~10 lines)
+├── mcp/                    # bondwire-mcp: the MCP server an LLM agent calls from its own tool loop
+├── agents/                 # ERC-8004 agent cards (aiden.json, verifier.json)
 ├── agent/                  # Aiden, runs the lifecycle; Circle-Wallet-signed Arc txs
 ├── demo/                   # commerce-scenario.js, runnable end-to-end flow
 ├── x402-demo/              # x402 pay-per-call API, settled per second on StreamPay
 ├── cctp-demo/              # cross-chain capital onboarding (Bridge Kit / CCTP V2 → AgentBond)
+├── social/                 # dated announcement archive (kept as published)
 └── contracts/              # Foundry projects (src, test, script)
     ├── agent-bond/         # AgentBond, trust primitive
     ├── stream-pay/         # StreamPay, settlement primitive

@@ -14,8 +14,8 @@ The handler drives random `create / resolve(pass|fail) / claim / slashExpired / 
 
 ## Results (actual local run, forge 1.7.1 / solc 0.8.24)
 
-- **25 tests, 0 failed.** No invariant violation was found in any campaign.
-- Each of the 3 invariants: **10,000 runs × depth 15 = 150,000 randomized calls, 0 reverts** (`fail_on_revert = true` on the new campaigns).
+- **28 tests, 0 failed.** No invariant violation was found in any campaign.
+- Each of the 4 invariants: **10,000 runs × depth 15 = 150,000 randomized calls, 0 reverts** (`fail_on_revert = true` on the new campaigns).
 - Each of the 6 fuzz properties: **10,000 runs**, pass lifecycle makes the staker exactly whole, fail pays the beneficiary exactly once, silent-verifier expiry from a random caller, single-surface XOR property, plus non-verifier / non-staker access fuzz.
 - Plus 12 unit tests and a hostile-token suite (reentrancy on claim and slash, fee-on-transfer solvency, no-return token).
 
