@@ -22,8 +22,8 @@ I wanted to watch the anti-collusion device work, not claim it works. When a ver
 
 | What | Burned | Transaction (open it, find the `Transfer` to `…dEaD`) |
 |---|---|---|
-| Overturn burn (surplus left after `damage` is paid) | 1.45 USDC | [`0x97f31e7a…c45435`](https://testnet.arcscan.app/tx/0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d) |
-| Liveness burn (the whole slice, when a dispute deadlocks) | 1.50 USDC | [`0x7bf59845…4aa6bd`](https://testnet.arcscan.app/tx/0xae25f95183bd6af798cf1f6a82222aeca35eae73553575449a403c8b03b5a364) |
+| Overturn burn (surplus left after `damage` is paid) | 1.45 USDC | [`0xf46f062d…3e9d1d`](https://testnet.arcscan.app/tx/0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d) |
+| Liveness burn (the whole slice, when a dispute deadlocks) | 1.50 USDC | [`0xae25f951…b5a364`](https://testnet.arcscan.app/tx/0xae25f95183bd6af798cf1f6a82222aeca35eae73553575449a403c8b03b5a364) |
 
 Open either one and look for the USDC `Transfer` (the 6-decimal ERC-20 at `0x3600…0000`) with recipient `0x000000000000000000000000000000000000dEaD`. Nobody owns that address. The profit is just gone, by construction, not sitting in some treasury.
 
