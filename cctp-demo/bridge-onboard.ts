@@ -37,7 +37,7 @@ const arc = defineChain({
   blockExplorers: { default: { name: 'Arcscan', url: 'https://testnet.arcscan.app' } },
 })
 const USDC_ARC = getAddress('0x3600000000000000000000000000000000000000')
-const AGENT_BOND = getAddress('0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0')
+const AGENT_BOND = getAddress('0x4383Ea48837eF7e60fC22BD67945BCBf0551702c')
 const agentBondAbi = [
   { type: 'function', name: 'deposit', stateMutability: 'nonpayable', inputs: [{ name: 'amount', type: 'uint256' }], outputs: [] },
   { type: 'function', name: 'bond', stateMutability: 'view', inputs: [{ name: 'a', type: 'address' }], outputs: [{ type: 'uint256' }] },

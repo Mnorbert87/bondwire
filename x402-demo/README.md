@@ -87,7 +87,7 @@ See a verified end-to-end transcript with live arcscan links in **[SAMPLE_RUN.md
 | RPC | `https://rpc.testnet.arc.network` |
 | Chain ID | `5042002` |
 | Gas token | **USDC** (native), `0x3600000000000000000000000000000000000000` |
-| StreamPay | `0x505739d33D85AD85D0f9eeE64856309782382450` |
+| StreamPay | `0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262` |
 | Explorer | https://testnet.arcscan.app |
 | Faucet | https://faucet.circle.com |
 

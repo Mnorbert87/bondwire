@@ -14,8 +14,8 @@
   },
   "arc": {
     "chainId": 5042002,
-    "agentBond": "0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0",
-    "streamPay": "0x505739d33D85AD85D0f9eeE64856309782382450",
+    "agentBond": "0x4383Ea48837eF7e60fC22BD67945BCBf0551702c",
+    "streamPay": "0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262",
     "settlementToken": "USDC"
   },
   "standard": "ERC-8004"

@@ -121,9 +121,9 @@ RPC       https://rpc.testnet.arc.network
 Chain id  5042002
 Explorer  https://testnet.arcscan.app
 USDC      0x3600000000000000000000000000000000000000  (native gas token + 6-dec ERC-20)
-AgentBond      0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0
-StreamPay      0x505739d33D85AD85D0f9eeE64856309782382450
-CommitStakeV2  0x1f1CA31bC36a95a3909628F1bA97970E20698CA9
+AgentBond      0x4383Ea48837eF7e60fC22BD67945BCBf0551702c
+StreamPay      0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262
+CommitStakeV2  0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474
 ```
 
 > Testnet only. Not audited for production; do not point this at mainnet funds.

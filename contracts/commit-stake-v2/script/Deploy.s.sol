@@ -11,8 +11,8 @@ import {CommitStakeV2, IERC20, IAgentBond, IStreamPay} from "../src/CommitStakeV
 /// AgentBond / StreamPay addresses are pinned constants below (the live Phase-1 instances).
 contract Deploy is Script {
     // Live, audited primitives on Arc testnet — DO NOT redeploy.
-    address constant AGENT_BOND = 0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0;
-    address constant STREAM_PAY = 0x505739d33D85AD85D0f9eeE64856309782382450;
+    address constant AGENT_BOND = 0x4383Ea48837eF7e60fC22BD67945BCBf0551702c;
+    address constant STREAM_PAY = 0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262;
 
     function run() external {
         uint256 pk = vm.envUint("DEPLOYER_PRIVATE_KEY");

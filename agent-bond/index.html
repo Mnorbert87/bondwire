@@ -429,7 +429,7 @@ const RPC = "https://rpc.testnet.arc.network";
 const CHAIN_ID = 5042002;
 const CHAIN_HEX = "0x" + CHAIN_ID.toString(16);
 const EXPLORER = "https://testnet.arcscan.app";
-const DEFAULT_AB = "0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0";
+const DEFAULT_AB = "0x4383Ea48837eF7e60fC22BD67945BCBf0551702c";
 
 const AB_ABI = [
   "function nextObligationId() view returns (uint256)",
@@ -438,7 +438,7 @@ const AB_ABI = [
   "function locked(address) view returns (uint256)",
   "function freeBondOf(address agent) view returns (uint256)",
   "function slashAllowance(address agent,address enforcer) view returns (uint256)",
-  "function getObligation(uint256 id) view returns (tuple(address agent,address enforcer,address creditor,uint256 amount,uint64 deadline,uint8 status))",
+  "function getObligation(uint256 id) view returns (tuple(address agent,address enforcer,address creditor,uint256 amount,uint64 deadline,uint64 allowanceEpoch,uint8 status))",
   "function deposit(uint256 amount)",
   "function withdraw(uint256 amount)",
   "function setSlashAllowance(address enforcer,uint256 amount)",

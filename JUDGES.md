@@ -5,11 +5,14 @@ Everything here is something you can click or run. I am not asking you to trust 
 ## If you have 30 seconds, look at four things
 
 1. **The burn is real.** Click the first transaction below. You will see a USDC `Transfer` of 1.45 USDC straight to `0x…dEaD`. That is the surplus burn that makes it pointless for a verifier to collude, and it actually happened on chain.
-2. **The code is verified.** `CommitStakeV2` at [`0x1f1CA31b…698CA9`](https://testnet.arcscan.app/address/0x1f1CA31bC36a95a3909628F1bA97970E20698CA9) is Blockscout exact-match verified. The source in this repo is the deployed bytecode, byte for byte.
+2. **The code is verified.** `CommitStakeV2` at [`0x1f1CA31b…698CA9`](https://testnet.arcscan.app/address/0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474) is Blockscout exact-match verified. The source in this repo is the deployed bytecode, byte for byte.
 3. **An agent can drive it without a UI.** [`mcp/`](./mcp/) is an MCP server: an LLM agent checks a
    counterparty's Agent Passport and opens a bonded escrow from its own tool loop. Every
    value-moving tool is quote-before-execute, so nothing signs without an explicit confirmation.
 4. **The tests pass.** One copy-paste command runs 102 tests (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants). They pass on your machine, not just mine.
+
+The honest version of what we found in our own code, including what is still open, is in
+[AUDIT_SUMMARY.md](./AUDIT_SUMMARY.md).
 
 ---
 
@@ -80,11 +83,11 @@ The suite compiles the real `agent-bond` and `stream-pay` from source, not vendo
 
 | Contract | Address (opens the explorer) | Verified |
 |---|---|---|
-| CommitStakeV2, the mechanism | [`0x1f1CA31bC36a95a3909628F1bA97970E20698CA9`](https://testnet.arcscan.app/address/0x1f1CA31bC36a95a3909628F1bA97970E20698CA9) | exact-match ✅ |
-| AgentBond, the trust layer | [`0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0`](https://testnet.arcscan.app/address/0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0) | source-verified ✅* |
-| StreamPay, the settlement layer | [`0x505739d33D85AD85D0f9eeE64856309782382450`](https://testnet.arcscan.app/address/0x505739d33D85AD85D0f9eeE64856309782382450) | source-verified ✅* |
+| CommitStakeV2, the mechanism | [`0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474`](https://testnet.arcscan.app/address/0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474) | exact-match ✅ |
+| AgentBond, the trust layer | [`0x4383Ea48837eF7e60fC22BD67945BCBf0551702c`](https://testnet.arcscan.app/address/0x4383Ea48837eF7e60fC22BD67945BCBf0551702c) | exact-match ✅ |
+| StreamPay, the settlement layer | [`0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262`](https://testnet.arcscan.app/address/0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262) | exact-match ✅ |
 
-\* Exact match (recompile this repo, compare byte for byte) holds for CommitStakeV2. For AgentBond and StreamPay the runtime code body is identical to this repo — only the constructor-set immutable addresses differ — but the solc metadata trailer reflects an earlier compilation state, so a recompile of today's source will not reproduce the last ~30 metadata bytes. The explorer serves them as verified against that earlier source.
+\* All three contracts are **fully verified on the explorer and exact-match**: recompile this repo and the deployed runtime matches byte for byte, including the metadata trailer, with only the constructor-set immutable addresses differing. This is the redeploy of 2026-07-31; the earlier deployment had AgentBond and StreamPay served as partial matches out of Blockscout's bytecode database, which is exactly what the redeploy fixed.
 
 - RPC: `https://rpc.testnet.arc.network`. Explorer: `https://testnet.arcscan.app`.
 - USDC is the native gas token on Arc. Value transfers use the 6-decimal ERC-20 at `0x3600…0000`.

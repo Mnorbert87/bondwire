@@ -39,11 +39,11 @@ No backend. The frontends read live state straight from the public Arc RPC and w
 
 | Contract | Address |
 |---|---|
-| AgentBond | [`0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0`](https://testnet.arcscan.app/address/0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0) |
-| StreamPay | [`0x505739d33D85AD85D0f9eeE64856309782382450`](https://testnet.arcscan.app/address/0x505739d33D85AD85D0f9eeE64856309782382450) |
-| CommitStakeV2 | [`0x1f1CA31bC36a95a3909628F1bA97970E20698CA9`](https://testnet.arcscan.app/address/0x1f1CA31bC36a95a3909628F1bA97970E20698CA9) · exact-match verified |
+| AgentBond | [`0x4383Ea48837eF7e60fC22BD67945BCBf0551702c`](https://testnet.arcscan.app/address/0x4383Ea48837eF7e60fC22BD67945BCBf0551702c) |
+| StreamPay | [`0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262`](https://testnet.arcscan.app/address/0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262) |
+| CommitStakeV2 | [`0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474`](https://testnet.arcscan.app/address/0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474) · exact-match verified |
 
-> Verification status, precisely: **CommitStakeV2 recompiles from this repo to the deployed bytecode byte for byte** (exact match). AgentBond and StreamPay are source-verified on the explorer and their runtime body is identical to this repo (only the constructor-set immutable addresses differ), but their metadata hash reflects an earlier compilation state, so a recompile of today's source matches the code body, not the metadata trailer.
+> Verification status, precisely: All three contracts are **fully verified on the explorer and exact-match**: recompile this repo and the deployed runtime matches byte for byte, including the metadata trailer, with only the constructor-set immutable addresses differing. This is the redeploy of 2026-07-31; the earlier deployment had AgentBond and StreamPay served as partial matches out of Blockscout's bytecode database, which is exactly what the redeploy fixed.
 
 - **RPC:** `https://rpc.testnet.arc.network`
 - **Explorer:** `https://testnet.arcscan.app`
@@ -151,7 +151,7 @@ The spec ([VERIFIER_ECONOMICS.md](./VERIFIER_ECONOMICS.md)) was already public; 
 | Mutation | [MUTATION_TESTING.md](./contracts/commit-stake-v2/MUTATION_TESTING.md) | 100% revert-class kill; survivors triaged equivalent / invariant-caught |
 | Gas | [GAS_PROFILE.md](./contracts/commit-stake-v2/GAS_PROFILE.md) | the full slash+burn path costs ~0.008 USDC over a plain finalize |
 
-`CommitStakeV2` `0x1f1CA31bC36a95a3909628F1bA97970E20698CA9`, Blockscout exact-match verified, 102-test
+`CommitStakeV2` `0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474`, Blockscout exact-match verified, 102-test
 suite (unit + adversarial + cold-audit + edge + fuzz + 10k-run invariants + symbolic spec) green.
 
 ---
@@ -379,6 +379,11 @@ We deliberately built on **USDC + Arc** for the trust path, used **Circle Wallet
 3. Publish a first-class reference pattern for **agent-held keys via Circle Wallets** signing Arc transactions. We wired this ourselves (see the live-tx table above) and it worked with no Arc-specific special-casing, but it's the missing primitive between "smart contract" and "autonomous agent," so an official, documented pattern would unblock the whole Track 4 category for every team.
 
 ---
+
+## Audit
+
+We attacked our own contracts, found four defects, redeployed hardened rather than ship them, and
+wrote down what is still open: **[AUDIT_SUMMARY.md](./AUDIT_SUMMARY.md)**.
 
 ## `bondwire-mcp`, the agent-facing surface
 

@@ -50,7 +50,7 @@ tx hash; the captured transcript is in [`SAMPLE_RUN.md`](./SAMPLE_RUN.md).
 | MessageTransmitterV2 (canonical, every chain) | `0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275` |, |
 | USDC · Base Sepolia | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` | src `6` |
 | USDC · Arc | `0x3600000000000000000000000000000000000000` | dst `26` |
-| AgentBond · Arc | `0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0` |, |
+| AgentBond · Arc | `0x4383Ea48837eF7e60fC22BD67945BCBf0551702c` |, |
 
 Standard Transfer (finality threshold `2000`) is free; Fast Transfer (`1000`) costs a few
 micro-USDC and clears in seconds on testnet. This demo uses Fast.

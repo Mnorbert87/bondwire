@@ -32,7 +32,7 @@ import { ethers } from "ethers";
 const RPC = process.env.RPC_URL || "https://rpc.testnet.arc.network";
 const CHAIN_ID = 5042002;
 const EXPLORER = "https://testnet.arcscan.app";
-const STREAM_PAY = process.env.STREAM_PAY || "0x505739d33D85AD85D0f9eeE64856309782382450";
+const STREAM_PAY = process.env.STREAM_PAY || "0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262";
 const PORT = Number(process.env.PORT || 4021);
 const U = 1_000_000n; // 1 USDC (6 decimals)
 const MIN_CALL = BigInt(Math.round(Number(process.env.MIN_CALL_USDC || 0.01) * 1e6)); // micro-USDC

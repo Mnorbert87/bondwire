@@ -14,8 +14,8 @@
   },
   "arc": {
     "chainId": 5042002,
-    "commitStakeV2": "0x1f1CA31bC36a95a3909628F1bA97970E20698CA9",
-    "agentBond": "0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0",
+    "commitStakeV2": "0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474",
+    "agentBond": "0x4383Ea48837eF7e60fC22BD67945BCBf0551702c",
     "settlementToken": "USDC"
   },
   "standard": "ERC-8004"

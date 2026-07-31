@@ -203,7 +203,7 @@
 import { ethers } from "https://esm.sh/ethers@6.13.4";
 
 const CHAIN = { rpc: "https://rpc.testnet.arc.network", explorer: "https://testnet.arcscan.app" };
-const AGENT_BOND = "0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0";
+const AGENT_BOND = "0x4383Ea48837eF7e60fC22BD67945BCBf0551702c";
 const DEMO = "0x2e36F4037E711e1d4c853BBCBF7F526B3714A08a";
 // Reputation is read by ENUMERATING obligations, not by scanning event logs: the Arc RPC
 // caps eth_getLogs at a 10k block range and the chain is 50M+ blocks deep, so a full-history
@@ -214,7 +214,7 @@ const ABI = [
   "function locked(address) view returns (uint256)",
   "function freeBondOf(address) view returns (uint256)",
   "function nextObligationId() view returns (uint256)",
-  "function getObligation(uint256 id) view returns (tuple(address agent, address enforcer, address creditor, uint256 amount, uint64 deadline, uint8 status))"
+  "function getObligation(uint256 id) view returns (tuple(address agent, address enforcer, address creditor, uint256 amount, uint64 deadline, uint64 allowanceEpoch, uint8 status))"
 ];
 
 // Multicall3 (canonical address, deployed on Arc testnet) lets us fetch every obligation in a

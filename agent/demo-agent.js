@@ -32,8 +32,8 @@ const RPC = process.env.RPC_URL || "https://rpc.testnet.arc.network";
 const CHAIN_ID = 5042002;
 const EXPLORER = "https://testnet.arcscan.app";
 const USDC = process.env.USDC || "0x3600000000000000000000000000000000000000";
-const AGENT_BOND = process.env.AGENT_BOND || "0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0";
-const STREAM_PAY = process.env.STREAM_PAY || "0x505739d33D85AD85D0f9eeE64856309782382450";
+const AGENT_BOND = process.env.AGENT_BOND || "0x4383Ea48837eF7e60fC22BD67945BCBf0551702c";
+const STREAM_PAY = process.env.STREAM_PAY || "0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262";
 
 const U = 1_000_000n; // 1 USDC (6 decimals)
 const BOND_TARGET = BigInt(process.env.BOND_TARGET || 3) * U;

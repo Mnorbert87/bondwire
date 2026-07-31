@@ -1,5 +1,12 @@
 # Shipped this week draft (Discord #user-made-things + X)
 
+> **Correction, 2026-07-31 (supersedes the note below):** the three contracts were redeployed
+> hardened on this date and the addresses in the post below are the OLD ones, kept as published.
+> The live addresses are AgentBond `0x4383Ea48837eF7e60fC22BD67945BCBf0551702c`, StreamPay
+> `0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262`, CommitStakeV2 `0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474`,
+> and all three are now fully verified and exact-match, which the note below said was true only
+> of CommitStakeV2. The post itself is unedited.
+>
 > **Correction, 2026-07-29:** exact match verification holds for CommitStakeV2; AgentBond and StreamPay are source-verified, runtime body identical, metadata trailer from an earlier compilation. The post below is kept as published.
 
 Publikálás: pénteken, Főnök jóváhagyása után. A [npm URL] placeholder az `npm publish` után él.
