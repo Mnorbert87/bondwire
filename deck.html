@@ -208,7 +208,7 @@
   <div class="two" style="margin-top:34px;">
     <div>
       <h3>Distinct wallets, not self dealing</h3>
-      <p class="sub" style="font-size:15px;">Agent, creditor, enforcer, verifier and arbiter are separate addresses on chain. AgentBond #7 was released by the enforcer, #8 was slashed and the <b>creditor</b> received the 2 USDC. The agent cannot release or slash its own bond.</p>
+      <p class="sub" style="font-size:15px;">Agent, verifier and arbiter are separate addresses on chain, and the bond is never resolved by the party it belongs to. On the live AgentBond, obligation #1 was released by its enforcer and #2 was slashed, sending 1.5 USDC to the creditor. Here the enforcer and the creditor are the same address because the enforcer is CommitStakeV2 itself, which is what routes a default to the harmed side. The agent cannot release or slash its own bond.</p>
     </div>
     <div>
       <h3>Ten terminal outcomes, all invariant tested</h3>
@@ -279,7 +279,7 @@
     <tr><th style="width:30%">Finding</th><th style="width:34%">Status</th><th>Branch</th></tr>
     <tr><td>Sockpuppet arbiter can reclaim the verifier's slice</td><td>Fixed and tested, opt in griefing guard</td><td class="m">fix/arbiter-griefing-optin</td></tr>
     <tr><td>AgentBond allowance race, revoke is not final</td><td>Fixed and tested, allowance epochs</td><td class="m">fix/agentbond-allowance-epoch</td></tr>
-    <tr><td>Staker chosen time parameters were unbounded</td><td>Fixed and tested, three ceilings, 109 tests</td><td class="m">fix/commitstake-param-bounds</td></tr>
+    <tr><td>Staker chosen time parameters were unbounded</td><td>Fixed and tested, three ceilings, 125 tests</td><td class="m">fix/commitstake-param-bounds</td></tr>
   </table>
   <div class="two" style="margin-top:22px;">
     <div>
