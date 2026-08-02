@@ -252,6 +252,11 @@
       <h3>An agent can bond from inside its own tool loop</h3>
       <p>Single file ethers v6 wrapper with human USDC amounts, and an MCP server so any AI agent can check a passport, post a bond and open a bonded escrow, with quote before execute on every value moving call.</p>
     </div>
+    <div class="card">
+      <div class="role">Circle Wallets</div>
+      <h3>The agent signs without ever holding a key</h3>
+      <p>A second binding runs the same lifecycle through a Circle developer controlled wallet: approve, deposit, open a stream, withdraw. Each step goes out as createContractExecutionTransaction and is polled to a terminal state. No private key sits on disk. The approve leg is on chain as 0x7ec0f1…0a28.</p>
+    </div>
   </div>
   <div class="num">06</div>
 </section>
@@ -262,12 +267,12 @@
   <h2>Not a prototype. A deployed, tested, documented stack.</h2>
   <div class="grid g4" style="margin-top:22px;">
     <div class="stat"><b>4</b><span>contracts live on Arc testnet, ownerless, source verified</span></div>
-    <div class="stat"><b>187</b><span>Solidity tests: unit, adversarial, cold audit, fuzz</span></div>
+    <div class="stat"><b>226</b><span>Solidity tests: unit, adversarial, cold audit, fuzz</span></div>
     <div class="stat"><b>5</b><span>Halmos symbolic proofs over the money paths</span></div>
     <div class="stat"><b>150k</b><span>calls per invariant campaign (10k runs × depth 15), zero solvency violations</span></div>
   </div>
   <div class="grid g4" style="margin-top:16px;">
-    <div class="stat"><b>7</b><span>static dApp pages, no backend, live RPC reads</span></div>
+    <div class="stat"><b>9</b><span>static dApp pages, no backend, live RPC reads</span></div>
     <div class="stat"><b>3</b><span>runnable demos: commerce, x402, CCTP</span></div>
     <div class="stat"><b>84.5%</b><span>measured mutation score, survivors classified one by one</span></div>
     <div class="stat"><b>0</b><span>admin keys, proxies or pause switches</span></div>
@@ -313,7 +318,7 @@
       <ul class="clean">
         <li><b>One asset end to end.</b> Gas, bond, stream and slash are all USDC. An agent holds no volatile second token just to be able to act.</li>
         <li><b>Micro settlement stays viable.</b> Per second streams and dust sized slices only make sense where fees are stable and denominated in the same unit as the value.</li>
-        <li><b>Neutral settlement between distrusting parties.</b> A shared database needs a trusted operator. These agents are not cooperating, so the ledger has to be.</li>
+        <li><b>Neutral settlement between distrusting parties.</b> A shared database needs a trusted operator. These agents do not trust each other, so the ledger, not a party, has to be the trusted one.</li>
       </ul>
     </div>
     <div>
