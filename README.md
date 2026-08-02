@@ -151,7 +151,7 @@ The spec ([VERIFIER_ECONOMICS.md](./VERIFIER_ECONOMICS.md)) was already public; 
 | Mutation | [MUTATION_TESTING.md](./contracts/commit-stake-v2/MUTATION_TESTING.md) | 100% revert-class kill; survivors triaged equivalent / invariant-caught |
 | Gas | [GAS_PROFILE.md](./contracts/commit-stake-v2/GAS_PROFILE.md) | the full slash+burn path costs ~0.008 USDC over a plain finalize |
 
-`CommitStakeV2` `0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474`, Blockscout exact-match verified, 102-test
+`CommitStakeV2` `0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474`, Blockscout exact-match verified, 125-test
 suite (unit + adversarial + cold-audit + edge + fuzz + 10k-run invariants + symbolic spec) green.
 
 ---
@@ -218,10 +218,10 @@ Every contract in the stack ships with a unit + adversarial + fuzz + **invariant
 
 | Project | Tests | Fuzz properties | Invariants | Invariant campaign | Result |
 |---|---|---|---|---|---|
-| [`contracts/agent-bond`](contracts/agent-bond/README.md) | 32 | 5 × 10,000 runs | 4 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
+| [`contracts/agent-bond`](contracts/agent-bond/README.md) | 48 | 5 × 10,000 runs | 4 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 | [`contracts/stream-pay`](contracts/stream-pay/README.md) | 25 | 5 × 10,000 runs | 3 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 | [`contracts/commit-stake`](contracts/commit-stake/README.md) | 28 | 6 × 10,000 runs | 4 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
-| [`contracts/commit-stake-v2`](contracts/commit-stake-v2/TEST_AUDIT.md) | 102 | 7 × 10,000 runs | 5 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
+| [`contracts/commit-stake-v2`](contracts/commit-stake-v2/TEST_AUDIT.md) | 125 | 8 × 10,000 runs | 5 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 
 `commit-stake-v2` carries three layers the others don't: **5 Halmos symbolic proofs** (all-inputs
 solvency / surplus-positivity / no-double-pay), a **Slither + Aderyn** pass with by-design findings

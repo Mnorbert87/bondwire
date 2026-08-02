@@ -9,7 +9,7 @@ Everything here is something you can click or run. I am not asking you to trust 
 3. **An agent can drive it without a UI.** [`mcp/`](./mcp/) is an MCP server: an LLM agent checks a
    counterparty's Agent Passport and opens a bonded escrow from its own tool loop. Every
    value-moving tool is quote-before-execute, so nothing signs without an explicit confirmation.
-4. **The tests pass.** One copy-paste command runs 102 tests (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants). They pass on your machine, not just mine.
+4. **The tests pass.** One copy-paste command runs 125 tests (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants). They pass on your machine, not just mine.
 
 The honest version of what we found in our own code, including what is still open, is in
 [AUDIT_SUMMARY.md](./AUDIT_SUMMARY.md).
@@ -61,7 +61,7 @@ On where this sits: ERC-8004 answers who an agent is and what job it took on. It
 
 ---
 
-## 4. Run the 102-test suite (~2 min)
+## 4. Run the 125-test suite (~2 min)
 
 This is exactly what CI runs ([the green run is here](https://github.com/Mnorbert87/bondwire/actions/workflows/test.yml)). You need [Foundry](https://getfoundry.sh) and nothing else.
 
@@ -75,10 +75,10 @@ forge test -vv
 The last line should read:
 
 ```
-Ran 7 test suites: 102 tests passed, 0 failed, 0 skipped (102 total tests)
+Ran 9 test suites: 125 tests passed, 0 failed, 0 skipped (125 total tests)
 ```
 
-The suite compiles the real `agent-bond` and `stream-pay` from source, not vendored copies, so there is no drift between what is tested and what is deployed. Each of those two has its own green suite (32 and 25 tests). Run `forge test` in their folders the same way if you want them too.
+The suite compiles the real `agent-bond` and `stream-pay` from source, not vendored copies, so there is no drift between what is tested and what is deployed. Each of those two has its own green suite (48 and 25 tests). Run `forge test` in their folders the same way if you want them too.
 
 ---
 
