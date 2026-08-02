@@ -1,0 +1,14 @@
+{
+  "name": "bondwire",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bondwire on Arc testnet. This root manifest exists so one npm install makes the runnable demos work: the SDK declares ethers as a peer dependency, and Node resolves it from the importing file upward, so a per-folder install does not reach sdk/bondwire.js.",
+  "scripts": {
+    "demo": "node demo/commerce-scenario.js",
+    "test:sdk": "node --test sdk/test.js"
+  },
+  "dependencies": {
+    "ethers": "^6.13.4"
+  }
+}

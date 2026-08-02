@@ -7,11 +7,18 @@ import { Bondwire, BONDWIRE } from "./bondwire.js";
 const arc = Bondwire.readOnly();
 const DEMO = "0x2e36F4037E711e1d4c853BBCBF7F526B3714A08a";
 
+// What this test is actually for: the SDK can reach all three contracts and
+// decode their counters. It used to assert magnitudes (>= 16 obligations,
+// >= 213 streams) copied from whatever the chain happened to hold that day.
+// The 2026-07-31 redeploy reset those counters, so the assertions became
+// unreachable and the test failed on a fresh clone while the SDK was fine.
+// A threshold pinned to a live counter is a test that expires; assert the
+// shape instead, which is what the name promises.
 test("stats: all three primitives answer with sane counters", async () => {
   const s = await arc.stats();
-  assert.ok(Number.isInteger(s.obligations) && s.obligations >= 16, "obligations counter");
-  assert.ok(Number.isInteger(s.streams) && s.streams >= 213, "streams counter");
-  assert.ok(Number.isInteger(s.commitments) && s.commitments >= 4, "commitments counter");
+  assert.ok(Number.isInteger(s.obligations) && s.obligations >= 0, "obligations counter");
+  assert.ok(Number.isInteger(s.streams) && s.streams >= 0, "streams counter");
+  assert.ok(Number.isInteger(s.commitments) && s.commitments >= 0, "commitments counter");
 });
 
 test("commitment(1): decodes to a terminal, known outcome", async () => {
