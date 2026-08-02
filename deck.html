@@ -90,6 +90,15 @@
   .link .l{font-size:11px; color:var(--faint); font-family:"JetBrains Mono",monospace; letter-spacing:1.4px;
     text-transform:uppercase; margin-bottom:6px;}
   .link .v{font-family:"JetBrains Mono",monospace; font-size:13px; color:var(--blue); word-break:break-all;}
+  /* Print to PDF at the slide's own geometry. Without this the browser falls back
+     to portrait letter and squeezes every 1280x720 slide into a page it does not
+     fit, which is what a judge downloading the deck would have received. */
+  @page{ size:1280px 720px; margin:0; }
+  @media print{
+    body{background:#000;}
+    .slide{ width:1280px; height:720px; box-shadow:none; }
+    *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
 </style>
 </head>
 <body>
