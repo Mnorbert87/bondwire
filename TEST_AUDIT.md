@@ -23,7 +23,7 @@ Run everything: `forge test` inside each of `contracts/agent-bond`, `contracts/c
 |---|---|---|
 | CommitStake | **PASS** (1 finding, fixed) | 28 tests, 0 failed |
 | StreamPay | **PASS** (claim-wording finding, fixed) | 25 tests, 0 failed |
-| AgentBond | **PASS** (evidence gap, fixed) | 32 tests, 0 failed |
+| AgentBond | **PASS** (evidence gap, fixed) | 48 tests, 0 failed |
 
 ### CommitStake (`contracts/commit-stake`)
 
