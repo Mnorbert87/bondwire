@@ -2,8 +2,9 @@
 
 **Tool:** `slither-mutate` (Slither 0.11.5) over Foundry + solc 0.8.24. **Date:** 2026-06-11.
 **Target:** `src/CommitStakeV2.sol`. **Test command (per mutant):** the fast deterministic subset
-`forge test --no-match-contract "Invariant|Fuzz|SymbolicSpec"` = **63 tests** (39 unit + 21
-adversarial + 3 cold-audit). Campaign ran ~27 min; source restored from git after (verified clean
+`forge test --no-match-contract "Invariant|Fuzz|SymbolicSpec"` = **63 tests as of that date**
+(39 unit + 21 adversarial + 3 cold-audit). The suite has grown since; the same filter returns
+114 today, so re-running the campaign would cover more than the numbers below describe. Campaign ran ~27 min; source restored from git after (verified clean
 vs commit `545e202`). Mutant artifacts (`mutation_campaign/`) were transient and removed.
 
 ## Score (fast subset)
