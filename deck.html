@@ -220,8 +220,8 @@
       <p class="sub" style="font-size:15px;">Agent, verifier and arbiter are separate addresses on chain, and the bond is never resolved by the party it belongs to. On the live AgentBond, obligation #1 was released by its enforcer and #2 was slashed, sending 1.5 USDC to the creditor. Here the enforcer and the creditor are the same address because the enforcer is CommitStakeV2 itself, which is what routes a default to the harmed side. The agent cannot release or slash its own bond.</p>
     </div>
     <div>
-      <h3>Ten terminal outcomes, all invariant tested</h3>
-      <p class="sub" style="font-size:15px;">Fulfilled, defaulted, expired, overturned, deadlocked, abandoned. The solvency invariant holds across all of them: the contract can never owe more than it holds.</p>
+      <h3>Nine terminal outcomes, all invariant tested</h3>
+      <p class="sub" style="font-size:15px;">Clean pass, clean fail, two upheld challenges, two overturns, two arbiter silences, and the liveness slash. Count them in the <code>Outcome</code> enum: it has ten members and the first one is <code>None</code>, which is not terminal. The solvency invariant holds across all nine: the contract can never owe more than it holds.</p>
     </div>
   </div>
   <div class="num">05</div>
