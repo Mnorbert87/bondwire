@@ -353,8 +353,10 @@ cp .env.example .env        # two dedicated burner keys; .env is gitignored, nev
 ./run.sh                    # bootstrap → server → buyer agent → tee to demo-run.log
 ```
 
-A verified end-to-end transcript with live arcscan links (committed 0.30 USDC, paid 0.17 for
-three calls, reclaimed 0.13) is in [`x402-demo/SAMPLE_RUN.md`](./x402-demo/SAMPLE_RUN.md).
+A verified end-to-end transcript with live arcscan links (committed 0.30 USDC, 0.185 went to
+the payee, 0.115 came back on cancel) is in [`x402-demo/SAMPLE_RUN.md`](./x402-demo/SAMPLE_RUN.md).
+Re-executed 2026-08-05 against the live StreamPay, with the split decoded from the cancel
+transaction's own transfer logs.
 
 ---
 

@@ -43,7 +43,7 @@ cancel(N)                 ──────────────────
   tx hash is returned in the `200` body.
 - **Pay only for use.** When done, the agent `cancel()`s the stream and the unspent
   remainder returns to it. In the [sample run](./SAMPLE_RUN.md): committed 0.30 USDC,
-  paid 0.17 for three calls, reclaimed 0.13.
+  0.185 to the payee, 0.115 back on cancel.
 
 Why streaming instead of one transfer per call? Because the agentic billing model is
 metered: a stream lets the server pull continuously while it works, settles many calls
