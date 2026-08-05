@@ -1,5 +1,13 @@
 # Sample run, cross-chain capital onboarding (real transactions)
 
+> **Correction, 2026-08-05.** This transcript is the original run and is kept as published
+> history. Its `approve` and `AgentBond.deposit` legs point at the AgentBond that the
+> 2026-07-31 redeploy superseded, so the `36 → 37` figure below belongs to that contract.
+> The deposit was re-executed against the live AgentBond (`0x4383Ea48…702c`) in
+> [`0x0eb3f7…1b3c`](https://testnet.arcscan.app/tx/0x0eb3f7e0fa6e52c0df47610de7e3155a250e7ac6ab41b6f4c2b5c93042b11b3c),
+> where the same 1 USDC moved the bond `3 → 4`. The two bridge legs are Base Sepolia and CCTP
+> transactions and are unaffected. README.md and JUDGES.md quote the live numbers.
+
 `PRIVATE_KEY=0x… npm run onboard` · burner `0x2e36F4037E711e1d4c853BBCBF7F526B3714A08a`
 (same EOA on both chains) · amount **1.0 USDC** · Circle **Bridge Kit** (App Kit, CCTP V2, Fast
 Transfer). Every tx below is confirmed (`status 1`).

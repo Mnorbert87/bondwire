@@ -80,7 +80,7 @@ built from **real `balanceOf` deltas**, never the contract's own bookkeeping:
 
 ## What changed vs. the pre-§7a suite (routing realignment)
 
-The previous 66-test suite validated the OLD (vulnerable) routing, whole slice to the
+The 66-test suite that existed at the time validated the OLD (vulnerable) routing, whole slice to the
 challenger on overturn, slice + stake to the staker on liveness, under which the
 staker≡beneficiary raid broke even at ≈17% arbiter error. All terminal asserts were re-derived
 from the §7a table (above); the raid now has a dedicated −EV test; the challenge-bond floor

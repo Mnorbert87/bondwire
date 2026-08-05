@@ -76,8 +76,11 @@ else
   # produced a new finding on each of three review passes in one evening.
   TRACKED | grep -E '\.(md|html)$' | while IFS= read -r file; do
     case "$file" in *_AUDIT_2026-*|social/*|CHANGELOG.md) continue;; esac   # dated historical records
-    grep -onE '\b[0-9]{2,4} tests\b' "$file" 2>/dev/null | while IFS=: read -r ln hit; do
-      num=${hit%% *}
+    # Both spellings. Only "N tests" was matched before, so a stale "102-test
+    # suite" sat in the submission document through every pass this checker
+    # signed off on. The hyphenated adjective form is the same claim.
+    grep -onE '\b[0-9]{2,4}[ -]tests?\b' "$file" 2>/dev/null | while IFS=: read -r ln hit; do
+      num=${hit%%[ -]*}
       # A number the text itself pins to a past run is a record, not a claim
       # about today. Requires explicit phrasing ("as of that date", "at the
       # time", a YYYY-MM-DD on the line) so this cannot be used to wave
@@ -181,6 +184,22 @@ nm=$(git ls-files | grep -c 'node_modules/' || true)
 [ "$nm" = "0" ] && ok "node_modules not tracked" || bad "$nm node_modules files tracked"
 unpushed=$(git rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)
 [ "$unpushed" = "0" ] && ok "nothing unpushed" || bad "$unpushed commits not pushed"
+
+# Nothing above can read a rendered image, so a diagram whose source was
+# corrected but never re-exported passes every other check while showing a dead
+# project name and three superseded addresses. That is exactly what happened:
+# 94b3b5e edited architecture.src.html and left architecture.png untouched, and
+# the stale render survived four review passes. Compare the commits, not the
+# mtimes, because a fresh clone writes every file at the same moment.
+src_c=$(git log -1 --format=%ct -- architecture.src.html 2>/dev/null || echo 0)
+png_c=$(git log -1 --format=%ct -- architecture.png 2>/dev/null || echo 0)
+if [ "$src_c" = "0" ] || [ "$png_c" = "0" ]; then
+  bad "architecture diagram: source or export missing from git"
+elif [ "$png_c" -ge "$src_c" ]; then
+  ok "architecture.png exported no earlier than its source"
+else
+  bad "architecture.png predates architecture.src.html, re-export it"
+fi
 
 # ---------------------------------------------------------------------- result
 head_ "Result"

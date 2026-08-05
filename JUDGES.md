@@ -42,7 +42,7 @@ An agent does not have to start its life on Arc. I took 1 USDC on Base Sepolia, 
 The two bridge legs above are from the original run and are unaffected by the 2026-07-31 redeploy (they are Base Sepolia and CCTP transactions, not Bondwire ones). The `AgentBond.deposit` leg was re-executed against the redeployed AgentBond so every Bondwire link on this page points at a live contract.
 
 
-After it landed, the agent's bond went from 36 to 37 USDC. A dollar that started on a different chain is now slashable collateral on Arc. You can run the whole thing yourself: `cd cctp-demo && npm run onboard`. Every hash is in [`cctp-demo/SAMPLE_RUN.md`](./cctp-demo/SAMPLE_RUN.md). I also left a raw CCTP version next to it (`run.sh`, no SDK) in case you want to see what Bridge Kit does under the hood.
+After it landed, the agent's bond went from 3 to 4 USDC. Open the `AgentBond.deposit` transaction above and read its `Deposited` event: 1 USDC in, 4 USDC of bond out. The original run moved 36 to 37, but that was on the pre-redeploy AgentBond, and this leg was re-executed against the live one so the link and the number agree. A dollar that started on a different chain is now slashable collateral on Arc. You can run the whole thing yourself: `cd cctp-demo && npm run onboard`. Every hash is in [`cctp-demo/SAMPLE_RUN.md`](./cctp-demo/SAMPLE_RUN.md). I also left a raw CCTP version next to it (`run.sh`, no SDK) in case you want to see what Bridge Kit does under the hood.
 
 ---
 

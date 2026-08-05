@@ -1,5 +1,13 @@
 # Sample run, verified on Arc Testnet (2026-06-09)
 
+> **Correction, 2026-08-05.** Every transaction below settles on StreamPay
+> `0x505739d3…82382450`, which the 2026-07-31 redeploy superseded; the live StreamPay is
+> `0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262`. I checked the receipts rather than assuming:
+> all five still read `status 1`, and their `to` field is the old contract. This transcript is
+> therefore kept as published history, not as a claim about the current deployment. The demo
+> code itself points at the live StreamPay, so `./run.sh` today produces fresh transactions
+> against `0x6C2A…B262`.
+
 Real transcript of `./run.sh`. Every tx below is live on Arc Testnet and clickable on
 [arcscan](https://testnet.arcscan.app). Buyer agent `0x2e36…A08a`, x402 server (payee)
 `0x0D09cA4F24CF66206f66DA1dc200d213327EEbDc`, StreamPay `0x5057…2450`, stream **#14**.

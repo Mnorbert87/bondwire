@@ -268,7 +268,9 @@ native Bridge-Kit chain (chainId `5042002`, CCTP domain `26`). Verified on testn
 The two bridge legs above are from the original run and are unaffected by the 2026-07-31 redeploy (they are Base Sepolia and CCTP transactions, not Bondwire ones). The `AgentBond.deposit` leg was re-executed against the redeployed AgentBond so every Bondwire link on this page points at a live contract.
 
 
-AgentBond bond `36 → 37 USDC`; the bridged dollar is now slashable collateral. Full transcript:
+AgentBond bond `3 → 4 USDC` on the live contract (the original run read `36 → 37`, on the AgentBond
+that the 2026-07-31 redeploy superseded; the deposit leg was re-executed so the linked transaction
+and the number match). The bridged dollar is now slashable collateral. Full transcript:
 [`cctp-demo/SAMPLE_RUN.md`](./cctp-demo/SAMPLE_RUN.md). A raw-CCTP-V2 (no-SDK) reference flow is in
 [`cctp-demo/run.sh`](./cctp-demo/run.sh).
 

@@ -40,7 +40,7 @@
 <h1>Bondwire</h1>
 <p class="sub">Trust and settlement primitives for autonomous agents, settled in USDC on Arc.</p>
 <p class="lead" style="font-weight:600; color:#0a2540;">Most agentic projects show agents paying each other. They assume trust. We show what happens when an agent lies, and why lying is structurally unprofitable.</p>
-<span class="track-pill">CIRCLE STABLECOIN COMMERCE STACK CHALLENGE · TRACK 4, BEST AGENTIC ECONOMY EXPERIENCE ON BONDWIRE</span>
+<span class="track-pill">CIRCLE STABLECOIN COMMERCE STACK CHALLENGE · TRACK 4, BEST AGENTIC ECONOMY EXPERIENCE ON ARC</span>
 
 <h2>1. Project Title</h2>
 <p><strong>Bondwire.</strong> Three small, ownerless contracts that let an autonomous agent be trusted before it acts and paid while it works, all settled in USDC on Circle's Arc L1.</p>
@@ -74,7 +74,7 @@
 </ul>
 
 <h2>6. Working MVP</h2>
-<p>It is live on Arc Testnet today, and you can verify it without trusting me. There is no backend. The frontends read live state straight from the public Arc RPC.</p>
+<p>It is live on Arc Testnet today, and you can verify it without trusting me. The frontends are static pages that read live state straight from the public Arc RPC, so there is no centralised server holding balances or deciding outcomes: the contracts on Arc are the backend, and they are the only thing that can move money. The server-side code that does exist is runnable and in the repo: <span class="mono">mcp/server.mjs</span> is an MCP server that lets an LLM agent drive the whole stack from its own tool loop, and <span class="mono">x402-demo/server.js</span> is an HTTP <span class="mono">402</span>-gated API that an agent pays per call, settled per second on StreamPay.</p>
 
 <p><strong>The proven, audited core.</strong> Three contracts, frozen and audited: CommitStakeV2, AgentBond, StreamPay. Everything in this block is about those three, and only those three.</p>
 <table>
@@ -87,13 +87,13 @@
 <ul>
   <li>Browse the live hub, no wallet needed: <a href="https://mnorbert87.github.io/bondwire/">mnorbert87.github.io/bondwire</a>.</li>
   <li>Two on-chain burns show the anti-collusion mechanism firing: 1.45 USDC from an overturn and 1.50 USDC from a liveness fail-closed, each a real <span class="mono">Transfer</span> to <span class="mono">0x…dEaD</span> you can open on the explorer.</li>
-  <li>The 102-test suite (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants) is green and reproduces with one command; the 5 Halmos symbolic proofs run separately. Mutation testing kills 84.5% of the mutants and 100% of the revert-class ones.</li>
+  <li>The 125-test suite (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants) is green and reproduces with one command; the 5 Halmos symbolic proofs run separately. Mutation testing kills 84.5% of the mutants and 100% of the revert-class ones.</li>
   <li>Halmos proves the hard properties at the property level, for all inputs, not just the cases a fuzzer happens to hit: solvency, surplus-positivity, no-double-pay, and the fee-residue bound. The two burns above are those same properties firing on chain.</li>
 </ul>
 
 <p><strong>Integration demos, built after the audit freeze.</strong> These show the core composing with the rest of the Arc agent ecosystem. They are real on-chain transactions, but they sit outside the audited core above, and I make no formal-verification claims about them.</p>
 <ul>
-  <li>Cross-chain capital onboarding. I bridged 1 USDC from Base Sepolia to Arc with CCTP V2 and Bridge Kit, then deposited it into AgentBond. Three transactions, all <span class="mono">status 1</span> (<span class="mono">depositForBurn</span>, <span class="mono">receiveMessage</span>, <span class="mono">deposit</span>), and the bond moved from 36 to 37 USDC. Code and transcript are in <span class="mono">cctp-demo/</span>.</li>
+  <li>Cross-chain capital onboarding. I bridged 1 USDC from Base Sepolia to Arc with CCTP V2 and Bridge Kit, then deposited it into AgentBond. Three transactions, all <span class="mono">status 1</span> (<span class="mono">depositForBurn</span>, <span class="mono">receiveMessage</span>, <span class="mono">deposit</span>), and the bond moved from 3 to 4 USDC on the live AgentBond (the original run read 36 to 37, on the contract the 2026-07-31 redeploy superseded). Code and transcript are in <span class="mono">cctp-demo/</span>.</li>
   <li>On-chain agent identity. Aiden (tokenId <span class="mono">471762</span>) and the bonded verifier (<span class="mono">471763</span>) are registered in Arc's ERC-8004 <span class="mono">IdentityRegistry</span>, plus a 5/5 counterparty <span class="mono">giveFeedback</span> and an EIP-712 <span class="mono">setAgentWallet</span> binding.</li>
 </ul>
 
