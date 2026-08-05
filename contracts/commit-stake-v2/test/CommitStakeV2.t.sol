@@ -82,7 +82,20 @@ contract CommitStakeV2Test is V2TestBase {
 
         p = defaultParams();
         p.deadline = uint64(block.timestamp);
-        vm.expectRevert(bytes("DEADLINE_PAST"));
+        vm.expectRevert(bytes("DEADLINE_TOO_SOON"));
+        vm.prank(staker);
+        cs.create(p);
+
+        // The floor, not just the past: a deadline no verifier could physically meet is what
+        // made the liveness burn free to trigger.
+        p = defaultParams();
+        p.deadline = uint64(block.timestamp) + 1;
+        vm.expectRevert(bytes("DEADLINE_TOO_SOON"));
+        vm.prank(staker);
+        cs.create(p);
+
+        p = defaultParams();
+        p.deadline = uint64(block.timestamp) + cs.MIN_RESOLVE_WINDOW();
         vm.prank(staker);
         cs.create(p);
 

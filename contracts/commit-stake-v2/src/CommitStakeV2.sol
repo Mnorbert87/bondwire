@@ -275,6 +275,23 @@ contract CommitStakeV2 is ReentrancyGuard {
     ///         denial of capital rather than theft, but it disables the verifier's whole business
     ///         (free bond is its bookable capacity) at the cost of gas plus the attacker's own
     ///         escrowed stake. These ceilings bound the worst case at 90 + 30 + 30 + 7 days.
+    /// @notice Floor on the resolve window. `create` used to accept any `deadline >
+    ///         block.timestamp`, so a staker could name a deadline no verifier could
+    ///         physically meet, then call the permissionless `slashVerifierExpired` and burn
+    ///         the whole slice. The stake is refunded on that branch, so the attack cost was
+    ///         gas alone. This floor makes the liveness branch reachable only after the
+    ///         verifier has had a real chance to act.
+    uint64 public constant MIN_RESOLVE_WINDOW = 1 hours;
+
+    /// @notice Cap on the arbiter fee relative to the value the staker actually escrows.
+    ///         `arbiterFee` is NEVER transferred at `create` — it is a free parameter that
+    ///         nonetheless sits in the denominator of both the sizing rule and the leverage
+    ///         cap, and in the challenge-bond band. Uncapped it (a) lets a dust stake lock an
+    ///         arbitrarily large slice, defeating MAX_SLICE_LEVERAGE, and (b) prices the
+    ///         non-consenting beneficiary out of challenging a false `pass`. Bounding it to
+    ///         real escrowed value closes both.
+    uint256 public constant MAX_ARBITER_FEE_LEVERAGE = 10;
+
     uint64 public constant MAX_DEADLINE_HORIZON = 90 days;
     uint64 public constant MAX_CHALLENGE_WINDOW = 30 days;
     uint64 public constant MAX_ARBITER_DEADLINE = 30 days;
@@ -379,7 +396,9 @@ contract CommitStakeV2 is ReentrancyGuard {
         // otherwise name a sockpuppet arbiter and overturn a correct verdict to burn an honest
         // verifier's slice (griefing). The verifier consents to the judge, not just the enforcer.
         require(arbiterApproved[p.verifier][p.arbiter], "ARBITER_NOT_APPROVED");
-        require(p.deadline > block.timestamp, "DEADLINE_PAST");
+        require(
+            p.deadline >= block.timestamp + MIN_RESOLVE_WINDOW, "DEADLINE_TOO_SOON"
+        );
         require(p.challengeWindow > 0, "WINDOW_ZERO");
         require(p.arbiterDeadline > 0, "ARBITER_DEADLINE_ZERO");
         // Ceilings on the same three parameters: the staker picks them, the verifier's capital
@@ -390,6 +409,11 @@ contract CommitStakeV2 is ReentrancyGuard {
         );
         require(p.challengeWindow <= MAX_CHALLENGE_WINDOW, "WINDOW_TOO_LONG");
         require(p.arbiterDeadline <= MAX_ARBITER_DEADLINE, "ARBITER_DEADLINE_TOO_LONG");
+        // The arbiter fee is not escrowed at create, so it must be bounded by what is.
+        require(
+            p.arbiterFee <= MAX_ARBITER_FEE_LEVERAGE * (p.amount + p.feeDeposit),
+            "ARBITER_FEE_TOO_LARGE"
+        );
         // Minimum slice for a SATISFIABLE bond band: below 4 micro-USDC the round-up floor
         // (ceil 10% × slice) exceeds the round-down cap (floor 25% × slice), leaving no legal
         // `challengeBond` and reverting with an inscrutable BOND_BELOW_FLOOR/ABOVE_CAP pair.
