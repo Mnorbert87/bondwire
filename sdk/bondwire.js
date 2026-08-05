@@ -14,10 +14,19 @@
 // micro-USDC) and `.usdc` (formatted string) so you never juggle decimals.
 import { ethers } from "ethers";
 
+// The public endpoint is the default, not a requirement. A reviewer behind a corporate proxy,
+// on a locked-down network, or hitting an outage should be able to point this at their own Arc
+// endpoint instead of concluding the SDK is broken. Guarded for the browser, where there is no
+// `process`.
+const ENV_RPC =
+  typeof process !== "undefined" && process.env && process.env.ARC_RPC
+    ? process.env.ARC_RPC
+    : null;
+
 /** Arc testnet network + deployed addresses, baked in. */
 export const BONDWIRE = Object.freeze({
   chainId: 5042002,
-  rpcUrl: "https://rpc.testnet.arc.network",
+  rpcUrl: ENV_RPC || "https://rpc.testnet.arc.network",
   wsUrl: "wss://rpc.testnet.arc.network",
   explorer: "https://testnet.arcscan.app",
   usdcDecimals: 6,

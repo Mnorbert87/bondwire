@@ -7,6 +7,23 @@ import { Bondwire, BONDWIRE } from "./bondwire.js";
 const arc = Bondwire.readOnly();
 const DEMO = "0x2e36F4037E711e1d4c853BBCBF7F526B3714A08a";
 
+// Three of the four tests below read the live chain, by design: the point is that the SDK
+// reaches the real deployment, not that its arithmetic compiles. That means a reviewer behind
+// a proxy, on a locked-down network, or hitting an RPC outage sees three failures that look
+// like the SDK is broken when it is the network. Say which one it is, once, up front.
+test("preflight: the Arc testnet RPC is reachable", async () => {
+  try {
+    await arc.stats();
+  } catch (e) {
+    assert.fail(
+      `Cannot reach the Arc testnet RPC (${BONDWIRE.rpcUrl ?? "default endpoint"}). ` +
+      `The three chain-reading tests below will fail for the same reason, and it is not SDK ` +
+      `drift. Set ARC_RPC to a reachable endpoint, or run only the offline test with ` +
+      `\`node --test-name-pattern units test.js\`. Underlying error: ${e.shortMessage ?? e.message}`
+    );
+  }
+});
+
 // What this test is actually for: the SDK can reach all three contracts and
 // decode their counters. It used to assert magnitudes (>= 16 obligations,
 // >= 213 streams) copied from whatever the chain happened to hold that day.

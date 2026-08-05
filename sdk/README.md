@@ -126,6 +126,19 @@ StreamPay      0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262
 CommitStakeV2  0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474
 ```
 
+The RPC is a default, not a requirement. Set `ARC_RPC` to use your own Arc endpoint, which is
+what to do if you are behind a proxy or the public one is throttling:
+
+```sh
+ARC_RPC=https://arc-rpc.example.com node sdk/test.js
+```
+
+`sdk/test.js` reads the live chain on purpose, so it needs an endpoint it can reach. Its first
+test is a preflight that fails with that diagnosis rather than letting the three chain-reading
+tests fail as if the SDK had drifted. The offline test runs on its own with
+`node --test-name-pattern units sdk/test.js`.
+
+
 > Testnet only. Not audited for production; do not point this at mainnet funds.
 
 MIT.
