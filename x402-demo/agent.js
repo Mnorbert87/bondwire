@@ -18,7 +18,7 @@
  *   STREAM_PAY         StreamPay address                        [default = live USDC deploy]
  *   SERVER_URL         base URL of the x402 server              [default http://localhost:4021]
  *   DEPOSIT_USDC       stream budget                            [default 0.30]
- *   STREAM_SECS        stream duration seconds                  [default 30]
+ *   STREAM_SECS        stream duration seconds                  [default 60]
  *   CALLS              number of paid calls                     [default 3]
  */
 import { ethers } from "ethers";
