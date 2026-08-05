@@ -23,7 +23,7 @@ tests that catch each defect ship in the repo.
 
 | Layer | Method |
 |---|---|
-| Unit + adversarial | 226 tests across four Foundry projects, 0 failed |
+| Unit + adversarial | 229 tests across four Foundry projects, 0 failed |
 | Fuzz | 23 properties, 10,000 runs each |
 | Invariants | 16 campaigns, 10,000 runs × depth 15 = 150,000 calls, `fail_on_revert = true` |
 | Symbolic | 5 Halmos proofs over the money paths (solvency, surplus-positivity on both slash branches, split conservation, fee residue). No-double-pay is stateful and belongs to the invariant campaign, not to these |
