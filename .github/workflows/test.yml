@@ -36,3 +36,38 @@ jobs:
       # Full suite: unit + adversarial + fuzz (10,000 runs) + invariant (10,000 runs x depth 15)
       - name: Test
         run: forge test -vv
+
+  # The SDK declares its own hand-written ABI fragments instead of importing the compiled
+  # artifacts, and that copy has already rotted once: on 2026-07-29 the AgentBond `Obligation`
+  # struct gained a field before `status`, the Solidity-side copy was updated and the SDK copy
+  # was not, so a live locked obligation decoded as "Released". HARDENED_AUDIT_2026-07-29 said
+  # this guard would be wired into CI so the next struct change could not ship half-applied.
+  # It was not, until 2026-08-05. It needs no chain and no key, only the built artifacts.
+  sdk-abi-conformance:
+    name: sdk abi conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build the three contracts the SDK mirrors
+        run: |
+          for p in contracts/agent-bond contracts/stream-pay contracts/commit-stake-v2; do
+            (cd "$p" && forge build)
+          done
+
+      - name: Install SDK dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Compare every SDK fragment to the compiled artifact
+        run: node sdk/test.abi-conformance.mjs

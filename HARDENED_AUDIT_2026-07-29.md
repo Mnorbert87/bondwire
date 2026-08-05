@@ -101,6 +101,9 @@ today on exactly one fragment and passes on the other 20, which is also useful n
 
 **Fix:** add `uint64 allowanceEpoch` before `uint8 status` in the SDK fragment, and wire
 `test.abi-conformance.mjs` into CI so the next struct change cannot ship half-applied.
+> **Done 2026-08-05** (an external review pointed out this line had stayed an intention for a
+> week): `.github/workflows/test.yml` now has an `sdk-abi-conformance` job. The test also no
+> longer dies with a raw ENOENT when the artifacts are missing; it names the build command.
 
 > Source change disclosure: to make the ABIs testable I added the `export` keyword to the three
 > `*_ABI` constants in `sdk/bondwire.js`. Non-behavioural, and the only edit I made to shipped

@@ -41,7 +41,20 @@ function canonical(fragment) {
 
 function compare(label, sdkAbi, artifactPath) {
   console.log(`\n[${label}]`);
-  const artifact = JSON.parse(readFileSync(join(ROOT, artifactPath), "utf8"));
+  // The artifact only exists after `forge build` has run in that project. Without this the
+  // whole point of the test inverts: a reviewer who has not built yet gets a raw ENOENT stack
+  // trace and no idea whether the ABIs drifted or the setup did.
+  let artifact;
+  try {
+    artifact = JSON.parse(readFileSync(join(ROOT, artifactPath), "utf8"));
+  } catch (e) {
+    if (e.code === "ENOENT") {
+      console.error(`\n  ✗ missing compiled artifact: ${artifactPath}`);
+      console.error(`    Build it first:  cd ${artifactPath.split("/out/")[0]} && forge build`);
+      process.exit(2);
+    }
+    throw e;
+  }
   const real = new ethers.Interface(artifact.abi);
   const sdk = new ethers.Interface(sdkAbi);
 
