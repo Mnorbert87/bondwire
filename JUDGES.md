@@ -102,13 +102,13 @@ The suite compiles the real `agent-bond` and `stream-pay` from source, not vendo
 
 1. The verifier has its own money on the line. It posts an `AgentBond` and grants CommitStakeV2 a revocable slash allowance, so trusting its verdict comes down to trusting a party that gets slashed if it is wrong. The source and the full flow are in [VERIFIER_ECONOMICS.md](./VERIFIER_ECONOMICS.md).
 2. I broke my own contract, then fixed it by counting it through. A cold adversarial audit (the 4th gate) found that an uncapped `arbiterFee` could push `damage` all the way up to the slice, which zeroes out the surplus burn. The fix folds `arbiterFee` into the slice-sizing rule, so `surplus = slice − damage` stays strictly positive no matter the inputs. The whole find-and-fix is written up in [TEST_AUDIT.md](./contracts/commit-stake-v2/TEST_AUDIT.md).
-3. The hard properties are proven, not just tested. Halmos proves solvency, surplus-positivity, no-double-pay, and the fee-residue bound for all inputs. The two burns in section 1 are the same properties firing on chain. See [HALMOS_VERIFICATION.md](./contracts/commit-stake-v2/HALMOS_VERIFICATION.md).
+3. The hard properties are proven, not just tested. Halmos proves solvency, surplus-positivity on both slash branches, split conservation, and the fee-residue bound for all inputs. The two burns in section 1 are the same properties firing on chain. See [HALMOS_VERIFICATION.md](./contracts/commit-stake-v2/HALMOS_VERIFICATION.md).
 
 ## The audit trail, all in this repo
 
 | Layer | Document | What it covers |
 |---|---|---|
-| Symbolic | [HALMOS_VERIFICATION.md](./contracts/commit-stake-v2/HALMOS_VERIFICATION.md) | solvency, surplus-positivity, no-double-pay, for all inputs |
+| Symbolic | [HALMOS_VERIFICATION.md](./contracts/commit-stake-v2/HALMOS_VERIFICATION.md) | solvency, surplus-positivity, split conservation, fee residue, for all inputs |
 | Static | [STATIC_ANALYSIS.md](./contracts/commit-stake-v2/STATIC_ANALYSIS.md) | zero new vulnerabilities, every flag triaged, by-design items suppressed in a triage DB |
 | Mutation | [MUTATION_TESTING.md](./contracts/commit-stake-v2/MUTATION_TESTING.md) | 100% of the revert-class mutants killed, survivors triaged |
 | Gas | [GAS_PROFILE.md](./contracts/commit-stake-v2/GAS_PROFILE.md) | the full slash-and-burn path costs about 0.008 USDC over a plain finalize |

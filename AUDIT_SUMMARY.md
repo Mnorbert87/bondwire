@@ -26,7 +26,7 @@ tests that catch each defect ship in the repo.
 | Unit + adversarial | 226 tests across four Foundry projects, 0 failed |
 | Fuzz | 23 properties, 10,000 runs each |
 | Invariants | 16 campaigns, 10,000 runs × depth 15 = 150,000 calls, `fail_on_revert = true` |
-| Symbolic | 5 Halmos proofs over the money paths (solvency, surplus-positivity, no-double-pay, fee residue) |
+| Symbolic | 5 Halmos proofs over the money paths (solvency, surplus-positivity on both slash branches, split conservation, fee residue). No-double-pay is stateful and belongs to the invariant campaign, not to these |
 | Mutation | revert-class mutants on the accounting and the new gates |
 | Static | Slither + Aderyn, every finding triaged |
 | On-chain | every documented address and transaction re-measured against the live chain |
@@ -87,6 +87,19 @@ this is counterparty-selection risk, not an attacker-reachable griefing vector, 
 self-release backstop bounds every bond lock. A correct fix is a `pendingWithdrawal` + `claim()`
 fallback across every payout path in all three contracts. We are not shipping that as a rushed
 pre-submission change. Details in [THREAT_MODEL.md](./THREAT_MODEL.md) §9.
+
+**`arbiterFee` is free, and it sits inside the cap that was supposed to bound the leverage.**
+Reported externally on 2026-08-05 and reproduced here before being believed: a 1 USDC stake with a
+9,000 USDC `arbiterFee` (never escrowed, at any point) passes both sizing gates, locks a verifier's
+entire bond, and burns it through the permissionless liveness branch with the stake refunded in
+full. Cost to the attacker: gas. With `arbiterFee = 0` the same parameters revert, so the leverage
+cap works and is simply walked around. Not theft, the slice burns; destruction of a verifier's
+bookable capacity. Fixed on `fix/commitstake-grief-bounds` (a deadline floor plus a bound on
+`arbiterFee` relative to escrowed value, main's 125 tests plus 5 new regression cases, all green), deliberately not deployed: shipping it
+costs the exact-match verification and moves every address again. The fix bounds the amplification
+at 33x rather than removing the burn, and a test asserts that number. Until then the mitigation is
+the one the contract already supports: grant a minimal per-job slash allowance, never an open one.
+Details in [THREAT_MODEL.md](./THREAT_MODEL.md) §12.
 
 **Aggregate leverage is not bounded, only per-commitment leverage is.** The time and leverage
 ceilings bound one commitment. N commitments stack, so an attacker with a third of a verifier's

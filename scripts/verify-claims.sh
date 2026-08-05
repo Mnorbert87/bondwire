@@ -76,11 +76,11 @@ else
   # produced a new finding on each of three review passes in one evening.
   TRACKED | grep -E '\.(md|html)$' | while IFS= read -r file; do
     case "$file" in *_AUDIT_2026-*|social/*|CHANGELOG.md) continue;; esac   # dated historical records
-    # Both spellings. Only "N tests" was matched before, so a stale "102-test
-    # suite" sat in the submission document through every pass this checker
-    # signed off on. The hyphenated adjective form is the same claim.
-    grep -onE '\b[0-9]{2,4}[ -]tests?\b' "$file" 2>/dev/null | while IFS=: read -r ln hit; do
-      num=${hit%%[ -]*}
+    # Three spellings. "N tests" was the original; "N-test" hid a stale 102 in the
+    # submission document; "N/N green" hid a stale 88 in three more places. Each was found by
+    # someone reading, after the checker had signed the file off.
+    grep -onE '\b[0-9]{2,4}([ -]tests?\b|/[0-9]{2,4} green)' "$file" 2>/dev/null | while IFS=: read -r ln hit; do
+      num=${hit%%[ -/]*}
       # A number the text itself pins to a past run is a record, not a claim
       # about today. Requires explicit phrasing ("as of that date", "at the
       # time", a YYYY-MM-DD on the line) so this cannot be used to wave

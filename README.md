@@ -108,7 +108,7 @@ Three claims, each backed by something you can re-run:
    by construction: a colluding arbiter can never recapture the slice. Found by counting it through,
    closed by counting it through. ([TEST_AUDIT.md](./contracts/commit-stake-v2/TEST_AUDIT.md))
 3. **Symbolically-verified surplus-burn, proven live.** Halmos proves solvency, surplus-positivity,
-   no-double-pay and the fee-residue bound **for all inputs**; two on-chain artifacts show the burn
+   split conservation and the fee-residue bound **for all inputs**; two on-chain artifacts show the burn
    actually happening: an overturn burn of **1.45 USDC**
    ([tx](https://testnet.arcscan.app/tx/0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d))
    and a liveness burn of the **whole 1.50 USDC slice**
@@ -138,7 +138,7 @@ opt-in to the named arbiter (or an AgentBond arbiter allowlist), plus a stake-pr
 `verifierSlice ≤ k·(amount + feeDeposit + arbiterFee)`. We state this because a careful reviewer
 reaches it: the symbolic spec proves the *accounting* of a slash, not the *justness* of the verdict
 ,  arbiter honesty is an assumption, exactly as the verifier's is. The fix is implemented, tested
-(88/88 green), and deployed in the hardened redeploy of 2026-07-31: see
+(88 tests green at the time, 125 today), and deployed in the hardened redeploy of 2026-07-31: see
 [THREAT_MODEL §8](./THREAT_MODEL.md) and Draft [PR #1](https://github.com/Mnorbert87/bondwire/pull/1).
 
 The spec ([VERIFIER_ECONOMICS.md](./VERIFIER_ECONOMICS.md)) was already public; with this the
@@ -146,7 +146,7 @@ The spec ([VERIFIER_ECONOMICS.md](./VERIFIER_ECONOMICS.md)) was already public; 
 
 | Layer | Document | What it proves |
 |---|---|---|
-| Symbolic | [HALMOS_VERIFICATION.md](./contracts/commit-stake-v2/HALMOS_VERIFICATION.md) | solvency / surplus-positivity / no-double-pay, all inputs |
+| Symbolic | [HALMOS_VERIFICATION.md](./contracts/commit-stake-v2/HALMOS_VERIFICATION.md) | solvency / surplus-positivity / split conservation, all inputs |
 | Static | [STATIC_ANALYSIS.md](./contracts/commit-stake-v2/STATIC_ANALYSIS.md) | zero new vulns; every flag triaged, by-design items annotated in-source |
 | Mutation | [MUTATION_TESTING.md](./contracts/commit-stake-v2/MUTATION_TESTING.md) | 100% revert-class kill; survivors triaged equivalent / invariant-caught |
 | Gas | [GAS_PROFILE.md](./contracts/commit-stake-v2/GAS_PROFILE.md) | the full slash+burn path costs ~0.008 USDC over a plain finalize |
@@ -224,7 +224,7 @@ Every contract in the stack ships with a unit + adversarial + fuzz + **invariant
 | [`contracts/commit-stake-v2`](contracts/commit-stake-v2/TEST_AUDIT.md) | 125 | 8 × 10,000 runs | 5 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 
 `commit-stake-v2` carries three layers the others don't: **5 Halmos symbolic proofs** (all-inputs
-solvency / surplus-positivity / no-double-pay), a **Slither + Aderyn** pass with by-design findings
+solvency / surplus-positivity / split conservation), a **Slither + Aderyn** pass with by-design findings
 annotated in-source and `--fail-pedantic` in CI, and a **mutation campaign** (100% revert-class kill).
 The full trail is in [its audit docs](#commitstakev2-who-pays-when-the-verifier-lies).
 

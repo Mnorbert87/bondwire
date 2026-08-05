@@ -13,8 +13,10 @@ import {MockERC20} from "./mocks/MockERC20.sol";
 ///      the assertions hold for ALL of them (subject to `vm.assume`), or returns a counterexample.
 ///
 ///      DESIGN — assume-guarantee decomposition. The §7a routing arithmetic is mirrored here
-///      1:1 from CommitStakeV2.sol (line refs inline). The create-time sizing require
-///      (`verifierSlice > amount + feeDeposit + arbiterFee`, src:365) is the *assumption*; it is
+///      1:1 from CommitStakeV2.sol. Pointers are function names, not line numbers: the line
+///      anchors this file used to carry had all drifted by 2026-08-05, which is exactly the
+///      hand-copied-mirror failure this file exists to guard against. The create-time sizing
+///      require (`verifierSlice > amount + feeDeposit + arbiterFee`) is the *assumption*; it is
 ///      proven to be ENFORCED by concrete tests (test_Create_RevertSliceAtOrBelowStake,
 ///      test_ColdAudit_HostileArbiterFeeRejectedAtCreate). Under that assumption these checks
 ///      prove the *consequences* hold symbolically over the entire 256-bit input space:
@@ -28,7 +30,7 @@ contract SymbolicSpec is Test {
         return a < b ? a : b;
     }
 
-    /// @notice (b) OVERTURN branch (arbitrate, src:508-525): surplus is strictly positive and the
+    /// @notice (b) OVERTURN branch (arbitrate,: surplus is strictly positive and the
     ///         slice is conserved, for ALL inputs satisfying the create-time sizing rule.
     function check_SurplusPositive_Overturn(
         uint256 amount,
@@ -38,24 +40,23 @@ contract SymbolicSpec is Test {
         uint256 challengeBondPaid,
         uint256 slice
     ) public pure {
-        // create-time invariants (CommitStakeV2.create, src:325 + src:365)
+        // create-time invariants enforced by CommitStakeV2.create
         vm.assume(amount > 0);
-        vm.assume(slice > amount + feeDeposit + arbiterFee); // gate-4 HIGH fix (src:365)
+        vm.assume(slice > amount + feeDeposit + arbiterFee); // gate-4 HIGH fix
         // feeAccrued is read from StreamPay state; it can never exceed the funded deposit.
         vm.assume(feeAccrued <= feeDeposit);
 
-        // arbitrate overturn routing, mirrored from src:508-525
-        uint256 fee = _min(arbiterFee, challengeBondPaid); // src:508
-        uint256 damage = feeAccrued + fee; // src:515
-        uint256 toHarmed = _min(damage, slice); // src:516
-        uint256 surplus = slice - toHarmed; // src:521
-
+        // arbitrate, overturn branch: mirrored 1:1 from the `else` arm of `arbitrate`
+        uint256 fee = _min(arbiterFee, challengeBondPaid);
+        uint256 damage = feeAccrued + fee;
+        uint256 toHarmed = _min(damage, slice);
+        uint256 surplus = slice - toHarmed;
         assert(surplus > 0); // gate-4: §7a surplus-burn is never zeroed
         assert(toHarmed + surplus == slice); // conservation: the whole slice is accounted for
         assert(toHarmed <= slice); // no over-routing out of the slice
     }
 
-    /// @notice (b) LIVENESS branch (slashVerifierExpired, src:610-621): no arbiter leg, so
+    /// @notice (b) LIVENESS branch (slashVerifierExpired,: no arbiter leg, so
     ///         damage = feeAccrued; surplus strictly positive and slice conserved.
     function check_SurplusPositive_Liveness(
         uint256 amount,
@@ -68,16 +69,16 @@ contract SymbolicSpec is Test {
         vm.assume(slice > amount + feeDeposit + arbiterFee);
         vm.assume(feeAccrued <= feeDeposit);
 
-        // slashVerifierExpired routing, mirrored from src:612-621
-        uint256 toStaker = _min(feeAccrued, slice); // src:614 (damage = feeAccrued + 0)
-        uint256 surplus = slice - toStaker; // src:619
+        // slashVerifierExpired: mirrored 1:1 from its slice-routing block
+        uint256 toStaker = _min(feeAccrued, slice); // damage = feeAccrued + 0, no arbiter leg
+        uint256 surplus = slice - toStaker;
 
         assert(surplus > 0);
         assert(toStaker + surplus == slice);
     }
 
     /// @notice (c) NO-OVERPAY of the fee residue: the early-Ended refund is capped at both the
-    ///         per-stream remainder AND the unbooked balance (src:713-714), so a residue payout
+    ///         per-stream remainder AND the unbooked balance, so a residue payout
     ///         can never dip into another commitment's booked escrow. Proven for all inputs.
     function check_FeeResidue_NeverExceedsUnbooked(
         uint256 deposit,
@@ -88,16 +89,15 @@ contract SymbolicSpec is Test {
         vm.assume(withdrawn <= deposit); // StreamPay invariant
         vm.assume(totalEscrowed <= balanceOf); // solvency precondition (booked <= held)
 
-        uint256 unbooked = balanceOf - totalEscrowed; // src:713
-        uint256 refunded = _min(deposit - withdrawn, unbooked); // src:714
-
+        uint256 unbooked = balanceOf - totalEscrowed;
+        uint256 refunded = _min(deposit - withdrawn, unbooked);
         // the refund never exceeds the unbooked surplus -> booked escrow is untouched
         assert(refunded <= unbooked);
         assert(balanceOf - refunded >= totalEscrowed); // still solvent after the residue payout
     }
 
-    /// @notice (a) STAKE-LEG conservation (arbitrate/finalize/liveness, _routeStake src:674-679 +
-    ///         slashVerifierExpired src:622-624): the booked stake leaves totalEscrowed exactly
+    /// @notice (a) STAKE-LEG conservation (arbitrate/finalize/liveness, _routeStake +
+    ///         slashVerifierExpired: the booked stake leaves totalEscrowed exactly
     ///         once and the contract stays solvent for the remaining booked obligations.
     function check_StakeLeg_Solvency(
         uint256 amount,
@@ -108,7 +108,7 @@ contract SymbolicSpec is Test {
         vm.assume(amount <= totalEscrowed); // no overflow in the sum
         vm.assume(totalEscrowed <= balanceOf); // solvency precondition
 
-        // _routeStake: totalEscrowed -= amount; transfer(to, amount)  (src:676-677)
+        // _routeStake: totalEscrowed -= amount; transfer(to, amount)
         uint256 newEscrowed = totalEscrowed - amount;
         uint256 newBalance = balanceOf - amount;
 
