@@ -76,10 +76,15 @@ else
   # produced a new finding on each of three review passes in one evening.
   TRACKED | grep -E '\.(md|html)$' | while IFS= read -r file; do
     case "$file" in *_AUDIT_2026-*|social/*|CHANGELOG.md) continue;; esac   # dated historical records
-    # Three spellings. "N tests" was the original; "N-test" hid a stale 102 in the
-    # submission document; "N/N green" hid a stale 88 in three more places. Each was found by
-    # someone reading, after the checker had signed the file off.
-    grep -onE '\b[0-9]{2,4}([ -]tests?\b|/[0-9]{2,4} green)' "$file" 2>/dev/null | while IFS=: read -r ln hit; do
+    # Four spellings. "N tests" was the original; "N-test" hid a stale 102 in the
+    # submission document; "N/N green" hid a stale 88 in three more places. The fourth,
+    # "N and M tests", hid a stale 48 in JUDGES.md through the whole 08-05 sweep: only
+    # the *last* number in a coordinated list sits next to the word "tests", so every
+    # earlier one was invisible to the first three spellings. Each was found by someone
+    # reading, after the checker had signed the file off.
+    grep -onE '\b[0-9]{2,4}( and [0-9]{2,4})?([ -]tests?\b|/[0-9]{2,4} green)' "$file" 2>/dev/null \
+    | sed -E 's/^([0-9]+):([0-9]{2,4}) and ([0-9]{2,4})([ -]tests?|\/.*)$/\1:\2 tests\n\1:\3\4/' \
+    | while IFS=: read -r ln hit; do
       num=${hit%%[ -/]*}
       # A number the text itself pins to a past run is a record, not a claim
       # about today. Requires explicit phrasing ("as of that date", "at the

@@ -78,7 +78,7 @@ The last line should read:
 Ran 9 test suites: 125 tests passed, 0 failed, 0 skipped (125 total tests)
 ```
 
-The suite compiles the real `agent-bond` and `stream-pay` from source, not vendored copies, so there is no drift between what is tested and what is deployed. Each of those two has its own green suite (48 and 25 tests). Run `forge test` in their folders the same way if you want them too.
+The suite compiles the real `agent-bond` and `stream-pay` from source, not vendored copies, so there is no drift between what is tested and what is deployed. Each of those two has its own green suite (51 and 25 tests). Run `forge test` in their folders the same way if you want them too.
 
 ---
 

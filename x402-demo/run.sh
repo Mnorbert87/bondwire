@@ -10,6 +10,12 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 # 1) server (payee) key + demo params from local .env.
+if [ ! -f ./.env ]; then
+  echo "x402-demo: no .env in $(pwd)." >&2
+  echo "  cp .env.example .env   then put a funded Arc testnet burner in AGENT_PRIVATE_KEY" >&2
+  echo "  and a second burner in SERVER_PRIVATE_KEY. See README.md." >&2
+  exit 1
+fi
 set -a; . ./.env; set +a
 
 # 2) agent (payer) key: prefer local .env (README's documented flow); ignore the
