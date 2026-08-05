@@ -1,5 +1,44 @@
 # Mutation testing, CommitStakeV2
 
+## Re-run on the current source, 2026-08-05
+
+The numbers below this section were measured on 2026-06-11. `CommitStakeV2.sol` changed three
+times after that date (the per-commitment arbiter opt-in, the time-parameter ceilings, the slice
+leverage cap and the obligation-tuple decode), adding 83 lines and removing 7, so those numbers
+described a source that is no longer deployed. The file said the *suite* had grown; it did not
+say the *contract* had. An external review made that the finding, correctly.
+
+Re-run against the deployed source, in an isolated clone, same tool and same filtered subset:
+
+| Mutator class | 2026-06-11 re-run | **2026-08-05, commit `a1bf4c5`** |
+|---|---:|---:|
+| Revert | 128 / 128 (100.0%) | **136 / 136 (100.0%)** |
+| Comment (`//` out a statement) | 101 / 128 (78.9%) | **111 / 134 (82.8%)** |
+| Tweak (operator/literal/condition) | 306 / 377 (81.2%) | **353 / 444 (79.5%)** |
+| **Overall (compilable mutants)** | **535 / 633 (84.5%)** | **600 / 714 (84.0%)** |
+
+Half a point lower on a denominator that grew by 81 mutants, which is what adding 83 lines of
+new require-branches to a contract does. The revert class is still fully killed. Campaign ran
+2 hours: the filtered subset was measured at 114 tests on 2026-08-05, against the 63 it was in
+June. That is a filtered count, not a suite size, which is why the claim checker sees a number it
+cannot match to any project total.
+
+Command, so the number is reproducible rather than quoted:
+
+```sh
+cd contracts/commit-stake-v2
+slither-mutate . \
+  --test-cmd 'forge test --no-match-contract "Invariant|Fuzz|SymbolicSpec"' \
+  --test-dir test --ignore-dirs "lib,script" --contract-names CommitStakeV2
+```
+
+The surviving mutants are still concentrated where the June triage said they would be: the
+`totalEscrowed` accounting mutants and the `surplus > 0` relational mutants, both of which are
+killed by the two suites this filter deliberately excludes (the invariant campaign and the
+Halmos spec). That is the same shape as June, on a different source, which is the useful part.
+
+The June sections below are kept as the record of what was measured then.
+
 **Tool:** `slither-mutate` (Slither 0.11.5) over Foundry + solc 0.8.24. **Date:** 2026-06-11.
 **Target:** `src/CommitStakeV2.sol`. **Test command (per mutant):** the fast deterministic subset
 `forge test --no-match-contract "Invariant|Fuzz|SymbolicSpec"` = **63 tests as of that date**
