@@ -168,6 +168,14 @@ hosted metadata (name, type, capabilities, version):
 | **Aiden** (AI research service agent) | `471762` | [`aiden.json`](https://mnorbert87.github.io/bondwire/agents/aiden.json) | [`0x8afedd…8cfa2`](https://testnet.arcscan.app/tx/0x8afedd30f718a82752811f6daab1c41d81e215eb0020e4eca76db0379888cfa2) |
 | **Arc Stack Verifier** (bonded verifier) | `471763` | [`verifier.json`](https://mnorbert87.github.io/bondwire/agents/verifier.json) | [`0xe2eb9b…cdae`](https://testnet.arcscan.app/tx/0xe2eb9b94cd1d4afe292f1bf9d4b859b122c96d6ca8f4a49a8d88c78bf86bcdae) |
 
+> **Corrected on-chain 2026-08-05.** Until today that sentence was false in the only place it
+> counts, the chain. Both `tokenURI`s still returned the pre-rebrand
+> `…/arc-agentic-stack/agents/…` path, which 404s, while this table linked the working one, so
+> reading the docs never surfaced it and only calling `tokenURI` did. Repointed with
+> `setAgentURI`, [`0x314da644…7866e629`](https://testnet.arcscan.app/tx/0x314da64458e3da95e8c2dfc0958f0ffb7861f07fd4cf1a8ed5ec64417866e629)
+> and [`0xb0331dbe…d23f709609`](https://testnet.arcscan.app/tx/0xb0331dbee7d759459bf3dbeefca12d2a1b15c3556cdaa09693c6fdd23f709609),
+> then read back off the chain and fetched: both resolve `200`.
+
 The full ERC-8004 surface is exercised on-chain, not just `register`:
 - **Reputation**, a counterparty left a real **`ReputationRegistry.giveFeedback`** for Aiden
   (value `5`, tags `research-quality` / `on-time-delivery`), from a *distinct* address (self-feedback
