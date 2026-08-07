@@ -353,8 +353,21 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
 });
 
 // wallet
+
+// A phone browser does not inject a wallet provider unless the page is open inside the wallet's
+// own browser, so "install MetaMask" is wrong advice on mobile: it is usually already installed.
+// Hand the visitor over to it with the page they were already on instead of dead ending them.
+function openInWalletBrowser() {
+  if (window.ethereum) return false;
+  if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) return false;
+  if (!location.host) return false;
+  location.href = "https://metamask.app.link/dapp/" + location.host + location.pathname + location.search;
+  return true;
+}
+
 async function connect() {
-  if (!window.ethereum) { setStatus("No injected wallet found. Install MetaMask.", true); return; }
+  if (!window.ethereum) { if (openInWalletBrowser()) return;
+    setStatus("No wallet in this browser. Install MetaMask, or open this page from your wallet's browser.", true); return; }
   const bp = new ethers.BrowserProvider(window.ethereum);
   await bp.send("eth_requestAccounts", []);
   const net = await bp.getNetwork();

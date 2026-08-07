@@ -163,6 +163,18 @@ $("csLink").href = `${EXPLORER}/address/${ADDR.CommitStakeV2}`;
 $("csLink").textContent = ADDR.CommitStakeV2;
 
 async function readOnly(){ if(!ro) ro = (() => { const r = new ethers.FetchRequest(RPC); r.timeout = 20000; r.retryFunc = async (_q, resp, a) => { if (a >= 4) return false; const t = resp == null || resp.statusCode === 429 || resp.statusCode >= 500; if (!t) return false; await new Promise(s => setTimeout(s, 500 * 2 ** (a - 1))); return true; }; const p = new ethers.JsonRpcProvider(r, undefined, { batchMaxCount: 1, staticNetwork: true }); /* the public Arc RPC drops concurrent bursts, so send one request at a time */ let q = Promise.resolve(); const send = p.send.bind(p); p.send = (mth, arg) => { const run = q.then(() => send(mth, arg)); q = run.catch(() => {}); return run; }; return p; })(); return ro; }
+
+// A phone browser does not inject a wallet provider unless the page is open inside the wallet's
+// own browser, so "install MetaMask" is wrong advice on mobile: it is usually already installed.
+// Hand the visitor over to it with the page they were already on instead of dead ending them.
+function openInWalletBrowser() {
+  if (window.ethereum) return false;
+  if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) return false;
+  if (!location.host) return false;
+  location.href = "https://metamask.app.link/dapp/" + location.host + location.pathname + location.search;
+  return true;
+}
+
 async function refresh(){
   try{
     const p = await readOnly();
@@ -179,7 +191,8 @@ async function refresh(){
 }
 
 $("connect").onclick = async ()=>{
-  if(!window.ethereum){ alert("Install MetaMask to write transactions. (State is still readable.)"); return; }
+  if(!window.ethereum){ if (openInWalletBrowser()) return;
+    alert("No wallet in this browser. Install MetaMask, or open this page from your wallet's browser. (State is still readable.)"); return; }
   provider = new ethers.BrowserProvider(window.ethereum);
   await provider.send("eth_requestAccounts", []);
   const net = await provider.getNetwork();
