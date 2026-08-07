@@ -21,11 +21,11 @@ trust-and-pay rail for autonomous agents.
 
 ## Live demo
 
-- **Hub:** https://mnorbert87.github.io/bondwire/
-- **Use case, hire an AI service agent:** https://mnorbert87.github.io/bondwire/use-case/
-- **Bonded verifier (live CommitStakeV2 flow):** https://mnorbert87.github.io/bondwire/bonded-verifier/ , create a staked commitment, verifier resolves, challenge window, arbiter rules, finalize. Every step is a real MetaMask tx confirmed on arcscan.
-- **AgentBond:** https://mnorbert87.github.io/bondwire/agent-bond/
-- **StreamPay:** https://mnorbert87.github.io/bondwire/stream-pay/
+- **Hub:** https://bondwire.dev/
+- **Use case, hire an AI service agent:** https://bondwire.dev/use-case/
+- **Bonded verifier (live CommitStakeV2 flow):** https://bondwire.dev/bonded-verifier/ , create a staked commitment, verifier resolves, challenge window, arbiter rules, finalize. Every step is a real MetaMask tx confirmed on arcscan.
+- **AgentBond:** https://bondwire.dev/agent-bond/
+- **StreamPay:** https://bondwire.dev/stream-pay/
 - **x402 pay-per-call demo (runnable):** [`x402-demo/`](./x402-demo/), agent pays an API over HTTP `402`, settled per second on StreamPay. [Verified tx transcript](./x402-demo/SAMPLE_RUN.md).
 - **CCTP capital onboarding (runnable):** [`cctp-demo/`](./cctp-demo/), an agent's bond capital is bridged **Base Sepolia → Arc** with Circle **Bridge Kit** (App Kit, CCTP V2) and deposited into AgentBond. [Verified tx transcript](./cctp-demo/SAMPLE_RUN.md).
 
@@ -165,8 +165,8 @@ hosted metadata (name, type, capabilities, version):
 
 | Agent | tokenId | metadata | register tx |
 |---|---|---|---|
-| **Aiden** (AI research service agent) | `471762` | [`aiden.json`](https://mnorbert87.github.io/bondwire/agents/aiden.json) | [`0x8afedd…8cfa2`](https://testnet.arcscan.app/tx/0x8afedd30f718a82752811f6daab1c41d81e215eb0020e4eca76db0379888cfa2) |
-| **Arc Stack Verifier** (bonded verifier) | `471763` | [`verifier.json`](https://mnorbert87.github.io/bondwire/agents/verifier.json) | [`0xe2eb9b…cdae`](https://testnet.arcscan.app/tx/0xe2eb9b94cd1d4afe292f1bf9d4b859b122c96d6ca8f4a49a8d88c78bf86bcdae) |
+| **Aiden** (AI research service agent) | `471762` | [`aiden.json`](https://bondwire.dev/agents/aiden.json) | [`0x8afedd…8cfa2`](https://testnet.arcscan.app/tx/0x8afedd30f718a82752811f6daab1c41d81e215eb0020e4eca76db0379888cfa2) |
+| **Arc Stack Verifier** (bonded verifier) | `471763` | [`verifier.json`](https://bondwire.dev/agents/verifier.json) | [`0xe2eb9b…cdae`](https://testnet.arcscan.app/tx/0xe2eb9b94cd1d4afe292f1bf9d4b859b122c96d6ca8f4a49a8d88c78bf86bcdae) |
 
 > **Corrected on-chain 2026-08-05.** Until today that sentence was false in the only place it
 > counts, the chain. Both `tokenURI`s still returned the pre-rebrand

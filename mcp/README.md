@@ -60,6 +60,6 @@ Claude Desktop / any MCP client config:
 - Arc testnet only (chain 5042002, USDC is the gas token). Never point a mainnet key at this.
 - The public Arc RPC rejects batched and concurrent JSON RPC; the vendored SDK handles both.
 - The SDK underneath is [bondwire-sdk](../sdk/), same addresses, same math as the hosted
-  [Agent Passport](https://mnorbert87.github.io/bondwire/agent-passport/).
+  [Agent Passport](https://bondwire.dev/agent-passport/).
 
 MIT.

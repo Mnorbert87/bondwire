@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://bondwire.dev/</loc><priority>1.0</priority></url>
+  <url><loc>https://bondwire.dev/app/</loc><priority>0.8</priority></url>
+  <url><loc>https://bondwire.dev/agent-bond/</loc><priority>0.8</priority></url>
+  <url><loc>https://bondwire.dev/stream-pay/</loc><priority>0.8</priority></url>
+  <url><loc>https://bondwire.dev/commit-stake/</loc><priority>0.8</priority></url>
+  <url><loc>https://bondwire.dev/bonded-verifier/</loc><priority>0.8</priority></url>
+  <url><loc>https://bondwire.dev/agent-passport/</loc><priority>0.8</priority></url>
+  <url><loc>https://bondwire.dev/use-case/</loc><priority>0.8</priority></url>
+  <url><loc>https://bondwire.dev/x402-demo/</loc><priority>0.8</priority></url>
+  <url><loc>https://bondwire.dev/ledger/</loc><priority>0.8</priority></url>
+  <url><loc>https://bondwire.dev/agent/</loc><priority>0.8</priority></url>
+  <url><loc>https://bondwire.dev/cctp-demo/</loc><priority>0.8</priority></url>
+</urlset>

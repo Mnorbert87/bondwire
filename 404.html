@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Page not found, Bondwire</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta name="theme-color" content="#060912" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060912; --ink: #eef3fb; --muted: #8c98af; --faint: #525d72;
+    --line: rgba(255,255,255,0.065); --glass: rgba(255,255,255,0.025);
+    --c1: #4da2ff; --c2: #56cfe1; --c3: #2f6bff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--ink); font-family: "Inter", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased; line-height: 1.55; display: grid; place-items: center;
+    padding: 24px; overflow-x: hidden; }
+  .aurora { position: fixed; inset: 0; z-index: -1;
+    background:
+      radial-gradient(900px 520px at 50% -12%, rgba(77,162,255,0.20), transparent 60%),
+      radial-gradient(680px 460px at 90% 114%, rgba(47,107,255,0.16), transparent 60%),
+      var(--bg); }
+  main { text-align: center; max-width: 620px; }
+  .logo { width: 52px; height: 52px; border-radius: 15px; margin: 0 auto 26px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--c2), var(--c1));
+    box-shadow: 0 14px 36px rgba(47,107,255,0.38); }
+  .logo svg { width: 29px; height: 29px; }
+  .code { font-family: "Space Grotesk", sans-serif; font-size: 15px; font-weight: 500;
+    letter-spacing: .22em; text-transform: uppercase; color: var(--c2); margin-bottom: 14px; }
+  h1 { font-family: "Space Grotesk", sans-serif; font-size: clamp(28px, 6vw, 42px);
+    font-weight: 700; letter-spacing: -0.02em; line-height: 1.12; }
+  p { margin-top: 16px; color: var(--muted); font-size: 16.5px; }
+  .row { display: flex; gap: 11px; justify-content: center; flex-wrap: wrap; margin-top: 32px; }
+  a.btn { text-decoration: none; font-size: 14.5px; font-weight: 500; padding: 12px 20px;
+    border-radius: 99px; border: 1px solid var(--line); background: var(--glass);
+    color: var(--ink); transition: border-color .2s, background .2s; }
+  a.btn:hover { border-color: rgba(122,170,255,0.4); background: rgba(255,255,255,0.05); }
+  a.btn.primary { background: linear-gradient(135deg, var(--c1), var(--c3));
+    border-color: transparent; color: #04111f; font-weight: 600; }
+  footer { margin-top: 40px; font-size: 12.5px; color: var(--faint); }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--c2); }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<main>
+  <div class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4z" stroke="#04111f" stroke-width="2" stroke-linejoin="round"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#04111f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="code">Error 404</div>
+  <h1>This page does not exist</h1>
+  <p>The contracts are still where you left them. The page is not.</p>
+  <div class="row">
+    <a class="btn primary" href="/">Back to the hub</a>
+    <a class="btn" href="/app/">Open the app</a>
+    <a class="btn" href="https://github.com/Mnorbert87/bondwire" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <footer>
+    Bondwire · Arc Testnet, USDC native · testnet demo, not for production use<br />
+    Something broken that should not be? <a href="mailto:cryptophantomhungary@gmail.com">cryptophantomhungary@gmail.com</a>
+  </footer>
+</main>
+</body>
+</html>

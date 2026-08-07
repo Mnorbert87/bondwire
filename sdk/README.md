@@ -1,9 +1,9 @@
 # bondwire-sdk
 
 A tiny [ethers v6](https://docs.ethers.org/v6/) wrapper over the **Bondwire** stack:
-[`AgentBond`](https://mnorbert87.github.io/bondwire/agent-bond/) (reputation backed
-trust), [`StreamPay`](https://mnorbert87.github.io/bondwire/stream-pay/)
-(continuous USDC settlement) and [`CommitStakeV2`](https://mnorbert87.github.io/bondwire/bonded-verifier/)
+[`AgentBond`](https://bondwire.dev/agent-bond/) (reputation backed
+trust), [`StreamPay`](https://bondwire.dev/stream-pay/)
+(continuous USDC settlement) and [`CommitStakeV2`](https://bondwire.dev/bonded-verifier/)
 (bonded verifier escrow, pay only on verified PASS), deployed on **Arc testnet**
 (chain `5042002`). Includes the Agent Passport reputation score as a single call.
 
@@ -73,7 +73,7 @@ const ro  = Bondwire.readOnly();              // read straight off the public RP
 
 Pay only on verified PASS: the staker escrows USDC, an AgentBond bonded verifier posts
 the verdict with its own money locked behind it, a challenge window plus optional
-arbiter keep everyone honest. Try it live: [bonded verifier dApp](https://mnorbert87.github.io/bondwire/bonded-verifier/).
+arbiter keep everyone honest. Try it live: [bonded verifier dApp](https://bondwire.dev/bonded-verifier/).
 
 | Method | What it does |
 |---|---|
@@ -103,7 +103,7 @@ const pass = await arc.passport("0xAgent...");
 ```
 
 Money backed reputation recomputed live from AgentBond in one Multicall3 round trip.
-Same math as the hosted [Agent Passport](https://mnorbert87.github.io/bondwire/agent-passport/):
+Same math as the hosted [Agent Passport](https://bondwire.dev/agent-passport/):
 reliability (0 to 55) + bond depth (0 to 30) + track record (0 to 15); a slash flags the agent.
 
 ### Helpers

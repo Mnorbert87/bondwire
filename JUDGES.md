@@ -94,7 +94,7 @@ The suite compiles the real `agent-bond` and `stream-pay` from source, not vendo
 
 - RPC: `https://rpc.testnet.arc.network`. Explorer: `https://testnet.arcscan.app`.
 - USDC is the native gas token on Arc. Value transfers use the 6-decimal ERC-20 at `0x3600…0000`.
-- The live frontend (browse it, no wallet needed) is at https://mnorbert87.github.io/bondwire/.
+- The live frontend (browse it, no wallet needed) is at https://bondwire.dev/.
 
 ---
 

@@ -85,7 +85,7 @@
 </table>
 <p style="font-size:0.85em;">All three are fully verified and exact-match on the explorer: a recompile of this repo reproduces the deployed runtime byte for byte, metadata trailer included, with only the constructor-set immutable addresses differing.</p>
 <ul>
-  <li>Browse the live hub, no wallet needed: <a href="https://mnorbert87.github.io/bondwire/">mnorbert87.github.io/bondwire</a>.</li>
+  <li>Browse the live hub, no wallet needed: <a href="https://bondwire.dev/">bondwire.dev</a>.</li>
   <li>Two on-chain burns show the anti-collusion mechanism firing: 1.45 USDC from an overturn and 1.50 USDC from a liveness fail-closed, each a real <span class="mono">Transfer</span> to <span class="mono">0x…dEaD</span> you can open on the explorer.</li>
   <li>The 125-test suite (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants) is green and reproduces with one command; the 5 Halmos symbolic proofs run separately. Mutation testing kills 84.0% of the mutants and 100% of the revert-class ones, re-measured 2026-08-05 against the deployed source rather than quoted from an older run.</li>
   <li>Halmos proves the hard properties at the property level, for all inputs, not just the cases a fuzzer happens to hit: solvency, surplus-positivity, no-double-pay, and the fee-residue bound. The two burns above are those same properties firing on chain.</li>

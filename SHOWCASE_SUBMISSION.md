@@ -11,7 +11,7 @@ https://github.com/Mnorbert87/bondwire
 
 ## Live site
 
-https://mnorbert87.github.io/bondwire/
+https://bondwire.dev/
 
 ## One line
 

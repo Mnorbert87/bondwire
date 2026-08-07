@@ -5,6 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Bondwire, Trust and Settlement for Autonomous Agents</title>
 <meta name="description" content="Two onchain primitives for the agent economy on Arc: AgentBond (reputation backed trust) and StreamPay (continuous USDC settlement). Built for Circle's Stablecoin Commerce Stack Challenge, Track 4." />
+<link rel="canonical" href="https://bondwire.dev/" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta name="theme-color" content="#060912" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Bondwire" />
+<meta property="og:url" content="https://bondwire.dev/" />
+<meta property="og:title" content="Bondwire, trust and settlement for autonomous agents" />
+<meta property="og:description" content="AgentBond gives an AI agent reputation backed by money it can lose. StreamPay pays it per second in USDC while it works. Composable onchain contracts, native to Arc." />
+<meta property="og:image" content="https://bondwire.dev/og.png" />
+<meta property="og:image:width" content="2400" />
+<meta property="og:image:height" content="1260" />
+<meta property="og:image:alt" content="Bondwire, trust and settlement for autonomous agents. AgentBond, StreamPay, CommitStake. Live on Arc testnet." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Bondwire, trust and settlement for autonomous agents" />
+<meta name="twitter:description" content="AgentBond gives an AI agent reputation backed by money it can lose. StreamPay pays it per second in USDC while it works. Composable onchain contracts, native to Arc." />
+<meta name="twitter:image" content="https://bondwire.dev/og.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -195,8 +212,18 @@
   .addr-bar a:hover { border-color: var(--line-2); color: var(--c2); }
   .addr-bar code { color: var(--c2); font-family: ui-monospace, monospace; }
 
-  footer { text-align: center; color: var(--faint); font-size: 12px; padding: 40px 20px 10px; }
+  footer { text-align: center; color: var(--faint); font-size: 12px; padding: 26px 20px 10px; line-height: 1.9; }
   footer a { color: var(--muted); text-decoration: none; } footer a:hover { color: var(--c2); }
+
+  .contact { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;
+    margin-top: 44px; padding-top: 32px; border-top: 1px solid var(--line); }
+  .contact-col { display: flex; flex-direction: column; gap: 9px; }
+  .contact-col h4 { margin: 0 0 3px; font-family: "Space Grotesk", sans-serif; font-size: 12px;
+    font-weight: 600; letter-spacing: .13em; text-transform: uppercase; color: var(--faint); }
+  .contact-col a { font-size: 13.5px; color: var(--muted); text-decoration: none;
+    transition: color .18s; word-break: break-word; }
+  .contact-col a:hover { color: var(--c2); }
+  @media (max-width: 720px) { .contact { grid-template-columns: 1fr; gap: 24px; } }
 </style>
 </head>
 <body>
@@ -409,8 +436,27 @@
     <a id="repoLink" href="https://github.com/Mnorbert87/bondwire" target="_blank" rel="noopener">GitHub ↗</a>
   </div>
 
+  <div class="contact">
+    <div class="contact-col">
+      <h4>Get in touch</h4>
+      <a href="mailto:cryptophantomhungary@gmail.com">cryptophantomhungary@gmail.com</a>
+      <a href="https://github.com/Mnorbert87/bondwire/issues" target="_blank" rel="noopener">Report an issue on GitHub ↗</a>
+    </div>
+    <div class="contact-col">
+      <h4>Found a vulnerability</h4>
+      <a href="https://github.com/Mnorbert87/bondwire/blob/main/SECURITY.md" target="_blank" rel="noopener">Security policy, what is in scope ↗</a>
+      <a href="mailto:cryptophantomhungary@gmail.com?subject=BONDWIRE%20SECURITY">Report it privately</a>
+    </div>
+    <div class="contact-col">
+      <h4>See it work</h4>
+      <a href="https://www.youtube.com/watch?v=QI-dMcepg-g" target="_blank" rel="noopener">Demo video ↗</a>
+      <a href="https://github.com/Mnorbert87/bondwire/blob/main/THREAT_MODEL.md" target="_blank" rel="noopener">Threat model and audits ↗</a>
+    </div>
+  </div>
+
   <footer>
-    Bondwire · Circle Stablecoin Commerce Stack Challenge, Track 4 (Agentic Economy) · Arc Testnet, USDC native · testnet demo, not for production use
+    Bondwire · Circle Stablecoin Commerce Stack Challenge, Track 4 (Agentic Economy) · Arc Testnet, USDC native · testnet demo, not for production use<br />
+    Built by <a href="https://github.com/Mnorbert87" target="_blank" rel="noopener">@Mnorbert87</a>, an independent builder. The contracts are ownerless and hold test USDC only, do not put real money in them.
   </footer>
 </main>
 

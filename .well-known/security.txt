@@ -1,0 +1,9 @@
+# Bondwire, security contact
+# https://bondwire.dev
+
+Contact: mailto:cryptophantomhungary@gmail.com
+Contact: https://github.com/Mnorbert87/bondwire/issues
+Preferred-Languages: en, hu, de
+Canonical: https://bondwire.dev/.well-known/security.txt
+Policy: https://github.com/Mnorbert87/bondwire/blob/main/SECURITY.md
+Expires: 2027-08-07T00:00:00.000Z

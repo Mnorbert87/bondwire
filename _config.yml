@@ -1,0 +1,10 @@
+# GitHub Pages (Jekyll) config.
+#
+# Do NOT add a .nojekyll file here. Five pages on this site are rendered by Jekyll
+# from their README.md and have no index.html of their own: /sdk/, /mcp/, /agent/,
+# /x402-demo/ and /cctp-demo/. Turning Jekyll off 404s all five.
+#
+# Jekyll skips dot directories by default, so .well-known has to be named explicitly
+# or /.well-known/security.txt never gets published.
+include:
+  - .well-known
