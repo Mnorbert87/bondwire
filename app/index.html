@@ -176,6 +176,17 @@
 </header>
 
 <main>
+  <div class="card rise d1">
+    <h2>Contracts you will be signing against</h2>
+    <div class="kv">
+      <b>AgentBond</b><span><a class="mono" id="cAB" target="_blank" rel="noopener"></a></span>
+      <b>StreamPay</b><span><a class="mono" id="cSP" target="_blank" rel="noopener"></a></span>
+      <b>CommitStakeV2</b><span><a class="mono" id="cCS" target="_blank" rel="noopener"></a> · source verified on arcscan</span>
+      <b>USDC (gas and value)</b><span class="mono">0x3600000000000000000000000000000000000000</span>
+    </div>
+    <p class="sub" style="margin-top:12px;">Arc testnet only. The USDC here comes from a faucet and is worth nothing, so nothing you sign on this page can cost you real money. Check these addresses against the <a href="https://github.com/Mnorbert87/bondwire#readme" target="_blank" rel="noopener">README</a> before you sign, here or anywhere else.</p>
+  </div>
+
   <div class="hero rise d1">
     <span class="eyebrow"><span class="dot"></span>Live on Arc testnet</span>
     <h2>Hire agents you can actually verify</h2>
@@ -319,6 +330,10 @@ const CS_ABI = [
   // Preconditions of create() that the page must read BEFORE it offers to sign.
   "function arbiterApproved(address verifier, address arbiter) view returns (bool)",
   "function recommendedSlice(uint256 amount, uint256 feeDeposit, uint256 arbiterFee) pure returns (uint256)",
+  // The challenge bond has a band too (CommitStakeV2.sol:403-407). A fixed 1 USDC sits inside
+  // it at amount 5 and above the cap below roughly amount 4, so it cannot be a constant.
+  "function challengeBondFloor(uint256 verifierSlice, uint256 arbiterFee) pure returns (uint256)",
+  "function challengeBondCap(uint256 verifierSlice, uint256 arbiterFee) pure returns (uint256)",
   "function resolve(uint256,bool)", "function finalize(uint256)",
   "function nextId() view returns (uint256)", "function totalEscrowed() view returns (uint256)",
   "function get(uint256) view returns (tuple(address staker,address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint256 bondObligationId,uint256 challengeBond,uint256 challengeBondPaid,uint256 arbiterFee,uint256 feeStreamId,uint64 deadline,uint64 challengeWindow,uint64 arbiterDeadline,uint64 resolvedAt,uint64 challengedAt,bool resolvedPass,uint8 status,uint8 outcome))",
@@ -478,6 +493,13 @@ let hPending = null;   // the exact params the preview showed; confirm signs THE
 //   slice 1 vs amount 5    -> SLICE_TOO_SMALL (slice must exceed amount + fees)
 //   arbiterDeadline now+7200 -> ARBITER_DEADLINE_TOO_LONG (:392) — that field is a DURATION,
 //                               not an absolute timestamp, and is capped at 30 days.
+// The addresses in the card at the top come from ADDR, so the page can never show one thing
+// and ask the wallet to sign against another.
+for (const [id, k] of [["cAB", "AgentBond"], ["cSP", "StreamPay"], ["cCS", "CommitStakeV2"]]) {
+  const a = $(id);
+  if (a) { a.textContent = ADDR[k]; a.href = EXPLORER + "/address/" + ADDR[k]; }
+}
+
 async function buildHireParams() {
   const now = Math.floor(Date.now() / 1000);
   const v = $("hVerifier").value.trim() || me, b = $("hBenef").value.trim() || me;
@@ -488,10 +510,16 @@ async function buildHireParams() {
   // Ask the contract for the slice instead of trusting a form default that cannot satisfy it.
   const csRo = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, ro);
   const slice = $("hSlice").value.trim() ? U($("hSlice").value.trim()) : await csRo.recommendedSlice(amount, 0n, 0n);
+  // Same treatment for the challenge bond: it is a band around the slice, not a constant.
+  // A hardcoded 1 USDC passed at the default amount of 5 and reverted BOND_ABOVE_CAP below it.
+  const [bFloor, bCap] = await Promise.all([
+    csRo.challengeBondFloor(slice, 0n), csRo.challengeBondCap(slice, 0n),
+  ]);
+  const chBond = (bFloor + bCap) / 2n;
   return {
     verifier: v, beneficiary: b, arbiter: ar,
     amount, verifierSlice: slice,
-    deadline: BigInt(now + 3600), challengeWindow: 120n, challengeBond: U("1"),
+    deadline: BigInt(now + 3600), challengeWindow: 120n, challengeBond: chBond,
     arbiterDeadline: 3600n, arbiterFee: 0n,      // DURATION after a challenge, not a timestamp
     feeDeposit: 0n, feeStart: 0n, feeStop: 0n, goal: $("hGoal").value || "",
   };
@@ -612,6 +640,16 @@ $("bWithdraw").onclick = async () => {
 $("bAllowBtn").onclick = async () => {
   try {
     needSigner();
+    // This is an unlimited allowance. The wallet will only show a bare address, so say out loud
+    // what it means and which contract gets it, before anything is signed.
+    const okAllow = confirm(
+      "Give UNLIMITED slash allowance?\n\n" +
+      "Contract: CommitStakeV2\n" + ADDR.CommitStakeV2 + "\n\n" +
+      "It lets that contract lock and slash your bond behind verdicts you signed up to. " +
+      "It is testnet USDC with no monetary value, and you can set the allowance back to zero at any time.\n\n" +
+      "Check the address against the one shown at the top of this page before you continue."
+    );
+    if (!okAllow) { setStatus("Allowance not given."); return; }
     const ab = new ethers.Contract(ADDR.AgentBond, AB_ABI, signer);
     const tx = await ab.setSlashAllowance(ADDR.CommitStakeV2, ethers.MaxUint256);
     const done = logTx("set slash allowance", tx.hash); await tx.wait(); done();
