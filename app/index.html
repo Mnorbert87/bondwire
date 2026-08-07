@@ -234,8 +234,9 @@
       <div class="frow">
         <div class="fld"><label>Verifier (bonded agent)</label><input id="hVerifier" placeholder="0x… from the passport tab" spellcheck="false" /></div>
         <div class="fld"><label>Beneficiary (refund target)</label><input id="hBenef" placeholder="0x… (defaults to you)" spellcheck="false" /></div>
+        <div class="fld"><label>Arbiter (rules on a challenge)</label><input id="hArbiter" placeholder="0x… — required, and the verifier must have approved it" spellcheck="false" /></div>
         <div class="fld" style="min-width:110px"><label>Amount (USDC)</label><input id="hAmount" value="5" /></div>
-        <div class="fld" style="min-width:110px"><label>Verifier slice</label><input id="hSlice" value="1" /></div>
+        <div class="fld" style="min-width:110px"><label>Verifier slice</label><input id="hSlice" placeholder="auto" /></div>
       </div>
       <div class="frow" style="margin-top:8px">
         <div class="fld" style="flex:3"><label>Goal / deliverable</label><input id="hGoal" value="Deliver the agreed work" /></div>
@@ -315,6 +316,9 @@ const AB_ABI = [
 ];
 const CS_ABI = [
   "function create((address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint64 deadline,uint64 challengeWindow,uint256 challengeBond,uint64 arbiterDeadline,uint256 arbiterFee,uint256 feeDeposit,uint64 feeStart,uint64 feeStop,string goal)) returns (uint256)",
+  // Preconditions of create() that the page must read BEFORE it offers to sign.
+  "function arbiterApproved(address verifier, address arbiter) view returns (bool)",
+  "function recommendedSlice(uint256 amount, uint256 feeDeposit, uint256 arbiterFee) pure returns (uint256)",
   "function resolve(uint256,bool)", "function finalize(uint256)",
   "function nextId() view returns (uint256)", "function totalEscrowed() view returns (uint256)",
   "function get(uint256) view returns (tuple(address staker,address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint256 bondObligationId,uint256 challengeBond,uint256 challengeBondPaid,uint256 arbiterFee,uint256 feeStreamId,uint64 deadline,uint64 challengeWindow,uint64 arbiterDeadline,uint64 resolvedAt,uint64 challengedAt,bool resolvedPass,uint8 status,uint8 outcome))",
@@ -454,35 +458,68 @@ $("ppHire").onclick = () => {
 
 // ── HIRE (CommitStakeV2) — quote before execute: preview first, sign only on confirm ──
 let hPending = null;   // the exact params the preview showed; confirm signs THESE, not the form
-function buildHireParams() {
+// Measured 2026-08-07: this builder produced FOUR independent reverts against the deployed
+// contract, so the "every button here is a real onchain transaction" claim above was false.
+//   arbiter: me            -> ARBITER_IS_STAKER (CommitStakeV2.sol:375)
+//   no approval anywhere   -> ARBITER_NOT_APPROVED (:381)
+//   slice 1 vs amount 5    -> SLICE_TOO_SMALL (slice must exceed amount + fees)
+//   arbiterDeadline now+7200 -> ARBITER_DEADLINE_TOO_LONG (:392) — that field is a DURATION,
+//                               not an absolute timestamp, and is capped at 30 days.
+async function buildHireParams() {
   const now = Math.floor(Date.now() / 1000);
   const v = $("hVerifier").value.trim() || me, b = $("hBenef").value.trim() || me;
+  const ar = $("hArbiter").value.trim();
   if (!ethers.isAddress(v) || !ethers.isAddress(b)) throw new Error("Verifier and beneficiary must be valid addresses (connect a wallet for the defaults).");
+  if (!ethers.isAddress(ar)) throw new Error("An arbiter address is required — CommitStakeV2 rejects a zero arbiter.");
+  const amount = U($("hAmount").value || "5");
+  // Ask the contract for the slice instead of trusting a form default that cannot satisfy it.
+  const csRo = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, ro);
+  const slice = $("hSlice").value.trim() ? U($("hSlice").value.trim()) : await csRo.recommendedSlice(amount, 0n, 0n);
   return {
-    verifier: v, beneficiary: b, arbiter: me,
-    amount: U($("hAmount").value || "5"), verifierSlice: U($("hSlice").value || "1"),
+    verifier: v, beneficiary: b, arbiter: ar,
+    amount, verifierSlice: slice,
     deadline: BigInt(now + 3600), challengeWindow: 120n, challengeBond: U("1"),
-    arbiterDeadline: BigInt(now + 7200), arbiterFee: 0n,
+    arbiterDeadline: 3600n, arbiterFee: 0n,      // DURATION after a challenge, not a timestamp
     feeDeposit: 0n, feeStart: 0n, feeStop: 0n, goal: $("hGoal").value || "",
   };
+}
+// Everything create() would revert on, read from the chain before anything is offered for signing.
+async function hireBlockers(p) {
+  const out = [], eq = (x, y) => x.toLowerCase() === y.toLowerCase();
+  if (eq(p.arbiter, me)) out.push("the arbiter cannot be you — you are the staker (ARBITER_IS_STAKER)");
+  if (eq(p.arbiter, p.verifier)) out.push("the arbiter cannot be the verifier (ARBITER_IS_VERIFIER)");
+  if (eq(p.arbiter, p.beneficiary)) out.push("the arbiter cannot be the beneficiary (ARBITER_IS_BENEFICIARY)");
+  try {
+    const csRo = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, ro);
+    if (!(await csRo.arbiterApproved(p.verifier, p.arbiter)))
+      out.push(`the verifier has not approved this arbiter (ARBITER_NOT_APPROVED) — only the verifier can, by calling approveArbiter(${p.arbiter}, true)`);
+  } catch { /* RPC cold: do not invent a blocker we could not measure */ }
+  return out;
 }
 $("hCreate").onclick = async () => {
   try {
     needSigner();
     $("hCreate").disabled = true; setStatus("Building the preview…");
-    const p = buildHireParams();
+    const p = await buildHireParams();
     // live reputation check on the verifier, part of the quote — hire decisions see the tier
     let tierLine = "no bond history";
     try { const pp = await passport(p.verifier); tierLine = `${pp.tier} · score ${pp.score} · bond ${fmt(pp.bondRaw)} · slashed ${pp.slashed}×`; } catch { }
+    const blockers = await hireBlockers(p);
     $("hPreviewBody").innerHTML =
       `<b>you escrow</b><span class="mono">${fmt(p.amount)}</span>` +
       `<b>verifier</b><span class="mono">${p.verifier.slice(0, 14)}… (${tierLine})</span>` +
       `<b>verifier risks</b><span class="mono">${fmt(p.verifierSlice)} of its own bond behind the verdict</span>` +
+      `<b>arbiter</b><span class="mono">${p.arbiter.slice(0, 14)}… rules on a challenge</span>` +
       `<b>on PASS</b><span>stake returns to you after a ${Number(p.challengeWindow)}s challenge window</span>` +
       `<b>on FAIL</b><span>stake pays the beneficiary ${p.beneficiary.slice(0, 14)}…</span>` +
-      `<b>goal</b><span>${p.goal.replace(/</g, "&lt;")}</span>`;
-    hPending = p;
-    $("hPreview").style.display = "block"; setStatus("");
+      `<b>goal</b><span>${p.goal.replace(/</g, "&lt;")}</span>` +
+      (blockers.length
+        ? `<b style="color:#ff8f6b">will revert</b><span style="color:#ff8f6b">${blockers.map(x => x.replace(/</g, "&lt;")).join("<br>")}</span>`
+        : "");
+    hPending = blockers.length ? null : p;   // a quote that would revert is not signable
+    $("hConfirm").disabled = blockers.length > 0;
+    $("hPreview").style.display = "block";
+    setStatus(blockers.length ? "This deal would revert on chain — nothing to sign until it is fixed." : "", blockers.length > 0);
   } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
   finally { $("hCreate").disabled = false; }
 };

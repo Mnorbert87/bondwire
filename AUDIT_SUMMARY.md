@@ -3,7 +3,8 @@
 What we checked, what we found, what we fixed, and what is still open. Written for a reviewer who
 wants the short version and the ability to re-run any of it.
 
-Last updated: 2026-07-31, after the hardened redeploy.
+Last updated: 2026-08-05, when the external review's §12 finding was reproduced and written up.
+(The hardened redeploy this document was first written for was 2026-07-31.)
 
 ---
 

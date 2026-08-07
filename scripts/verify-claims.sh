@@ -164,6 +164,113 @@ for old in "${SUPERSEDED[@]}"; do
   done
 done
 
+# ------------------------------------------------------------ address roster
+# Measured gap, 2026-08-06: changing the last hex digit of the live
+# CommitStakeV2 address in README.md left this script fully green. Every check
+# above asks the chain "does this resolve", and a one-digit typo resolves --
+# it is simply a different real address. Liveness is not equality. So the docs
+# are also checked against a roster: anything not on it is a typo or a new
+# address nobody wrote down, and both deserve a stop.
+#
+# The regex is boundary-anchored on purpose. A bare {40} also matches the
+# first 40 hex characters of every 64-hex transaction hash, which turns 4 tx
+# hashes into 4 phantom "addresses" (measured on this repo).
+KNOWN_OTHER="
+  0x3600000000000000000000000000000000000000  # USDC on Arc (native gas token)
+  0x036CbD53842c5426634e7929541eC2318f3dCF7e  # USDC on Base Sepolia
+  0x8004A818BFB912233c491871b3d84c89A494BD9e  # ERC-8004 identity registry
+  0x8004b663056a597dFFE9EcCC1965a193b7388713  # ERC-8004 reputation registry (proxy)
+  0x9758F80455dd2C1b2d33cFfdCE6B26a04ab02bcD  # Acme, the use-case page's hiring party
+  0xcA11bde05977b3631167028862bE2a173976CA11  # Multicall3 (canonical)
+  0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275  # CCTP MessageTransmitterV2
+  0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA  # CCTP TokenMessengerV2
+  0x000000000000000000000000000000000000dEaD  # burn address
+  0x2e36F4037E711e1d4c853BBCBF7F526B3714A08a  # Aiden, the demo agent (burner)
+  0x0D09cA4F24CF66206f66DA1dc200d213327EEbDc  # x402 demo server burner (payTo)
+  0x6A74572d5C0311ceA70b475993b040047dbfB96C  # the demo verifier
+  0x7AD10237032263216b87a65DAbE7c676dc7B45fB  # the one approved arbiter
+  0xdFDaDEb7440f1CE4Cc2f62Aa21BCCe3374bDF46b  # Circle developer-controlled wallet
+  0xDBBed9cdFe1eA44789dDD2EA453cbD9252e6d310  # seed run staker
+  0x8918E6A86413b13BD2E995308D4F9dB08cEae361  # seed run beneficiary
+  0xa49ff45166612a151f57e1cd209dba4e75e14a41  # StreamPay (EURC), predates the redeploy
+"
+head_ "Documented addresses are all on the known roster"
+ROSTER=$(printf ' %s %s %s %s %s %s ' \
+  "$LIVE_AGENTBOND" "$LIVE_STREAMPAY" "$LIVE_COMMITSTAKEV2" "$LIVE_COMMITSTAKE" \
+  "${SUPERSEDED[*]}" "$(printf '%s' "$KNOWN_OTHER" | sed 's/#.*//')" \
+  | tr 'A-F' 'a-f' | tr -s ' \n' '  ')
+UNKNOWN=0
+for a in $(TRACKED | xargs grep -ohE '0x[a-fA-F0-9]{40}([^a-fA-F0-9]|$)' 2>/dev/null \
+           | sed -E 's/[^a-fA-F0-9]$//' | tr 'A-F' 'a-f' | sort -u); do
+  case "$ROSTER" in
+    *" $a "*) : ;;
+    *) bad "unknown address $a — a typo, or a new address missing from the roster"
+       UNKNOWN=$((UNKNOWN+1)) ;;
+  esac
+done
+[ "$UNKNOWN" = 0 ] && ok "every 0x… address in the docs is a known one"
+
+# --------------------------------------------------------- transaction roster
+# The third blind spot measured 2026-08-06: changing the last hex digit of a
+# burn tx hash in JUDGES.md kept the checker green, because that typo is
+# another real transaction and the explorer answers 200 for it. What separates
+# our transactions from a stranger's is who they were sent to, so the receipt's
+# `to` is checked against the same roster (deploys have no `to`, they carry
+# `contractAddress` instead).
+head_ "Documented transactions were sent to our own contracts"
+TX_BAD=0
+TX_N=0
+for h in $(TRACKED | grep -E '\.(md|html)$' \
+           | xargs grep -ohE 'testnet\.arcscan\.app/tx/0x[a-fA-F0-9]{64}' 2>/dev/null \
+           | grep -oE '0x[a-fA-F0-9]{64}' | sort -u); do
+  TX_N=$((TX_N+1))
+  target=$(curl -s -m 25 -X POST "$RPC" -H 'content-type: application/json' \
+    -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_getTransactionReceipt\",\"params\":[\"$h\"]}" \
+    | python3 -c 'import sys,json
+r=(json.load(sys.stdin) or {}).get("result") or {}
+print(((r.get("to") or r.get("contractAddress")) or "").lower())' 2>/dev/null)
+  if [ -z "$target" ]; then
+    bad "${h:0:12}… has no receipt on this chain"
+    TX_BAD=$((TX_BAD+1)); continue
+  fi
+  case "$ROSTER" in
+    *" $target "*) : ;;
+    *) bad "${h:0:12}… was sent to $target, which is not ours — typo, or an address missing from the roster"
+       TX_BAD=$((TX_BAD+1)) ;;
+  esac
+done
+[ "$TX_BAD" = 0 ] && ok "all $TX_N documented Arc transactions target roster addresses"
+
+# ------------------------------------------------------- mutation score claim
+# Also measured 2026-08-06: editing the deck's mutation score from 84.0% to
+# 94.0% produced zero failures. The number is a headline on the deck and in the
+# submission document, and nothing tied it back to the campaign that measured
+# it. The campaign file's own history columns are exempt -- old scores belong
+# there, that is what makes it a history.
+head_ "Mutation score quoted outside the campaign file"
+MUT_FILE=contracts/commit-stake-v2/MUTATION_TESTING.md
+if [ ! -f "$MUT_FILE" ]; then
+  bad "$MUT_FILE is missing, so no mutation score can be verified"
+else
+  # Last percentage on the Overall row = the current column, not the previous one.
+  SCORE=$(grep -E '^\| \*\*Overall' "$MUT_FILE" | head -1 \
+          | grep -oE '\([0-9]+\.[0-9]%\)' | tail -1 | tr -d '()%')
+  if [ -z "$SCORE" ]; then
+    bad "could not parse the Overall row of $MUT_FILE"
+  else
+    MUT_BAD=0
+    for f in $(TRACKED | grep -E '\.(md|html)$' | grep -v "$MUT_FILE"); do
+      for pct in $(grep -iE 'mutation' "$f" 2>/dev/null | grep -oE '[0-9]+\.[0-9]%' | tr -d '%'); do
+        if [ "$pct" != "$SCORE" ]; then
+          bad "$f quotes mutation score $pct% but the campaign measured $SCORE%"
+          MUT_BAD=$((MUT_BAD+1))
+        fi
+      done
+    done
+    [ "$MUT_BAD" = 0 ] && ok "every quoted mutation score is $SCORE%, as measured"
+  fi
+fi
+
 # ----------------------------------------------------------------------- URLs
 head_ "Links"
 TRACKED | grep -E '\.(md|html)$' | xargs grep -ohE 'https://[a-zA-Z0-9./_?=&#:%-]+' 2>/dev/null \

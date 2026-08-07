@@ -114,24 +114,53 @@ server.tool(
   {
     verifier: z.string().describe("0x address of the bonded verifier (must have an AgentBond bond + slash allowance for CommitStakeV2)"),
     beneficiary: z.string().describe("0x address paid if the work FAILS (refund target)"),
+    arbiter: z.string().describe("0x address that decides a challenge. Required by CommitStakeV2, and it must differ from you, the verifier and the beneficiary. The VERIFIER must have accepted it via approveArbiter — this quote checks that for you."),
     amountUsdc: z.string().describe("stake amount in human USDC, e.g. \"5\""),
-    verifierSliceUsdc: z.string().default("1").describe("how much of the verifier's bond is locked behind the verdict"),
+    verifierSliceUsdc: z.string().default("").describe("how much of the verifier's bond is locked behind the verdict. Leave empty to use the contract's own recommendedSlice(), which is the only value guaranteed to clear the strict slice > amount + fees rule."),
     goal: z.string().default("").describe("one line description of the deliverable"),
   },
-  async ({ verifier, beneficiary, amountUsdc, verifierSliceUsdc, goal }) => {
+  async ({ verifier, beneficiary, arbiter, amountUsdc, verifierSliceUsdc, goal }) => {
     try {
       if (!ethers.isAddress(verifier) || !ethers.isAddress(beneficiary)) throw new Error("verifier and beneficiary must be valid 0x addresses");
+      if (!ethers.isAddress(arbiter)) throw new Error("arbiter must be a valid 0x address — CommitStakeV2 reverts with ARBITER_ZERO without one");
       let pp = null; try { pp = await ro.passport(verifier); } catch { }
-      const params = { verifier, beneficiary, amount: amountUsdc, verifierSlice: verifierSliceUsdc, goal };
+
+      // Everything below would otherwise revert at execute time. A quote that cannot say
+      // "this will fail, and why" is not a quote — it is a delayed error.
+      const slice = verifierSliceUsdc || await ro.recommendedSlice(amountUsdc);
+      const blockers = [];
+      const eq = (a, b) => a.toLowerCase() === b.toLowerCase();
+      if (eq(arbiter, verifier)) blockers.push("arbiter equals the verifier (ARBITER_IS_VERIFIER)");
+      if (eq(arbiter, beneficiary)) blockers.push("arbiter equals the beneficiary (ARBITER_IS_BENEFICIARY)");
+      let approved = null;
+      try { approved = await ro.isArbiterApproved(verifier, arbiter); } catch { }
+      if (approved === false) {
+        blockers.push(
+          `the verifier has not accepted this arbiter (ARBITER_NOT_APPROVED). Only the verifier ` +
+          `can fix this, by calling approveArbiter(${arbiter}, true) on CommitStakeV2 — you cannot ` +
+          `do it on its behalf.`);
+      }
+
+      const params = { verifier, beneficiary, arbiter, amount: amountUsdc, verifierSlice: slice, goal };
       const summary =
         `You escrow ${amountUsdc} USDC on the live CommitStakeV2 (Arc testnet).\n` +
         `Verifier ${verifier} — passport: ${pp ? `${pp.tier}, score ${pp.score}, bond ${pp.bond.usdc} USDC, slashed ${pp.obligations.slashed}x` : "unavailable"}.\n` +
-        `The verifier locks ${verifierSliceUsdc} USDC of its own bond behind the verdict.\n` +
+        `The verifier locks ${slice} USDC of its own bond behind the verdict${verifierSliceUsdc ? "" : " (sized by the contract)"}.\n` +
+        `A challenge escalates to arbiter ${arbiter}${approved === null ? " (approval status unknown — RPC did not answer)" : approved ? " — accepted by the verifier" : ""}.\n` +
         `On verified PASS the stake returns to you; on FAIL it pays ${beneficiary}.\n` +
         `Goal: ${goal || "(none)"}\n` +
+        (blockers.length
+          ? `\nWILL REVERT — do not execute until these are fixed:\n  - ${blockers.join("\n  - ")}\n`
+          : ``) +
         `Nothing is signed yet. To proceed, call bondwire_commit_execute with confirmed=true and this previewId.`;
       const previewId = storePreview("commit", params, summary);
-      return text({ previewId, summary, verifierPassport: pp ? { tier: pp.tier, score: pp.score, slashed: pp.obligations.slashed } : null });
+      return text({
+        previewId, summary, blockers,
+        willRevert: blockers.length > 0,
+        arbiterApproved: approved,
+        verifierSlice: slice,
+        verifierPassport: pp ? { tier: pp.tier, score: pp.score, slashed: pp.obligations.slashed } : null,
+      });
     } catch (e) { return err(e); }
   }
 );
@@ -151,6 +180,7 @@ server.tool(
       const bw = needSigner();
       const { id, receipt } = await bw.commit({
         verifier: p.params.verifier, beneficiary: p.params.beneficiary,
+        arbiter: p.params.arbiter,
         amount: p.params.amount, verifierSlice: p.params.verifierSlice, goal: p.params.goal,
       });
       return text({ ok: true, commitmentId: id?.toString?.() ?? String(id), tx: receipt.hash, explorer: `${BONDWIRE.explorer}/tx/${receipt.hash}` });

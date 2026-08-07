@@ -75,11 +75,14 @@
     color:var(--faint); text-align:left; padding:0 12px 10px 0; font-weight:500;}
   td{font-size:14px; color:#c6d3e8; padding:11px 12px 11px 0; border-top:1px solid var(--line); vertical-align:top;}
   td.m{font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--blue);}
-  /* The honesty slide carries five findings once the open ones are named,
-     which is one row more than the default row rhythm fits in 720px. */
-  table.tight{margin-top:16px;}
-  table.tight td{padding:7px 12px 7px 0; font-size:13.5px; line-height:1.4;}
-  .slide .two.tight{margin-top:16px; gap:28px;}
+  /* The honesty slide carries six findings once the open ones are named
+     (§12 joined them on 2026-08-06), which is two rows more than the default
+     row rhythm fits in 720px. Every edit here is re-measured with the
+     scrollHeight sweep below -- on 2026-08-05 slide 6 overflowed by 53px and
+     overflow:hidden cut it off silently in the PDF. */
+  table.tight{margin-top:12px;}
+  table.tight td{padding:5px 12px 5px 0; font-size:12.5px; line-height:1.36;}
+  .slide .two.tight{margin-top:6px; gap:28px;}
   .note{margin-top:auto; border-left:2px solid var(--gold); padding:14px 0 14px 18px;
     background:linear-gradient(90deg, rgba(255,212,121,0.05), transparent 70%);}
   .note .h{font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:1.8px;
@@ -130,7 +133,7 @@
   <div class="rule" style="margin-top:34px; max-width:760px;"></div>
   <div class="mono" style="color:var(--muted); font-size:12.5px; line-height:1.9;">
     github.com/Mnorbert87/bondwire<br>
-    mnorbert87.github.io/bondwire
+    bondwire.dev
   </div>
   <div class="foot">Bondwire · Arc testnet demo · not audited for production</div>
   <div class="num">01</div>
@@ -299,7 +302,7 @@
 <section class="slide">
   <div class="eyebrow">Honesty as a feature</div>
   <h2>What is still wrong with it, in our own words</h2>
-  <p class="sub" style="margin-top:12px;">Three findings were fixed on public branches and, on 2026-07-31, <b style="color:var(--ink)">deployed</b>. Holding them back would have preserved the old deployment's exact match verification, so we redeployed and re verified instead: all three contracts are exact match again, at new addresses. We measured that rather than assumed it. Two are <b style="color:var(--ink)">still open</b>, and they belong on this slide: one called what is still wrong should contain something that still is.</p>
+  <p class="sub" style="margin-top:12px;">Three findings were fixed on public branches and, on 2026-07-31, <b style="color:var(--ink)">deployed</b>. Holding them back would have preserved the old deployment's exact match verification, so we redeployed and re verified instead, at new addresses. Three are <b style="color:var(--ink)">still open</b>, and they belong on this slide: one called what is still wrong should contain something that still is.</p>
   <table class="tight">
     <tr><th style="width:30%">Finding</th><th style="width:34%">Status</th><th>Branch</th></tr>
     <tr><td>Sockpuppet arbiter can reclaim the verifier's slice</td><td>Fixed and tested, opt in griefing guard</td><td class="m">fix/arbiter-griefing-optin</td></tr>
@@ -307,15 +310,16 @@
     <tr><td>Staker chosen time parameters were unbounded</td><td>Fixed and tested, three ceilings, 125 tests</td><td class="m">fix/commitstake-param-bounds</td></tr>
     <tr><td>USDC blacklist can strand a terminal transition</td><td><b style="color:var(--ink)">Open, by choice.</b> Payouts are pushes and USDC can blacklist. Medium: counterparties are pinned at create. The fix touches every payout path, not a rushed change</td><td class="m">THREAT_MODEL §9</td></tr>
     <tr><td>Aggregate leverage is unbounded, only per commitment leverage is capped</td><td><b style="color:var(--ink)">Open.</b> N commitments stack, so a third of a bond in capital can pin all of it. The revoke exit is real, which is what fix 2 bought</td><td class="m">AUDIT_SUMMARY</td></tr>
+    <tr><td>arbiterFee is a free parameter inside the cap meant to bound it</td><td><b style="color:var(--ink)">Open.</b> An outside review found it on 2026-08-05, we reproduced it before writing it down. A fee that is never escrowed sits in the cap's own denominator, so a one dollar stake can burn a verifier's whole bond for gas. A branch fix bounds it to 33x, not deployed</td><td class="m">THREAT_MODEL §12</td></tr>
   </table>
   <div class="two tight">
     <div>
       <h3>Self correction, in public</h3>
-      <p class="sub" style="font-size:15px;">Section 8 of the security document claimed the sockpuppet arbiter did not profit. It was wrong. We corrected it in the repo and on the page people actually read, rather than quietly deleting the claim.</p>
+      <p class="sub" style="font-size:14px;">Section 8 of the security document claimed the sockpuppet arbiter did not profit. It was wrong. We corrected it in the repo and on the page people actually read, rather than quietly deleting the claim.</p>
     </div>
     <div class="note" style="margin-top:0;">
       <div class="h">The limit of our own evidence</div>
-      <p>The invariant campaign bounds deadlines to thirty days, so a green campaign was never evidence against the unbounded lock finding. We wrote that into the public threat model as a limit of the thing we are otherwise proud of.</p>
+      <p style="font-size:14px;">The invariant campaign bounds deadlines to thirty days, so a green campaign was never evidence against the unbounded lock finding. We wrote that into the public threat model as a limit of the thing we are otherwise proud of.</p>
     </div>
   </div>
   <div class="num">08</div>
@@ -353,8 +357,8 @@
   <h2 style="font-size:46px;">Open a transaction. Run the suite. Nothing here needs your trust.</h2>
   <div class="big-links">
     <div class="link"><div class="l">Repository</div><div class="v">github.com/Mnorbert87/bondwire</div></div>
-    <div class="link"><div class="l">Live dApps, no backend</div><div class="v">mnorbert87.github.io/bondwire</div></div>
-    <div class="link"><div class="l">Bonded verifier flow, real transactions</div><div class="v">mnorbert87.github.io/bondwire/bonded-verifier</div></div>
+    <div class="link"><div class="l">Live dApps, no backend</div><div class="v">bondwire.dev</div></div>
+    <div class="link"><div class="l">Bonded verifier flow, real transactions</div><div class="v">bondwire.dev/bonded-verifier</div></div>
     <div class="link"><div class="l">Two minute judge walkthrough</div><div class="v">JUDGES.md</div></div>
   </div>
   <div class="rule" style="margin-top:30px;"></div>

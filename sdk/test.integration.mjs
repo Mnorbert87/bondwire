@@ -85,6 +85,13 @@ async function main() {
   await verifier.bond("300");                              // bond 300 USDC (> the ~150 slice)
   await verifier.setSlashAllowance(commitStake, "300");     // enforcer = CommitStakeV2
 
+  // Third leg of verifier setup, and the one this test used to skip: create() checks
+  // arbiterApproved[verifier][arbiter] (CommitStakeV2.sol:381) and only the VERIFIER can set it.
+  // Without it step [3] reverted with ARBITER_NOT_APPROVED even though an arbiter was passed.
+  await verifier.approveArbiter(addr.arbiter, true);
+  check("verifier accepted the arbiter (create() checks this)",
+        await verifier.isArbiterApproved(addr.verifier, addr.arbiter));
+
   console.log("[3] staker commits via the SDK (defaults derived from the contract)");
   const { id, receipt } = await staker.commit({
     verifier: addr.verifier,

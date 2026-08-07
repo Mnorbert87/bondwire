@@ -74,9 +74,9 @@
     <div class="grid2">
       <div class="fld"><label>Verifier (bonded wallet)</label><input id="verifier" placeholder="0x… (defaults to you)" /></div>
       <div class="fld"><label>Beneficiary (paid if agent defaults)</label><input id="beneficiary" placeholder="0x… (defaults to you)" /></div>
-      <div class="fld"><label>Arbiter (rules on a challenge)</label><input id="arbiter" placeholder="0x… (defaults to you)" /></div>
+      <div class="fld"><label>Arbiter (rules on a challenge)</label><input id="arbiter" placeholder="0x… required — not you, the verifier or the beneficiary" /></div>
       <div class="fld"><label>Stake amount (USDC)</label><input id="amount" value="10" /></div>
-      <div class="fld"><label>Verifier slice (USDC, slashable)</label><input id="slice" value="1.5" /></div>
+      <div class="fld"><label>Verifier slice (USDC, slashable)</label><input id="slice" placeholder="auto — sized by the contract" /></div>
       <div class="fld"><label>Challenge bond (USDC)</label><input id="chBond" value="1" /></div>
       <div class="fld"><label>Arbiter fee (USDC)</label><input id="arbFee" value="0.5" /></div>
       <div class="fld"><label>Challenge window (seconds)</label><input id="chWin" value="120" /></div>
@@ -124,6 +124,10 @@ const CS_ABI = [
   "function arbitrate(uint256 id, bool overturn)",
   "function finalize(uint256 id)",
   "function nextId() view returns (uint256)",
+  // Preconditions of create(), read before signing rather than discovered as a revert.
+  "function approveArbiter(address arbiter, bool ok)",
+  "function arbiterApproved(address verifier, address arbiter) view returns (bool)",
+  "function recommendedSlice(uint256 amount, uint256 feeDeposit, uint256 arbiterFee) pure returns (uint256)",
   "function totalEscrowed() view returns (uint256)",
   "function get(uint256 id) view returns (tuple(address staker,address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint256 bondObligationId,uint256 challengeBond,uint256 challengeBondPaid,uint256 arbiterFee,uint256 feeStreamId,uint64 deadline,uint64 challengeWindow,uint64 arbiterDeadline,uint64 resolvedAt,uint64 challengedAt,bool resolvedPass,uint8 status,uint8 outcome))",
 ];
@@ -204,19 +208,54 @@ $("btnBond").onclick = async ()=>{ if(!need())return;
     const b = new ethers.Contract(ADDR.AgentBond, BOND_ABI, signer);
     let tx = await b.deposit(amt); let d=logTx("AgentBond.deposit", tx.hash); await tx.wait(); await done(d);
     tx = await b.setSlashAllowance(ADDR.CommitStakeV2, ethers.MaxUint256); d=logTx("setSlashAllowance CommitStakeV2", tx.hash); await tx.wait(); await done(d);
+    // Third leg of verifier setup, and the one that was missing: create() checks
+    // arbiterApproved[verifier][arbiter], and only the VERIFIER can set it. Bonding without it
+    // leaves a verifier that looks ready and still reverts every commitment aimed at it.
+    const arb = $("arbiter").value.trim();
+    if(ethers.isAddress(arb)){
+      const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, signer);
+      if(await cs.arbiterApproved(me, arb)){
+        // NOT logTx: it builds an explorer link from the hash, and there is no tx here.
+        const el=$("log"), n=document.createElement("div"); n.className="item";
+        n.innerHTML=`approveArbiter <span class="mono">${arb.slice(0,10)}…</span> <span class="green">✓ already accepted, no tx needed</span>`;
+        el.prepend(n);
+      } else {
+        tx = await cs.approveArbiter(arb, true); d=logTx("approveArbiter "+arb.slice(0,10)+"…", tx.hash); await tx.wait(); await done(d);
+      }
+    } else {
+      alert("Bond posted. Fill the Arbiter field and run Step 0 again to accept an arbiter — create() reverts without it.");
+    }
   }catch(e){ alert("Failed: "+(e.shortMessage||e.message)); }
 };
 
+// Measured 2026-08-07: `arbiter: …||me` made the default case revert with ARBITER_IS_STAKER, and
+// even a distinct arbiter reverted with ARBITER_NOT_APPROVED because nothing on this page ever
+// called approveArbiter. On the page that exists to demonstrate the arbiter flow, under the line
+// "Every button below writes a real tx". Both preconditions are now read before anything is sent.
 $("btnCreate").onclick = async ()=>{ if(!need())return;
   try{
     const now = Math.floor(Date.now()/1000);
+    const arb = $("arbiter").value.trim();
+    if(!ethers.isAddress(arb)) throw new Error("An arbiter address is required, and it cannot be you — CommitStakeV2 rejects a zero arbiter and one that equals the staker.");
     const p = {
-      verifier: $("verifier").value.trim()||me, beneficiary: $("beneficiary").value.trim()||me, arbiter: $("arbiter").value.trim()||me,
-      amount: toU($("amount").value), verifierSlice: toU($("slice").value),
+      verifier: $("verifier").value.trim()||me, beneficiary: $("beneficiary").value.trim()||me, arbiter: arb,
+      amount: toU($("amount").value), verifierSlice: toU($("slice").value.trim()||"0"),  // 0 = auto, filled below
       deadline: BigInt(now+3600), challengeWindow: BigInt(parseInt($("chWin").value||"120")),
       challengeBond: toU($("chBond").value), arbiterDeadline: BigInt(3600),
       arbiterFee: toU($("arbFee").value), feeDeposit: 0n, feeStart: 0n, feeStop: 0n, goal: $("goal").value,
     };
+    const eq=(x,y)=>x.toLowerCase()===y.toLowerCase();
+    if(eq(p.arbiter,me)) throw new Error("The arbiter cannot be you — you are the staker (ARBITER_IS_STAKER).");
+    if(eq(p.arbiter,p.verifier)) throw new Error("The arbiter cannot be the verifier (ARBITER_IS_VERIFIER).");
+    if(eq(p.arbiter,p.beneficiary)) throw new Error("The arbiter cannot be the beneficiary (ARBITER_IS_BENEFICIARY).");
+    const csRo = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, await readOnly());
+    const minSlice = await csRo.recommendedSlice(p.amount, p.feeDeposit, p.arbiterFee);
+    // Empty field = let the contract size it. A hardcoded default cannot survive a param change,
+    // which is exactly how the old 1.5 became unusable once the strict inequality landed.
+    if(!$("slice").value.trim()) p.verifierSlice = minSlice;
+    else if(p.verifierSlice < minSlice) throw new Error(`Verifier slice too small: the contract requires at least ${ethers.formatUnits(minSlice,6)} USDC for this amount and fee (SLICE_TOO_SMALL).`);
+    if(!(await csRo.arbiterApproved(p.verifier, p.arbiter)))
+      throw new Error(`The verifier has not approved this arbiter (ARBITER_NOT_APPROVED). Only the verifier can fix it, by calling approveArbiter(${p.arbiter}, true) on CommitStakeV2 — Step 0 below now does that.`);
     await ensureApprove(ADDR.CommitStakeV2, p.amount + p.arbiterFee + p.feeDeposit);
     const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, signer);
     const tx = await cs.create(p); const d=logTx("create commitment", tx.hash);

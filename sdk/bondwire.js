@@ -80,6 +80,11 @@ export const COMMIT_STAKE_ABI = [
   "function challenge(uint256 id)",
   "function arbitrate(uint256 id, bool overturn)",
   "function finalize(uint256 id)",
+  // Arbiter opt-in (CommitStakeV2.sol:497). create() requires arbiterApproved[verifier][arbiter],
+  // so a verifier can never be dragged in front of an arbiter it did not accept. Without these two
+  // in the ABI the SDK could demand an arbiter but offered no way to make one usable.
+  "function approveArbiter(address arbiter, bool ok)",
+  "function arbiterApproved(address verifier, address arbiter) view returns (bool)",
   "function nextId() view returns (uint256)",
   "function totalEscrowed() view returns (uint256)",
   "function get(uint256 id) view returns (tuple(address staker,address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint256 bondObligationId,uint256 challengeBond,uint256 challengeBondPaid,uint256 arbiterFee,uint256 feeStreamId,uint64 deadline,uint64 challengeWindow,uint64 arbiterDeadline,uint64 resolvedAt,uint64 challengedAt,bool resolvedPass,uint8 status,uint8 outcome))",
@@ -225,6 +230,33 @@ export class Bondwire {
   async setSlashAllowance(enforcer, amount) {
     const tx = await this.agentBond.setSlashAllowance(enforcer, this.toUnits(amount));
     return tx.wait();
+  }
+
+  /**
+   * Verifier-side: accept (or drop) `arbiter` as an escalation path for commitments
+   * where you are the verifier. `create()` reverts with ARBITER_NOT_APPROVED without it
+   * (CommitStakeV2.sol:381), so this is a prerequisite of commit(), not an option.
+   * Idempotent, and it is the *verifier* who must send it, not the staker.
+   */
+  async approveArbiter(arbiter, ok = true) {
+    const tx = await this.commitStake.approveArbiter(arbiter, ok);
+    return tx.wait();
+  }
+
+  /** Has `verifier` accepted `arbiter`? Read-only mirror of the mapping above. */
+  async isArbiterApproved(verifier, arbiter) {
+    return this.commitStake.arbiterApproved(verifier, arbiter);
+  }
+
+  /**
+   * The smallest verifier slice CommitStakeV2 will accept for `amount` (plus optional fee legs),
+   * in human USDC. commit() already applies this when `verifierSlice` is omitted; this exposes it
+   * so callers can *show* the number instead of hardcoding one that a param change would break.
+   */
+  async recommendedSlice(amount, feeDeposit = "0", arbiterFee = "0") {
+    const s = await this.commitStake.recommendedSlice(
+      this.toUnits(amount), this.toUnits(feeDeposit), this.toUnits(arbiterFee));
+    return this.fromUnits(s);
   }
 
   /**
