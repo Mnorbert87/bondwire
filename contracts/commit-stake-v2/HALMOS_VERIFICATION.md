@@ -1,10 +1,36 @@
 # Symbolic verification, CommitStakeV2 (+ StreamPay core)
 
-**Tool:** Halmos 0.3.3 (a16z) over Foundry + solc 0.8.24. **Date:** 2026-06-11. Local, no network,
-no keys. Spec: `test/SymbolicSpec.t.sol`. Run: `halmos --contract SymbolicSpec --function check_`.
+**Tool:** Halmos 0.3.3 (a16z) over Foundry + solc 0.8.24. Local, no network, no keys.
+Spec: `test/SymbolicSpec.t.sol`. Run: `halmos --function check_ --solver-timeout-assertion 0`.
+
+## Re-run on the current source, 2026-08-09
+
+The run recorded below was 2026-06-11, and the gate-4 sizing assumption it rests on landed after
+that date, so the date alone was doing more work than it should. Re-run tonight on commit
+`5fdb466`, the same source the explorer verifies exact-match:
+
+```
+Running 5 tests for test/SymbolicSpec.t.sol:SymbolicSpec
+[PASS] check_FeeResidue_NeverExceedsUnbooked  (paths: 7,  time: 7.88s, bounds: [])
+[PASS] check_StakeLeg_Solvency                (paths: 5,  time: 2.56s, bounds: [])
+[PASS] check_StreamPay_SplitConserves         (paths: 5,  time: 0.35s, bounds: [])
+[PASS] check_SurplusPositive_Liveness         (paths: 7,  time: 0.69s, bounds: [])
+[PASS] check_SurplusPositive_Overturn         (paths: 14, time: 6.40s, bounds: [])
+Symbolic test result: 5 passed; 0 failed; time: 17.99s
+```
+
+Same five proofs, same path counts, still `bounds: []` (complete, not loop-bounded). Halmos also
+prints three `parsing failure` warnings for `CommitStakeV2GriefBounds`, `GriefPoCCheck` and
+`PatchedResidualPoC`; those are ordinary Foundry test artifacts, not proofs, and none of the five
+`check_` functions is affected.
+
+Line references in this document were re-anchored to `5fdb466` at the same time. They move whenever
+the source moves, so trust the function names over the numbers.
+
+## The original run, 2026-06-11
 
 Halmos symbolically executes each `check_*` over **all** 256-bit inputs (subject to `vm.assume`)
-and either proves the assertions or returns a concrete counterexample. Result below:
+and either proves the assertions or returns a concrete counterexample. Result of that first run:
 
 ```
 [PASS] check_SurplusPositive_Overturn      (paths: 14)
@@ -21,12 +47,12 @@ timeout; the largest (overturn, 6 symbolic words) closed in ~1.5s.
 ## Method, assume-guarantee decomposition
 
 The security-critical logic of CommitStakeV2 is the §7a **routing arithmetic** in `arbitrate`
-(src:508-525) and `slashVerifierExpired` (src:610-621). Those expressions are mirrored 1:1 in the
+(src:604-612) and `slashVerifierExpired` (src:682-690). Those expressions are mirrored 1:1 in the
 spec with inline `src:` line references, and proven symbolically. The create-time **assumption**
 they rest on , 
 
 ```
-verifierSlice > amount + feeDeposit + arbiterFee     (CommitStakeV2.sol:365, the gate-4 HIGH fix)
+verifierSlice > amount + feeDeposit + arbiterFee     (CommitStakeV2.sol:427, the gate-4 HIGH fix)
 feeAccrued <= feeDeposit                              (feeAccrued is read from StreamPay state)
 ```
 
@@ -53,11 +79,11 @@ Also proven in the same checks:
 
 ### (a) Solvency (stake leg + fee residue)
 - `check_StakeLeg_Solvency`: routing the stake (`totalEscrowed -= amount; transfer(amount)`,
-  src:676-677) leaves `balanceOf − amount >= totalEscrowed − amount`, the contract still covers
+  src:693-694) leaves `balanceOf − amount >= totalEscrowed − amount`, the contract still covers
   **every remaining booked obligation**, and exactly this stake was removed (`newEscrowed ==
   otherBooked`). Solvency is preserved by the routing step for all (amount, otherBooked, balance).
 - `check_FeeResidue_NeverExceedsUnbooked`: the early-Ended fee refund is `min(deposit−withdrawn,
-  balanceOf−totalEscrowed)` (src:713-714), so `refunded <= unbooked` and `balanceOf − refunded >=
+  balanceOf−totalEscrowed)` (src:807-808), so `refunded <= unbooked` and `balanceOf − refunded >=
   totalEscrowed`, a residue payout provably **never dips into another commitment's booked
   escrow** (the cross-commitment-leak surface the cold audit probed manually, now proven).
 
