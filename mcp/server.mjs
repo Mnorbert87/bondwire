@@ -144,7 +144,7 @@ server.tool(
       const params = { verifier, beneficiary, arbiter, amount: amountUsdc, verifierSlice: slice, goal };
       const summary =
         `You escrow ${amountUsdc} USDC on the live CommitStakeV2 (Arc testnet).\n` +
-        `Verifier ${verifier} — passport: ${pp ? `${pp.tier}, score ${pp.score}, bond ${pp.bond.usdc} USDC, slashed ${pp.obligations.slashed}x` : "unavailable"}.\n` +
+        `Verifier ${verifier} — passport: ${pp ? `${pp.tier}, score ${pp.score}, bond ${pp.bond.usdc} USDC, slashed ${pp.obligations.slashed} time(s)` : "unavailable"}.\n` +
         `The verifier locks ${slice} USDC of its own bond behind the verdict${verifierSliceUsdc ? "" : " (sized by the contract)"}.\n` +
         `A challenge escalates to arbiter ${arbiter}${approved === null ? " (approval status unknown — RPC did not answer)" : approved ? " — accepted by the verifier" : ""}.\n` +
         `On verified PASS the stake returns to you; on FAIL it pays ${beneficiary}.\n` +

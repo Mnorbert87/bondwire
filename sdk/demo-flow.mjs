@@ -24,7 +24,7 @@ if (!pk) {
   const s = await ro.stats();
   log(`Live stack: ${s.obligations} obligations, ${s.streams} streams, ${s.commitments} commitments.`);
   const p = await ro.passport("0x2e36F4037E711e1d4c853BBCBF7F526B3714A08a");
-  log(`Passport of the seeded demo agent: score ${p.score} (${p.tier}), bond ${p.bond.usdc} USDC, slashed ${p.obligations.slashed}x.`);
+  log(`Passport of the seeded demo agent: score ${p.score} (${p.tier}), bond ${p.bond.usdc} USDC, slashed ${p.obligations.slashed} time(s).`);
   log("\nSet AGENT_PRIVATE_KEY (Arc testnet burner) to run the full hire flow.");
   process.exit(0);
 }
