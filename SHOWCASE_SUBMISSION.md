@@ -1,9 +1,20 @@
 # Arc OSS Showcase submission draft (arc-canteen submit-showcase)
 
-Prepared 2026-07-22. The showcase is OPEN (rolling, guided CLI flow on
-arc-oss.thecanteenapp.com). Run after the pending commits are pushed:
-`npm i -g arc-canteen && arc-canteen login && arc-canteen submit-showcase`
-(login is an interactive step). Answers below map to what the flow asks for.
+Prepared 2026-07-22, install line corrected 2026-08-09 after measuring it. The showcase is OPEN
+(rolling) on arc-oss.thecanteenapp.com, and there are two ways in: the Google form linked from the
+hackathon site, or the CLI. The CLI is a Python tool from
+[the-canteen-dev/ARC-cli](https://github.com/the-canteen-dev/ARC-cli/), so it installs with `uv`,
+not npm:
+
+```
+uv tool install arc-canteen
+arc-canteen login            # interactive, GitHub handle
+arc-canteen submit-showcase  # re-runnable, a later entry supersedes an earlier one
+```
+
+This file said `npm i -g arc-canteen` until 2026-08-09. There is no such npm package: the registry
+returns 404, which is why nobody could have followed that line. `uv` is already installed here
+(0.11.11). Answers below map to what the flow asks for.
 
 ## Main repo
 
