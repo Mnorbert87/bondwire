@@ -107,7 +107,9 @@ Three claims, each backed by something you can re-run:
    verdict. The fix folds `arbiterFee` into the slice-sizing rule so `surplus = slice − damage` stays
    **strictly positive** by construction: on the overturn path a colluding arbiter can never recapture
    the slice. This one is in the deployed contract, not on a branch — it is `CommitStakeV2.sol:427`,
-   and the deployment above is exact-match verified against this source. It closes the recapture hole;
+   and the deployment above is exact-match verified against this source. It is a *different* finding
+   from the `arbiterFee` leverage-cap one in [THREAT_MODEL §12](./THREAT_MODEL.md), which is still
+   open and whose fix is **not** deployed: same parameter, two separate holes. It closes the recapture hole;
    it does not close the uphold path, where nothing burns at all
    ([THREAT_MODEL §11](./THREAT_MODEL.md)). Found by counting it through,
    closed by counting it through. ([TEST_AUDIT.md](./contracts/commit-stake-v2/TEST_AUDIT.md))
