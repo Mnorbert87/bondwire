@@ -323,7 +323,12 @@ cd web && python3 -m http.server 8080
 # open http://localhost:8080
 ```
 
-Each frontend is a single `index.html` using `ethers` from a CDN, no install, no bundler, host anywhere static.
+Each frontend is a single `index.html` with `ethers` vendored next to it at
+[`vendor/ethers-6.13.4.min.js`](./vendor/ethers-6.13.4.min.js): no install, no bundler, no
+CDN, host anywhere static. It used to import from esm.sh, which meant that a third party
+having a bad minute during a demo left every page rendering its shell and doing nothing,
+with no error to explain it. Checked by blocking esm.sh at the network layer: all pages
+still read the chain.
 
 ### SDK (one-import integration)
 
