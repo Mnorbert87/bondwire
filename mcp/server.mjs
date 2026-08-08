@@ -49,7 +49,12 @@ function takePreview(id, kind) {
   return p;
 }
 
-const text = (s) => ({ content: [{ type: "text", text: typeof s === "string" ? s : JSON.stringify(s, null, 2) }] });
+// JSON.stringify throws on a bigint, and the SDK returns `{ raw: bigint, usdc }` for every
+// amount. Each tool below is expected to hand up human USDC strings, but one that forgets
+// used to take the whole call down with "Do not know how to serialize a BigInt" — an
+// unusable tool, not a wrong number. The replacer is the net under that mistake.
+const bigintSafe = (_k, v) => (typeof v === "bigint" ? v.toString() : v);
+const text = (s) => ({ content: [{ type: "text", text: typeof s === "string" ? s : JSON.stringify(s, bigintSafe, 2) }] });
 const err = (e) => ({ content: [{ type: "text", text: "Error: " + (e.shortMessage || e.message || String(e)) }], isError: true });
 
 const server = new McpServer({ name: "bondwire-mcp", version: "0.1.0" });
@@ -76,7 +81,15 @@ server.tool(
   async ({ agent }) => {
     try {
       const p = await ro.passport(agent);
-      return text({ ...p, bond: p.bond.usdc + " USDC", slashedTotal: p.slashedTotal.usdc + " USDC", verify: `${BONDWIRE.explorer}/address/${p.agent}` });
+      // `reliability` is a 0..1 fraction (null before the first settled obligation). Emitted raw
+      // next to a 0..100 `score`, "reliability: 1" reads to a model as one point out of a hundred
+      // — the opposite of a perfect record. Carry the unit, like every other number here.
+      return text({
+        ...p,
+        bond: p.bond.usdc + " USDC", slashedTotal: p.slashedTotal.usdc + " USDC",
+        reliability: p.reliability === null ? "n/a (no settled obligation yet)" : Math.round(p.reliability * 100) + "%",
+        verify: `${BONDWIRE.explorer}/address/${p.agent}`,
+      });
     } catch (e) { return err(e); }
   }
 );
@@ -102,7 +115,18 @@ server.tool(
   "Decoded state of one bonded verifier commitment on CommitStakeV2: parties, amounts, status (Open / Resolved / Challenged / Finalized), outcome and verdict timing.",
   { id: z.number().int().positive().describe("commitment id") },
   async ({ id }) => {
-    try { return text(await ro.commitment(id)); } catch (e) { return err(e); }
+    try {
+      const c = await ro.commitment(id);
+      // Same shape rule as passport/bond_status: an amount reaches the model as a human USDC
+      // string. `{ raw: 1000000n }` is both unserializable and, once stringified, a number an
+      // LLM reads as a million dollars.
+      return text({
+        ...c,
+        amountUsdc: c.amount.usdc, verifierSliceUsdc: c.verifierSlice.usdc, challengeBondUsdc: c.challengeBond.usdc,
+        amount: undefined, verifierSlice: undefined, challengeBond: undefined,
+        verify: `${BONDWIRE.explorer}/address/${BONDWIRE.contracts.CommitStakeV2}`,
+      });
+    } catch (e) { return err(e); }
   }
 );
 
