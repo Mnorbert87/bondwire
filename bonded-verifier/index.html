@@ -71,7 +71,8 @@
   <h1>Bondwire</h1>
   <span class="tag">Bonded verifier · CommitStakeV2 · live on Arc testnet</span>
   <span id="net" class="status-bar muted" style="margin-left:auto">not connected</span>
-  <a href="../" class="back-link" style="font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:9px 15px;white-space:nowrap;">&larr; All dApps</a>
+  <!-- this page declares its own tokens and has no --line, so the border needs the fallback -->
+  <a href="../" class="back-link" style="font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--line, var(--border));border-radius:999px;padding:9px 15px;white-space:nowrap;">&larr; All dApps</a>
   <button id="connect">Connect wallet</button>
 </header>
 <!-- A judge who clicks Connect with an empty wallet used to dead end here: no gas,
@@ -118,7 +119,7 @@
       <div class="fld"><label>Arbiter (rules on a challenge)</label><input id="arbiter" placeholder="0x… required — not you, the verifier or the beneficiary" /></div>
       <div class="fld"><label>Stake amount (USDC)</label><input id="amount" value="10" /></div>
       <div class="fld"><label>Verifier slice (USDC, slashable)</label><input id="slice" placeholder="auto — sized by the contract" /></div>
-      <div class="fld"><label>Challenge bond (USDC)</label><input id="chBond" value="1" /></div>
+      <div class="fld"><label>Challenge bond (USDC)</label><input id="chBond" placeholder="auto — sized by the contract" /></div>
       <div class="fld"><label>Arbiter fee (USDC)</label><input id="arbFee" value="0.5" /></div>
       <div class="fld"><label>Challenge window (seconds)</label><input id="chWin" value="120" /></div>
     </div>
@@ -169,6 +170,11 @@ const CS_ABI = [
   "function approveArbiter(address arbiter, bool ok)",
   "function arbiterApproved(address verifier, address arbiter) view returns (bool)",
   "function recommendedSlice(uint256 amount, uint256 feeDeposit, uint256 arbiterFee) pure returns (uint256)",
+  // The challenge bond sits in a band, not at a constant: floor keeps a frivolous challenge
+  // more expensive than the prize, cap stops a real victim being priced out. A fixed 1 USDC is
+  // inside the band at a 10 USDC stake and above the cap at 1, so a smaller demo reverts.
+  "function challengeBondFloor(uint256 verifierSlice, uint256 arbiterFee) pure returns (uint256)",
+  "function challengeBondCap(uint256 verifierSlice, uint256 arbiterFee) pure returns (uint256)",
   "function totalEscrowed() view returns (uint256)",
   "function get(uint256 id) view returns (tuple(address staker,address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint256 bondObligationId,uint256 challengeBond,uint256 challengeBondPaid,uint256 arbiterFee,uint256 feeStreamId,uint64 deadline,uint64 challengeWindow,uint64 arbiterDeadline,uint64 resolvedAt,uint64 challengedAt,bool resolvedPass,uint8 status,uint8 outcome))",
 ];
@@ -183,8 +189,30 @@ const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
   "function decimals() view returns (uint8)",
 ];
-const STATUS = ["Open (awaiting verify)","Resolved (challenge window)","Challenged (awaiting arbiter)","Finalized"];
-const OUTCOME = [", ","Passed, stake released","Failed, stake to beneficiary","Overturned by arbiter"];
+// These are indexed by the raw enum value the contract returns, so index 0 must be None.
+// The previous arrays started at "Open", which shifted every label by one: a live Active
+// commitment displayed as "Resolved (challenge window)" and a Resolved one as "Challenged".
+// CommitStakeV2.sol:165-186 is the source of truth for both.
+const STATUS = [
+  "None (never created)",          // 0
+  "Active (awaiting the verdict)", // 1
+  "Resolved (challenge window)",   // 2
+  "Challenged (awaiting arbiter)", // 3
+  "Finalized",                     // 4
+  "Expired (liveness slash ran)",  // 5
+];
+const OUTCOME = [
+  "not terminal yet",                        // 0 None
+  "CleanPass, stake back to the staker",     // 1
+  "CleanFail, stake to the beneficiary",     // 2
+  "UpheldPass, challenger bond slashed",     // 3
+  "UpheldFail, challenger bond slashed",     // 4
+  "OverturnedToPass, surplus burned",        // 5
+  "OverturnedToFail, surplus burned",        // 6
+  "SilencePass, arbiter silent, bond back",  // 7
+  "SilenceFail, arbiter silent, bond back",  // 8
+  "LivenessSlash, surplus burned",           // 9
+];
 
 let provider, signer, me, ro;
 const $ = (id)=>document.getElementById(id);
@@ -308,6 +336,13 @@ $("btnCreate").onclick = async ()=>{ if(!need())return;
     // which is exactly how the old 1.5 became unusable once the strict inequality landed.
     if(!$("slice").value.trim()) p.verifierSlice = minSlice;
     else if(p.verifierSlice < minSlice) throw new Error(`Verifier slice too small: the contract requires at least ${ethers.formatUnits(minSlice,6)} USDC for this amount and fee (SLICE_TOO_SMALL).`);
+    // Same treatment for the challenge bond: empty means let the contract size it, and a value
+    // outside the band is named with the numbers rather than left to revert as BOND_ABOVE_CAP.
+    const bFloor = await csRo.challengeBondFloor(p.verifierSlice, p.arbiterFee);
+    const bCap   = await csRo.challengeBondCap(p.verifierSlice, p.arbiterFee);
+    if(!$("chBond").value.trim()){ p.challengeBond = bFloor; $("chBond").value = ethers.formatUnits(bFloor, 6); }
+    else if(p.challengeBond < bFloor || p.challengeBond > bCap)
+      throw new Error(`Challenge bond ${ethers.formatUnits(p.challengeBond,6)} USDC is outside the band this stake allows: ${ethers.formatUnits(bFloor,6)} to ${ethers.formatUnits(bCap,6)} USDC. Clear the field to let the contract size it.`);
     if(!(await csRo.arbiterApproved(p.verifier, p.arbiter)))
       throw new Error(`The verifier has not approved this arbiter (ARBITER_NOT_APPROVED). Only the verifier can fix it, by calling approveArbiter(${p.arbiter}, true) on CommitStakeV2 — Step 0 below now does that.`);
     await ensureApprove(ADDR.CommitStakeV2, p.amount + p.arbiterFee + p.feeDeposit);
@@ -331,24 +366,73 @@ async function loadState(){
     $("stateBox").innerHTML = [
       ["staker", short(c.staker)],["verifier", short(c.verifier)],["beneficiary", short(c.beneficiary)],["arbiter", short(c.arbiter)],
       ["stake", usdc(c.amount)+" USDC"],["verifier slice", usdc(c.verifierSlice)+" USDC"],["challenge bond", usdc(c.challengeBond)+" USDC"],
-      ["arbiter fee", usdc(c.arbiterFee)+" USDC"],["goal", esc(c.goal)],
+      // The goal is emitted in the Created event, deliberately not stored in the struct, so
+      // get() cannot return it and this row used to render the string "undefined".
+      ["arbiter fee", usdc(c.arbiterFee)+" USDC"],
+      ["goal", `<span class="muted">not in storage by design, it is in the <a href="${EXPLORER}/address/${ADDR.CommitStakeV2}#events" target="_blank" rel="noopener">Created event</a></span>`],
       ["resolved", c.resolvedAt>0n? (c.resolvedPass?"PASS":"FAIL") : "no"],["outcome", OUTCOME[oc]||("outcome "+oc)],
     ].map(([k,v])=>`<b>${esc(k)}</b><span class="mono">${v}</span>`).join("");
   }catch(e){ $("stateBox").innerHTML=`<span class="red">not found or read error: ${esc(e.shortMessage||e.message)}</span>`; }
 }
 $("btnLoad").onclick = loadState;
 
-function action(fn){ return async ()=>{ if(!need())return;
-  try{ const id = BigInt($("inspectId").value||"0"); const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, signer);
-    const {tx,label} = await fn(cs,id); const d=logTx(label, tx.hash); await tx.wait(); await done(d); loadState();
-  }catch(e){ alert("Failed: "+(e.shortMessage||e.message)); } };
+// Measured 2026-08-08 on the deployed contract: the Arc RPC does not return the revert reason
+// on a gas estimate, so every refused action here used to pop "Failed: missing revert data".
+// The commitment's state is readable, so check what actually blocks the call and say it.
+async function whyBlocked(label, id){
+  const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, await readOnly());
+  let c; try{ c = await cs.get(id); }catch{ return `Commitment #${id} could not be read from the contract.`; }
+  const st = Number(c.status);   // 0 None · 1 Open · 2 Resolved · 3 Challenged · 4 Finalized
+  const mine = me ? me.toLowerCase() : null;
+  if(st === 0) return `Commitment #${id} does not exist. Create one above, or type an id that does.`;
+  if(st === 4) return `Commitment #${id} is already finalized (${OUTCOME[Number(c.outcome)] || "settled"}). Nothing left to do.`;
+  if(label.startsWith("resolve")){
+    if(st !== 1) return `Commitment #${id} already has a verdict. Only an Open commitment can be resolved.`;
+    if(mine && c.verifier.toLowerCase() !== mine) return `Only the verifier on this commitment (${short(c.verifier)}) can post the verdict.`;
+  }
+  if(label === "challenge"){
+    if(st !== 2) return st === 3 ? `Commitment #${id} is already under challenge.` : `Nothing to challenge yet: the verifier has not posted a verdict.`;
+    const ends = (Number(c.resolvedAt) + Number(c.challengeWindow)) * 1000;
+    if(Date.now() > ends) return `The challenge window closed at ${new Date(ends).toLocaleTimeString()}. This verdict can only be finalized now.`;
+  }
+  if(label.startsWith("arbitrate")){
+    if(st !== 3) return `Nobody has challenged commitment #${id}, so there is nothing for an arbiter to rule on.`;
+    if(mine && c.arbiter.toLowerCase() !== mine) return `Only the arbiter named on this commitment (${short(c.arbiter)}) can rule. That is the point: it is not you.`;
+  }
+  if(label === "finalize"){
+    if(st === 1) return `No verdict yet. The verifier resolves first, then finalize settles the money.`;
+    if(st === 2){
+      const opens = (Number(c.resolvedAt) + Number(c.challengeWindow)) * 1000;
+      const left = Math.ceil((opens - Date.now())/1000);
+      if(left > 0) return `The challenge window is still open, which is the point of it. Finalize unlocks in ${left}s, at ${new Date(opens).toLocaleTimeString()}.`;
+    }
+    if(st === 3) return `Commitment #${id} is under challenge. The arbiter rules first, or its deadline has to pass.`;
+  }
+  return null;
 }
-$("aResolvePass").onclick = action(async (cs,id)=>({tx:await cs.resolve(id,true),  label:"resolve PASS"}));
-$("aResolveFail").onclick = action(async (cs,id)=>({tx:await cs.resolve(id,false), label:"resolve FAIL"}));
-$("aChallenge").onclick   = action(async (cs,id)=>{ const c=await cs.get(id); if(c.challengeBond>0n) await ensureApprove(ADDR.CommitStakeV2,c.challengeBond); return {tx:await cs.challenge(id),label:"challenge"}; });
-$("aArbOver").onclick     = action(async (cs,id)=>({tx:await cs.arbitrate(id,true),  label:"arbitrate OVERTURN"}));
-$("aArbUphold").onclick   = action(async (cs,id)=>({tx:await cs.arbitrate(id,false), label:"arbitrate UPHOLD"}));
-$("aFinalize").onclick    = action(async (cs,id)=>({tx:await cs.finalize(id),        label:"finalize"}));
+
+function action(fn){ return async ()=>{ if(!need())return;
+  const id = BigInt($("inspectId").value||"0");
+  try{
+    const label0 = fn.__label || "";
+    const why = label0 ? await whyBlocked(label0, id).catch(()=>null) : null;
+    if(why){ alert(why); return; }
+    const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, signer);
+    const {tx,label} = await fn(cs,id); const d=logTx(label, tx.hash); await tx.wait(); await done(d); loadState();
+  }catch(e){
+    const raw = (e.shortMessage||e.message||"")+"";
+    if(/user rejected|ACTION_REJECTED/i.test(raw)){ alert("You rejected the signature in your wallet, nothing was sent."); return; }
+    const why = await whyBlocked(fn.__label||"", id).catch(()=>null);
+    alert(why || ("Failed: " + raw));
+  } };
+}
+const labelled = (l, fn) => { fn.__label = l; return fn; };
+$("aResolvePass").onclick = action(labelled("resolve PASS", async (cs,id)=>({tx:await cs.resolve(id,true),  label:"resolve PASS"})));
+$("aResolveFail").onclick = action(labelled("resolve FAIL", async (cs,id)=>({tx:await cs.resolve(id,false), label:"resolve FAIL"})));
+$("aChallenge").onclick   = action(labelled("challenge", async (cs,id)=>{ const c=await cs.get(id); if(c.challengeBond>0n) await ensureApprove(ADDR.CommitStakeV2,c.challengeBond); return {tx:await cs.challenge(id),label:"challenge"}; }));
+$("aArbOver").onclick     = action(labelled("arbitrate OVERTURN", async (cs,id)=>({tx:await cs.arbitrate(id,true),  label:"arbitrate OVERTURN"})));
+$("aArbUphold").onclick   = action(labelled("arbitrate UPHOLD", async (cs,id)=>({tx:await cs.arbitrate(id,false), label:"arbitrate UPHOLD"})));
+$("aFinalize").onclick    = action(labelled("finalize", async (cs,id)=>({tx:await cs.finalize(id),        label:"finalize"})));
 
 refresh(); setInterval(refresh, 15000);
 

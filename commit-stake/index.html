@@ -686,7 +686,15 @@ $("createBtn").onclick = async () => {
     toast("Creating commitment…");
     const tx = await csWrite().create(verifier, beneficiary, amount, deadline, goal);
     const rc = await tx.wait();
-    toast("Commitment created", "good", rc.hash);
+    // Hand the id to the Manage tab: every next step (load, PASS, FAIL, claim) needs it typed in.
+    let id = null;
+    try {
+      const cs = new ethers.Contract(csAddress(), CS_ABI, read);
+      id = (await cs.nextId()) - 1n;
+      $("mId").value = id.toString();
+      renderCommitment(id.toString(), await cs.get(id));
+    } catch { }
+    toast(id != null ? `Commitment #${id} created` : "Commitment created", "good", rc.hash);
     loadInfo();
   } catch (e) { toast("Failed: " + (e.shortMessage || e.message), "bad"); }
 };
