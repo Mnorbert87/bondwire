@@ -722,7 +722,15 @@ $("lockBtn").onclick = async () => {
     await ensureChain();
     toast("Locking bond…");
     const tx = await ab(signer).lock(agent, creditor, amount, deadline); const rc = await tx.wait();
-    toast("Obligation opened", "good", rc.hash);
+    // Hand the id back. Without it the enforcer has locked someone's bond and cannot say
+    // which obligation to release or slash, which is the only reason to open one.
+    let id = null;
+    try { id = (await ab().nextObligationId()) - 1n; } catch { }
+    if (id != null) {
+      $("oId").value = id.toString();
+      try { renderObligation(id.toString(), await ab().getObligation(id)); } catch { }
+    }
+    toast(id != null ? `Obligation #${id} opened` : "Obligation opened", "good", rc.hash);
     loadInfo();
   } catch (e) { toast("Failed: " + (e.shortMessage || e.message), "bad"); }
 };

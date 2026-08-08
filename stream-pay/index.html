@@ -722,7 +722,15 @@ $("createBtn").onclick = async () => {
     toast("Opening stream…");
     const tx = await spWrite().createStream(recipient, amount, start, stop, memo);
     const rc = await tx.wait();
-    toast("Stream opened", "good", rc.hash);
+    // Hand the id straight to the Manage tab. Without it the user has just opened a stream
+    // and has no way of knowing which number to type in to withdraw or cancel it.
+    let id = null;
+    try { id = (await new ethers.Contract(spAddress(), SP_ABI, read).nextId()) - 1n; } catch { }
+    if (id != null) {
+      $("mId").value = id.toString();
+      try { renderStream(id.toString(), await new ethers.Contract(spAddress(), SP_ABI, read).get(id)); } catch { }
+    }
+    toast(id != null ? `Stream #${id} opened` : "Stream opened", "good", rc.hash);
     loadInfo();
   } catch (e) { toast("Failed: " + (e.shortMessage || e.message), "bad"); }
 };
