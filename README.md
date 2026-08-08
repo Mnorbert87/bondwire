@@ -103,9 +103,10 @@ Three claims, each backed by something you can re-run:
    with skin in the game, and that skin is enforced on-chain, not promised.
 2. **The raid finding, closed by full accounting, not patched over.** A 4th-gate cold adversarial
    audit found that an uncapped `arbiterFee` could feed `damage` until it equalled the slice, zeroing
-   the §7a **surplus-burn**, the anti-collusion device at the core of the mechanism. The fix folds
-   `arbiterFee` into the slice-sizing rule so `surplus = slice − damage` stays **strictly positive**
-   by construction: a colluding arbiter can never recapture the slice. Found by counting it through,
+   the §7a **surplus-burn**, the device that caps what a colluding pair can extract on an overturned
+   verdict. The fix folds `arbiterFee` into the slice-sizing rule so `surplus = slice − damage` stays
+   **strictly positive** by construction: on that branch a colluding arbiter can never recapture the
+   slice. It bounds the hole, it does not close it ([THREAT_MODEL §11](./THREAT_MODEL.md)). Found by counting it through,
    closed by counting it through. ([TEST_AUDIT.md](./contracts/commit-stake-v2/TEST_AUDIT.md))
 3. **Symbolically-verified surplus-burn, proven live.** Halmos proves solvency, surplus-positivity,
    split conservation and the fee-residue bound **for all inputs**; two on-chain artifacts show the burn

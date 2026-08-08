@@ -18,7 +18,7 @@ The honest version of what we found in our own code, including what is still ope
 
 ## 1. See the mechanism fire: two on-chain burns (~30s)
 
-I wanted to watch the anti-collusion device work, not claim it works. When a verifier's verdict gets overturned, the harmed party is paid exactly its `damage`, and whatever is left of the slashed slice (`slice − damage`) goes to `0x…dEaD`. A challenger can never be over-rewarded, and a colluding arbiter can never claw the slice back. Two transactions show it:
+I wanted to watch the overturn burn work, not claim it works. When a verifier's verdict gets overturned, the harmed party is paid exactly its `damage`, and whatever is left of the slashed slice (`slice − damage`) goes to `0x…dEaD`. A challenger can never be over-rewarded, and on that branch a colluding arbiter can never claw the slice back. Two transactions show it:
 
 | What | Burned | Transaction (open it, find the `Transfer` to `…dEaD`) |
 |---|---|---|
