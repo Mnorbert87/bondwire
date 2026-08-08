@@ -363,7 +363,10 @@ const CS_ABI = [
   "function resolve(uint256,bool)", "function finalize(uint256)",
   "function nextId() view returns (uint256)", "function totalEscrowed() view returns (uint256)",
   "function get(uint256) view returns (tuple(address staker,address verifier,address beneficiary,address arbiter,uint256 amount,uint256 verifierSlice,uint256 bondObligationId,uint256 challengeBond,uint256 challengeBondPaid,uint256 arbiterFee,uint256 feeStreamId,uint64 deadline,uint64 challengeWindow,uint64 arbiterDeadline,uint64 resolvedAt,uint64 challengedAt,bool resolvedPass,uint8 status,uint8 outcome))",
-  "event Created(uint256 indexed id, address indexed staker, address indexed verifier, address beneficiary, uint256 amount, uint64 deadline)",
+  // Must match the deployed contract exactly, or parseLog silently matches nothing and the
+  // page tells the user their commitment is "#?". Verified against the chain: topic0 of the
+  // CommitStakeV2 log in tx 0x622dc4db… is keccak("Created(uint256,address,address,uint256,uint256,uint256,string)").
+  "event Created(uint256 indexed id, address indexed staker, address indexed verifier, uint256 amount, uint256 verifierSlice, uint256 bondObligationId, string goal)",
 ];
 const SP_ABI = ["function nextId() view returns (uint256)"];
 const MC_ABI = ["function aggregate3(tuple(address target, bool allowFailure, bytes callData)[] calls) view returns (tuple(bool success, bytes returnData)[])"];
@@ -604,10 +607,14 @@ $("hConfirm").onclick = async () => {
     const rc = await tx.wait(); done();
     let id = "?";
     for (const l of rc.logs) { try { const pl = cs.interface.parseLog(l); if (pl?.name === "Created") id = pl.args.id.toString(); } catch { } }
+    // Belt and braces: an id the user cannot read is a dead end, because every next step
+    // (Load, PASS, Finalize) needs it typed in. If the log did not parse, ask the contract.
+    if (id === "?") { try { id = ((await cs.nextId()) - 1n).toString(); } catch { } }
     $("hId").value = id === "?" ? "" : id;
     hPending = null; $("hPreview").style.display = "none";
     setStatus(`Commitment #${id} created. The verifier resolves, then finalize settles the money.`);
     loadCommit().catch(() => {});
+    stats().catch(() => {});   // the tiles are read once on load; a write must move them
   } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
   finally { $("hConfirm").disabled = false; }
 };
@@ -622,14 +629,48 @@ async function loadCommit() {
     `<b>verdict</b><span>${Number(c.resolvedAt) ? (c.resolvedPass ? "PASS" : "FAIL") + " @ " + new Date(Number(c.resolvedAt) * 1000).toLocaleTimeString() : "not yet"}</span>`;
 }
 $("hLoad").onclick = () => loadCommit().catch(e => setStatus(e.shortMessage || e.message, true));
+
+// Why a preflight and not a nicer error message: measured 2026-08-08 against the deployed
+// contract, a finalize one second early comes back as "missing revert data" — the Arc RPC
+// does not return the revert reason on the gas estimate, so the WINDOW_OPEN string never
+// reaches the page. The state that makes the call legal is readable, so read it first.
+async function blockedBecause(label, id) {
+  const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, ro);
+  let c; try { c = await cs.get(id); } catch { return `Commitment #${id} does not exist on this contract.`; }
+  const st = Number(c.status);                      // 0 None · 1 Open · 2 Resolved · 3 Challenged · 4 Finalized
+  if (st === 0) return `Commitment #${id} does not exist on this contract.`;
+  if (st === 4) return `Commitment #${id} is already settled, there is nothing left to do.`;
+  if (label === "finalize") {
+    if (st === 1) return "Nobody has posted a verdict yet. The verifier resolves first, then finalize settles the money.";
+    const opensAt = (Number(c.resolvedAt) + Number(c.challengeWindow)) * 1000;
+    const left = Math.ceil((opensAt - Date.now()) / 1000);
+    if (st === 2 && left > 0)
+      return `The challenge window is still open, which is the point of it. Finalize unlocks in ${left}s, at ${new Date(opensAt).toLocaleTimeString()}.`;
+  }
+  if (label.startsWith("resolve")) {
+    if (st !== 1) return `Commitment #${id} already has a verdict on chain.`;
+    if (me && c.verifier.toLowerCase() !== me.toLowerCase())
+      return `Only the verifier on this commitment (${c.verifier.slice(0, 10)}…) can post the verdict.`;
+  }
+  return null;
+}
+
 const act = (fn, label) => async () => {
+  const id = Number($("hId").value);
   try {
     needSigner();
-    const id = Number($("hId").value); if (!Number.isInteger(id) || id < 1) { setStatus("Load a commitment id first.", true); return; }
+    if (!Number.isInteger(id) || id < 1) { setStatus("Load a commitment id first.", true); return; }
+    const why = await blockedBecause(label, id).catch(() => null);
+    if (why) { setStatus(why, true); return; }
     const cs = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, signer);
     const tx = await fn(cs, id); const done = logTx(label, tx.hash); await tx.wait(); done();
-    setStatus(label + " confirmed."); loadCommit().catch(() => {});
-  } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
+    setStatus(label + " confirmed."); loadCommit().catch(() => {}); stats().catch(() => {});
+  } catch (e) {
+    if (e.message === "no signer") return;
+    const raw = (e.shortMessage || e.message || "") + "";
+    setStatus(/user rejected|ACTION_REJECTED/i.test(raw)
+      ? "You rejected the signature in your wallet, nothing was sent." : raw, true);
+  }
 };
 $("hPass").onclick = act((cs, id) => cs.resolve(id, true), "resolve PASS");
 $("hFail").onclick = act((cs, id) => cs.resolve(id, false), "resolve FAIL");
@@ -651,7 +692,7 @@ $("bDeposit").onclick = async () => {
     await ensureApprove(ADDR.AgentBond, amt);
     const ab = new ethers.Contract(ADDR.AgentBond, AB_ABI, signer);
     const tx = await ab.deposit(amt); const done = logTx("bond deposit", tx.hash); await tx.wait(); done();
-    setStatus("Bond posted."); refreshBond();
+    setStatus("Bond posted."); refreshBond(); stats().catch(() => {});
   } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
 };
 $("bWithdraw").onclick = async () => {
@@ -660,7 +701,7 @@ $("bWithdraw").onclick = async () => {
     const ab = new ethers.Contract(ADDR.AgentBond, AB_ABI, signer);
     const tx = await ab.withdraw(U($("bAmt").value || "5"));
     const done = logTx("bond withdraw", tx.hash); await tx.wait(); done();
-    setStatus("Withdrawn."); refreshBond();
+    setStatus("Withdrawn."); refreshBond(); stats().catch(() => {});
   } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
 };
 $("bAllowBtn").onclick = async () => {
