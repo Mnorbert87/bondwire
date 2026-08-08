@@ -15,13 +15,30 @@
 // only checked for a clean refusal, never executed. It does read the live Arc testnet RPC,
 // because a mock cannot reproduce the bigints that broke serialization in the first place.
 //
-// Run: node mcp/test.smoke.mjs
+// Two halves, because they fail for different reasons and only one of them is about this code:
+//
+//   --offline   handshake, tool list, schemas, the confirm gate, the missing-key refusals.
+//               No network. Deterministic. A failure here is a real regression.
+//   --live      the five key-free tools called against Arc testnet. A failure here is either
+//               a real regression OR the public RPC throttling a CI runner, which it does.
+//
+// Exit codes follow the SDK preflight convention: 0 pass, 1 real failure, 2 the live RPC is
+// unreachable so the on-chain half never ran. Never silently green — code 2 says out loud
+// that nothing was measured.
+//
+// Run: node mcp/test.smoke.mjs [--offline|--live]   (no flag = both)
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { BONDWIRE } from "./lib/bondwire.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SERVER = join(HERE, "server.mjs");
+
+const MODE = process.argv.includes("--offline") ? "offline"
+  : process.argv.includes("--live") ? "live" : "both";
+const doOffline = MODE !== "live";
+const doLive = MODE !== "offline";
 
 const READ_ONLY = [
   "bondwire_stats",
@@ -93,6 +110,28 @@ function payloadOf(res) {
   return Array.isArray(c) ? c.map((x) => x.text ?? "").join("\n") : "";
 }
 
+let liveSkipped = false;
+
+/** Is the public Arc RPC answering at all? Asked BEFORE the live half, not inferred from a
+ *  tool failure afterwards — "the RPC is throttling a CI runner" and "the tool is broken"
+ *  produce the same red X, and only one of them is this repo's problem. The public endpoint
+ *  throttles rather than blocks, so this is a real CI failure mode, not a hypothetical. */
+async function rpcReachable() {
+  for (const attempt of [1, 2, 3]) {
+    try {
+      const r = await fetch(BONDWIRE.rpcUrl, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_chainId", params: [] }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (r.ok && (await r.json())?.result) return true;
+    } catch { /* fall through to the retry */ }
+    if (attempt < 3) await new Promise((r) => setTimeout(r, 3000 * attempt));
+  }
+  return false;
+}
+
 async function main() {
   console.log("\n[handshake]");
   const init = await rpc("initialize", {
@@ -120,7 +159,6 @@ async function main() {
     ok(!!t.inputSchema, `${t.name} declares an input schema`);
   }
 
-  console.log("\n[read only tools — no AGENT_PRIVATE_KEY set]");
   const args = {
     bondwire_stats: {},
     bondwire_passport: { agent: AIDEN },
@@ -130,6 +168,16 @@ async function main() {
       verifier: AIDEN, beneficiary: AIDEN, arbiter: ARBITER, amountUsdc: "1",
     },
   };
+
+  if (!doLive) {
+    console.log("\n[read only tools] skipped — offline half only");
+  } else if (!(await rpcReachable())) {
+    // Not a pass and not a failure: the half that touches the chain never ran. Saying so is
+    // the whole point — a green run that measured nothing is worse than a red one.
+    console.log(`\n  ⚠ live Arc RPC unreachable (${BONDWIRE.rpcUrl}) — on-chain reads NOT run`);
+    liveSkipped = true;
+  } else {
+  console.log("\n[read only tools — no AGENT_PRIVATE_KEY set]");
   for (const name of READ_ONLY) {
     let res;
     try {
@@ -151,6 +199,27 @@ async function main() {
     ok(!/serialize a BigInt/i.test(body), `${name} did not hit the BigInt serializer`);
   }
 
+  // Needs the chain: the previewId only exists once a quote has read the verifier's passport.
+  console.log("\n[execute — past the confirm gate, stopped only by the missing key]");
+  const quoted = await rpc("tools/call", {
+    name: "bondwire_commit_quote", arguments: args.bondwire_commit_quote,
+  });
+  let previewId = null;
+  try { previewId = JSON.parse(payloadOf(quoted)).previewId; } catch { /* stays null */ }
+  ok(!!previewId, "quote handed back a previewId to spend");
+  const exec = await rpc("tools/call", {
+    name: "bondwire_commit_execute",
+    arguments: { previewId: previewId ?? "bw_none", confirmed: true },
+  });
+  const execBody = payloadOf(exec);
+  ok(exec.result?.isError === true, "bondwire_commit_execute stopped", execBody.slice(0, 120));
+  ok(/AGENT_PRIVATE_KEY/.test(execBody),
+    "bondwire_commit_execute stopped at the missing key, not at the preview",
+    execBody.slice(0, 160));
+  }
+
+  if (!doOffline) return;
+
   console.log("\n[value moving tools — the confirm gate]");
   // Schema-VALID arguments with confirmed:false. The first version of this test passed
   // garbage, every tool bounced off zod's type check, and the run went green without the
@@ -170,23 +239,16 @@ async function main() {
   }
 
   console.log("\n[value moving tools — no key, no signature]");
-  // Now past the confirm gate, so the ONLY thing left between this call and a signature is
-  // the missing key. Safe because AGENT_PRIVATE_KEY was stripped from the child's env above:
-  // a wallet cannot be constructed, so nothing can sign whatever the caller's shell holds.
-  const quoted = await rpc("tools/call", {
-    name: "bondwire_commit_quote", arguments: args.bondwire_commit_quote,
-  });
-  let previewId = null;
-  try { previewId = JSON.parse(payloadOf(quoted)).previewId; } catch { /* stays null */ }
-  ok(!!previewId, "quote handed back a previewId to spend");
-
+  // Past the confirm gate, so the ONLY thing left between this call and a signature is the
+  // missing key — and needSigner() throws before it ever reaches the network, which is why
+  // this belongs in the offline half. Safe because AGENT_PRIVATE_KEY was stripped from the
+  // child's env above: no wallet can be built out of whatever the caller's shell holds.
   const signing = {
-    bondwire_commit_execute: { previewId: previewId ?? "bw_none", confirmed: true },
     bondwire_resolve: { id: 1, passed: true, confirmed: true },
     bondwire_finalize: { id: 1, confirmed: true },
   };
-  for (const name of VALUE_MOVING) {
-    const res = await rpc("tools/call", { name, arguments: signing[name] });
+  for (const [name, argv] of Object.entries(signing)) {
+    const res = await rpc("tools/call", { name, arguments: argv });
     const body = payloadOf(res);
     ok(res.result?.isError === true, `${name} stopped at the missing key`, body.slice(0, 120));
     ok(/AGENT_PRIVATE_KEY/.test(body),
@@ -204,6 +266,20 @@ main()
   .finally(() => {
     proc.kill();
     if (failed && stderr.trim()) console.log("\n[server stderr]\n" + stderr.trim().slice(0, 2000));
-    console.log(`\n${failed === 0 ? "✅ PASS" : "❌ " + failed + " FAILURE(S)"} — MCP server surface (8 tools, 5 called without a key)`);
-    process.exit(failed === 0 ? 0 : 1);
+    const scope = MODE === "both" ? "8 tools, 5 called without a key"
+      : MODE === "offline" ? "tool list, schemas, gates — no network"
+      : "the five key-free tools against Arc testnet";
+    if (failed) {
+      console.log(`\n❌ ${failed} FAILURE(S) — MCP server surface (${scope})`);
+      process.exit(1);
+    }
+    if (liveSkipped) {
+      // Exit 2, never 0: the on-chain half measured nothing, and a green tick that means
+      // "did not run" is the failure mode this whole file exists to prevent.
+      console.log(`\n⚠️  NOT MEASURED — live Arc RPC unreachable`
+        + `${doOffline ? "; the offline half passed" : ""} (${scope})`);
+      process.exit(2);
+    }
+    console.log(`\n✅ PASS — MCP server surface (${scope})`);
+    process.exit(0);
   });
