@@ -200,7 +200,10 @@ ROSTER=$(printf ' %s %s %s %s %s %s ' \
   "${SUPERSEDED[*]}" "$(printf '%s' "$KNOWN_OTHER" | sed 's/#.*//')" \
   | tr 'A-F' 'a-f' | tr -s ' \n' '  ')
 UNKNOWN=0
-for a in $(TRACKED | xargs grep -ohE '0x[a-fA-F0-9]{40}([^a-fA-F0-9]|$)' 2>/dev/null \
+# vendor/ is third party code we ship verbatim, not a document making a claim. The ethers
+# bundle carries the ENS registry address and the zero address in its own source, and this
+# check exists to catch a typo'd Bondwire address, not to audit a dependency.
+for a in $(TRACKED | grep -v '^vendor/' | xargs grep -ohE '0x[a-fA-F0-9]{40}([^a-fA-F0-9]|$)' 2>/dev/null \
            | sed -E 's/[^a-fA-F0-9]$//' | tr 'A-F' 'a-f' | sort -u); do
   case "$ROSTER" in
     *" $a "*) : ;;
@@ -208,7 +211,8 @@ for a in $(TRACKED | xargs grep -ohE '0x[a-fA-F0-9]{40}([^a-fA-F0-9]|$)' 2>/dev/
        UNKNOWN=$((UNKNOWN+1)) ;;
   esac
 done
-[ "$UNKNOWN" = 0 ] && ok "every 0x… address in the docs is a known one"
+VENDORED=$(TRACKED | grep -c '^vendor/' || true)
+[ "$UNKNOWN" = 0 ] && ok "every 0x… address in the docs is a known one (${VENDORED} vendored file(s) excluded, third party source)"
 
 # --------------------------------------------------------- transaction roster
 # The third blind spot measured 2026-08-06: changing the last hex digit of a
