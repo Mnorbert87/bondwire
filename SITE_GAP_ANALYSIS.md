@@ -1,5 +1,32 @@
 # Bondwire site gap analysis
 
+> **Status, 2026-08-08.** Everything in section 2 below except the npm republish has since
+> been fixed and is live on bondwire.dev. The findings are left in place unedited, because a
+> list of what was wrong is worth more to a reader than a list of what was fixed, and because
+> the fixes should be checked rather than believed. Verify anything here against the live
+> site; where the site and this document disagree, the site is newer.
+>
+> | item | state on 2026-08-08 | how it was checked |
+> |---|---|---|
+> | B1 hero numbers | fixed | tiles render an em dash until the RPC answers; live read 20.00 / 8 / 4 / 0.96 |
+> | B2 unlimited allowance, no address on /app/ | fixed | the page asks for an amount, defaulting to the bond actually held; six addresses shown before signing |
+> | B3 buried proof | fixed | deck, judge path, architecture and the demo reachable from the landing page |
+> | B4 phones | fixed | Chromium at 390px, nine pages, scrollWidth 390 on every one |
+> | B5 orphan pages, stray comma | fixed | every wallet page has a way back; 25 comma placeholders replaced, live sweep finds none |
+> | B6 head meta | fixed | canonical, icon, OG and theme-color on /app/ and /bonded-verifier/ |
+> | B7 LICENSE, repo metadata | fixed | GitHub API reports MIT, a description, a homepage and eight topics |
+> | B7 npm `bondwire-sdk@0.2.0` | **open** | still ships pre-redeploy addresses; needs an npm login the CI does not have |
+> | B8 ethers on a CDN | fixed | vendored; with esm.sh aborted at the network layer every page still reads the chain |
+> | B9 empty wallet dead end | fixed | every wallet page links the faucet and states the chain id |
+> | B10 x402 link, deck URLs | fixed | the CTA goes to /x402-demo/; no github.io left in deck.html |
+>
+> Found in the same pass and also fixed, none of them in the list below: /app/ reported
+> "Commitment #?" after a successful escrow because its ABI carried the predecessor's event
+> signature; /agent-bond/, /stream-pay/ and /commit-stake/ never handed back the id they had
+> just created; /bonded-verifier/ labelled every status one position off the contract's enum;
+> refused actions showed "missing revert data" because the Arc RPC omits revert reasons on a
+> gas estimate.
+
 Merged from six review lenses (hackathon judge, product design, web3 security, frontend engineering, legal ops, devrel), deduplicated, and re-measured against the live site on 2026-08-07.
 
 Measurement method for the chain figures below: `eth_call` `balanceOf` on USDC `0x3600…0000` against `https://rpc.testnet.arc.network`, run directly, not read from a doc. Live pages fetched with `curl -H 'Cache-Control: no-cache' 'https://bondwire.dev/…?cb=<nonce>'`.
