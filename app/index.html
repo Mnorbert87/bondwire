@@ -707,20 +707,43 @@ $("bWithdraw").onclick = async () => {
 $("bAllowBtn").onclick = async () => {
   try {
     needSigner();
-    // This is an unlimited allowance. The wallet will only show a bare address, so say out loud
-    // what it means and which contract gets it, before anything is signed.
-    const okAllow = confirm(
-      "Give UNLIMITED slash allowance?\n\n" +
-      "Contract: CommitStakeV2\n" + ADDR.CommitStakeV2 + "\n\n" +
-      "It lets that contract lock and slash your bond behind verdicts you signed up to. " +
-      "It is testnet USDC with no monetary value, and you can set the allowance back to zero at any time.\n\n" +
-      "Check the address against the one shown at the top of this page before you continue."
+    // A site whose entire argument is "do not trust, verify" should not be the one asking for
+    // an unlimited allowance. Default to what the bond is actually worth; unlimited stays
+    // available for anyone who types it, and the wallet will only show a bare address either
+    // way, so the contract is named here before anything is signed.
+    const abRo = new ethers.Contract(ADDR.AgentBond, AB_ABI, ro);
+    let suggested = "0";
+    try { suggested = fmt(await abRo.bond(me)); } catch { }
+    if (!Number(suggested)) suggested = "10";
+    const answer = prompt(
+      "How much of your bond may CommitStakeV2 lock and slash?\n\n" +
+      "Contract: CommitStakeV2\n" + ADDR.CommitStakeV2 + "\n" +
+      "Check that address against the one at the top of this page.\n\n" +
+      "It can lock and slash up to this amount behind verdicts you signed up to. Set it back to 0\n" +
+      "at any time. Testnet USDC, no monetary value.\n\n" +
+      'Amount in USDC, or type "max" for unlimited:',
+      suggested
     );
-    if (!okAllow) { setStatus("Allowance not given."); return; }
+    if (answer === null || !answer.trim()) { setStatus("Allowance not given, nothing was signed."); return; }
+    const wants = answer.trim().toLowerCase();
+    let allowance;
+    if (wants === "max" || wants === "unlimited") {
+      if (!confirm("Unlimited means this contract can lock and slash your whole bond, now and after any future deposit. Continue?")) {
+        setStatus("Allowance not given, nothing was signed."); return;
+      }
+      allowance = ethers.MaxUint256;
+    } else if (!/^\d+(\.\d+)?$/.test(wants)) {
+      setStatus('Enter a number in USDC, or "max".', true); return;
+    } else {
+      allowance = U(wants);
+    }
     const ab = new ethers.Contract(ADDR.AgentBond, AB_ABI, signer);
-    const tx = await ab.setSlashAllowance(ADDR.CommitStakeV2, ethers.MaxUint256);
+    const tx = await ab.setSlashAllowance(ADDR.CommitStakeV2, allowance);
     const done = logTx("set slash allowance", tx.hash); await tx.wait(); done();
-    setStatus("Escrow may now lock and slash your bond behind verdicts you sign."); refreshBond();
+    setStatus(allowance === ethers.MaxUint256
+      ? "Unlimited allowance set. CommitStakeV2 may lock and slash your bond behind verdicts you sign."
+      : `Allowance set to ${wants} USDC. CommitStakeV2 may lock and slash up to that much behind verdicts you sign.`);
+    refreshBond();
   } catch (e) { if (e.message !== "no signer") setStatus(e.shortMessage || e.message, true); }
 };
 
