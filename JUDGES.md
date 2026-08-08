@@ -4,7 +4,7 @@ Everything here is something you can click or run. I am not asking you to trust 
 
 ## If you have 30 seconds, look at four things
 
-1. **The burn is real.** Click the first transaction below. You will see a USDC `Transfer` of 1.45 USDC straight to `0x…dEaD`. That is the surplus burn that makes it pointless for a verifier to collude, and it actually happened on chain.
+1. **The burn is real.** Click the first transaction below. You will see a USDC `Transfer` of 1.45 USDC straight to `0x…dEaD`. That is the surplus burn on an **overturned** verdict: whatever is left of the slashed slice is destroyed, so there is nothing for a colluding pair to split. It actually happened on chain. It is an overturn-branch device, not a general anti-collusion guarantee — on an *uphold* nothing burns, and THREAT_MODEL §11 states the path where that matters.
 2. **The code is verified.** `CommitStakeV2` at [`0xf3457ABf…af1474`](https://testnet.arcscan.app/address/0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474) is Blockscout exact-match verified. The source in this repo is the deployed bytecode, byte for byte.
 3. **An agent can drive it without a UI.** [`mcp/`](./mcp/) is an MCP server: an LLM agent checks a
    counterparty's Agent Passport and opens a bonded escrow from its own tool loop. Every
