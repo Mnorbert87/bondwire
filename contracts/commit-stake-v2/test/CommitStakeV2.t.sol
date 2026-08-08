@@ -631,6 +631,9 @@ contract CommitStakeV2Test is V2TestBase {
         uint256 id = createChallenged(false); // staker frivolously challenges a fail
         uint256 beneficiaryBefore = usdc.balanceOf(beneficiary);
         uint256 stakerBefore = usdc.balanceOf(staker);
+        uint256 verifierWalletBefore = usdc.balanceOf(verifier);
+        uint256 arbiterBefore = usdc.balanceOf(arbiter);
+        uint256 freeBefore = agentBond.freeBondOf(verifier);
 
         vm.prank(arbiter);
         cs.arbitrate(id, false);
@@ -638,6 +641,18 @@ contract CommitStakeV2Test is V2TestBase {
         assertOutcome(id, CommitStakeV2.Outcome.UpheldFail);
         assertEq(usdc.balanceOf(beneficiary), beneficiaryBefore + STAKE);
         assertEq(usdc.balanceOf(staker), stakerBefore, "challenger bond slashed");
+        // Asserting only that the challenger LOST the bond leaves the destination unchecked, so a
+        // mutation that routed it anywhere else would still pass. This branch is also the one an
+        // uphold-collusion path runs through (THREAT_MODEL §11), which makes where the money lands
+        // the interesting fact rather than an incidental one.
+        assertEq(usdc.balanceOf(arbiter), arbiterBefore + ARB_FEE, "arbiter paid for ruling");
+        assertEq(
+            usdc.balanceOf(verifier),
+            verifierWalletBefore + (BOND - ARB_FEE),
+            "challenge bond remainder to the verifier whose verdict stood"
+        );
+        assertEq(agentBond.freeBondOf(verifier), freeBefore + SLICE, "slice released, not burned");
+        assertEq(usdc.balanceOf(BURN), 0, "uphold burns nothing");
         assertEq(usdc.balanceOf(address(cs)), 0);
     }
 
