@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
 <title>Bondwire — pitch deck</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -108,6 +110,11 @@
      to portrait letter and squeezes every 1280x720 slide into a page it does not
      fit, which is what a judge downloading the deck would have received. */
   @page{ size:1280px 720px; margin:0; }
+  /* The slides are a fixed 1280x720 by design, which on a phone meant a 1280px wide page with
+     no viewport meta and no way to read it. Measured before this: scrollWidth 1280 at a 390px
+     viewport. The scale factor cannot be expressed in CSS — zoom takes a number and CSS cannot
+     divide 100vw by a length — so it is set from script below, on load and on resize. */
+  body{ overflow-x:hidden; }
   @media print{
     body{background:#000;}
     .slide{ width:1280px; height:720px; box-shadow:none; }
@@ -370,5 +377,18 @@
   <div class="num">10</div>
 </section>
 
+<script>
+// Fit the fixed-width deck to the screen. zoom rather than transform: scale, because zoom
+// shrinks the layout box too, so the page stops scrolling sideways instead of only looking smaller.
+(function fit(){
+  var apply = function(){
+    var k = Math.min(1, window.innerWidth / 1280);
+    var slides = document.querySelectorAll('.slide');
+    for (var i = 0; i < slides.length; i++) slides[i].style.zoom = k;
+  };
+  apply();
+  window.addEventListener('resize', apply);
+})();
+</script>
 </body>
 </html>
