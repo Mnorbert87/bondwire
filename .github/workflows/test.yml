@@ -71,3 +71,34 @@ jobs:
 
       - name: Compare every SDK fragment to the compiled artifact
         run: node sdk/test.abi-conformance.mjs
+
+  # The MCP server is the Track 4 surface — the tools an agent calls in its own loop — and it
+  # had no automated coverage at all until 2026-08-08. That absence, not any single bug, is
+  # the finding: `bondwire_commitment` shipped returning "Do not know how to serialize a
+  # BigInt" for every id, because nothing outside a human's terminal ever called it.
+  #
+  # This job speaks JSON-RPC to the real server over stdio: lists the 8 tools and calls the 5
+  # that need no key. Verified by control, not by going green — run against the pre-fix server
+  # (402aa20^) it fails 3 assertions with that exact BigInt message.
+  #
+  # No key is set, so the value-moving tools can only be checked for a clean refusal; they
+  # cannot sign. It does read the live Arc testnet RPC, deliberately: a mock cannot produce
+  # the bigints that broke serialization.
+  mcp-smoke:
+    name: mcp server surface
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install MCP server dependencies
+        working-directory: mcp
+        run: npm install --no-audit --no-fund
+
+      - name: Drive the server as a client
+        working-directory: mcp
+        run: node test.smoke.mjs
