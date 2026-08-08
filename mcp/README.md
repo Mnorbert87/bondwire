@@ -38,7 +38,12 @@ signs the stored params, not arguments read again.
 
 ```bash
 npx bondwire-mcp        # once published; until then:
-git clone https://github.com/Mnorbert87/bondwire.git && cd bondwire/mcp && npm i
+git clone https://github.com/Mnorbert87/bondwire.git
+cd bondwire
+npm install             # root: ethers. server.mjs imports ../sdk/bondwire.js, and Node
+                        # resolves that file's own imports upward from sdk/, so a install
+                        # inside mcp/ alone leaves it unresolved and the server exits.
+cd mcp && npm i         # the MCP SDK and zod
 ```
 
 Claude Desktop / any MCP client config:
