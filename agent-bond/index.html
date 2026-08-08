@@ -272,6 +272,20 @@
     font-family: "Space Grotesk"; font-weight: 700; color: #04111f; background: linear-gradient(135deg, var(--c2), var(--c1));
     box-shadow: 0 6px 16px rgba(54,160,255,0.32); }
   .about .step b { color: var(--ink); }
+
+  /* Judges browse on phones. Measured at a 390px viewport before this block:
+     bonded-verifier 504px wide, commit-stake 412, agent-bond 396, stream-pay 392.
+     The overflowing element was usually the Connect button or an un-breakable address. */
+  @media (max-width: 600px) {
+    header { padding: 11px 14px; gap: 10px; flex-wrap: wrap; }
+    header .tag, header .net-badge, .brand small { display: none; }
+    main, .wrap, .container { padding-left: 14px; padding-right: 14px; }
+    button, .btn, #connect, #connectBtn { max-width: 100%; white-space: normal; }
+    .kv { grid-template-columns: 1fr; gap: 2px 0; }
+    .kv b { margin-top: 8px; }
+    .mono, code, .addr { overflow-wrap: anywhere; word-break: break-all; }
+    table { font-size: 12px; }
+  }
 </style>
 </head>
 <body>
@@ -289,7 +303,8 @@
   </div>
   <div style="display:flex; align-items:center; gap:12px;">
     <span id="netBadge" class="net-badge"><span class="dot"></span>not connected</span>
-    <button id="connectBtn" class="primary">Connect Wallet</button>
+  <a href="../" class="back-link" style="font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:9px 15px;white-space:nowrap;">&larr; All dApps</a>
+  <button id="connectBtn" class="primary">Connect Wallet</button>
   </div>
 </header>
 
@@ -474,7 +489,7 @@ let provider, signer, account, usdcAddr, usdcDecimals = 6;
 
 const $ = (id) => document.getElementById(id);
 const abAddress = () => (localStorage.getItem("ab_addr") || DEFAULT_AB);
-const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : ", ";
+const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : "not connected";
 const fmt = (v) => ethers.formatUnits(v, usdcDecimals);
 
 function countTo(el, target, decimals) {
@@ -517,7 +532,7 @@ document.querySelectorAll(".tab").forEach((b) => b.onclick = () => {
 
 function syncChips() {
   $("abChip").textContent = short(abAddress());
-  $("usdcChip").textContent = usdcAddr ? short(usdcAddr) : ", ";
+  $("usdcChip").textContent = usdcAddr ? short(usdcAddr) : "not connected";
   $("explorer").href = `${EXPLORER}/address/${abAddress()}`;
   $("footExplorer").href = `${EXPLORER}/address/${abAddress()}`;
 }

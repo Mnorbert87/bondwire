@@ -115,6 +115,9 @@
 
   <div id="status">Reading AgentBond on Arc testnet…</div>
 
+  <!-- html/body set overflow-x:hidden, so without this inner scroller the rightmost
+       columns (obligations, SLASHED) are clipped and unreachable on a phone. -->
+  <div id="tblWrap" style="display:none; overflow-x:auto; -webkit-overflow-scrolling:touch;">
   <table id="tbl" style="display:none;">
     <thead><tr>
       <th>Agent</th><th class="num">Score</th><th>Tier</th>
@@ -123,6 +126,7 @@
     </tr></thead>
     <tbody id="rows"></tbody>
   </table>
+  </div>
 
   <div class="foot">
     Source: AgentBond <code id="srcAddr"></code> · enumerated via Multicall3 ·
@@ -243,6 +247,7 @@ async function load() {
     $("status").style.display = "none";
     $("bar").style.display = "flex";
     $("tbl").style.display = "table";
+    $("tblWrap").style.display = "block";
     render("score");
   } catch (e) {
     console.error(e);
@@ -258,5 +263,13 @@ document.querySelectorAll(".sort button").forEach((b) => b.onclick = () => {
 
 load();
 </script>
+
+<footer style="margin:44px auto 26px;max-width:980px;padding:0 20px;font-size:12px;color:var(--muted);line-height:1.85;text-align:center">
+  <a href="../" style="color:var(--muted);text-decoration:none">Bondwire</a> ·
+  <a href="https://github.com/Mnorbert87/bondwire" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:none">Source</a> ·
+  <a href="mailto:cryptophantomhungary@gmail.com" style="color:var(--muted);text-decoration:none">Contact</a> ·
+  <a href="mailto:cryptophantomhungary@gmail.com?subject=BONDWIRE%20SECURITY" style="color:var(--muted);text-decoration:none">Report a security issue</a><br>
+  Arc testnet only. Testnet USDC has no monetary value and these contracts are unaudited. Do not connect a wallet that holds real assets.
+</footer>
 </body>
 </html>
