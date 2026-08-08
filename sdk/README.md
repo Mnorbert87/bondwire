@@ -17,7 +17,12 @@ git clone https://github.com/Mnorbert87/bondwire.git
 cp bondwire/sdk/bondwire.js .
 ```
 
-> Not on npm (yet), the SDK is a single zero dependency ESM file; vendoring it is the supported install.
+> **On npm, `bondwire-sdk@0.2.0` is stale and wrong.** It was published 2026-07-22 and carries the
+> pre-redeploy addresses, superseded on 2026-07-31, and an `AgentBond.getObligation` tuple missing
+> the `allowanceEpoch` field the deployed contract returns. That second one does not throw: decoded
+> with the published ABI, obligation 1 reads `status = 1` (Active) when the chain says `2`
+> (Released). Until 0.3.0 is published, copy `bondwire.js` from this repository. The file here is
+> correct, single file, zero dependency, and vendoring it is the supported install either way.
 
 ## 10-line integration
 
