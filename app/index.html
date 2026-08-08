@@ -189,6 +189,17 @@
     <button id="connect">Connect wallet</button>
   </div>
 </header>
+<!-- A judge who clicks Connect with an empty wallet used to dead end here: no gas,
+     no USDC, and no instruction anywhere on the page. Chain add is automatic in the
+     connect flow, so the only thing missing was where the money comes from. -->
+<div style="border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);">
+  <p style="max-width:1080px;margin:0 auto;padding:10px 20px;font-size:12.5px;line-height:1.7;color:#8c98af;">
+    New here? This is <b style="color:#c4cede;font-weight:600;">Arc testnet</b>, chain 5042002, where USDC is both the money and the gas.
+    Get free testnet USDC from the <a href="https://faucet.circle.com" target="_blank" rel="noopener" style="color:#4da2ff;text-decoration:none;">Circle faucet &#8599;</a>, then press Connect.
+    Your wallet is asked to add the network automatically. Nothing here is worth real money.
+  </p>
+</div>
+
 
 <main>
   <div class="card rise d1">
