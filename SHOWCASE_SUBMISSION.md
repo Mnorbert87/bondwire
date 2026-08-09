@@ -79,6 +79,27 @@ published 2026-08-09 and matching this repo, or you vendor the single file from
 `sdk/bondwire.js`. The older 0.2.0 carries the superseded addresses and is
 deprecated on the registry. Fork, point at the baked in testnet addresses, go.
 
+## What is disclosed and not fixed
+
+Two findings are disclosed and not shipped. THREAT_MODEL section 12 has the first
+in full: `arbiterFee` is never escrowed at create, yet it sits in the denominator
+of both the sizing rule and the leverage cap, so a dust stake can still lock a
+verifier's entire bond and an unmeetable deadline burns it. I reproduced it
+against the deployed source rather than taking the finding on trust; the test runs
+green today. On this liveness path the attacker gains nothing, the whole slice
+burns, so it is griefing at the cost of gas. The same parameter also carries a
+theft vector, the sockpuppet arbiter profit leg in section 8, whose reimbursement
+out of the slice is tracked open, with no fix on the branch; the branch fix bounds
+the amplification to 33x rather than removing that leg.
+
+The fix is written and tested on `fix/commitstake-grief-bounds`. It is deliberately
+not merged: touching the source would break the exact match verification of the
+deployed bytecode that this submission asks you to check. It ships after judging,
+with a fresh deployment and a fresh verification.
+
+Until then, section 8 and two natspec lines still assert a bound that section 12
+refutes. I would rather you read both than only the flattering one.
+
 ## Open source commitment
 
 MIT, open now and going forward.
