@@ -15,7 +15,7 @@
 > | B5 orphan pages, stray comma | fixed | every wallet page has a way back; 25 comma placeholders replaced, live sweep finds none |
 > | B6 head meta | fixed | canonical, icon, OG and theme-color on /app/ and /bonded-verifier/ |
 > | B7 LICENSE, repo metadata | fixed | GitHub API reports MIT, a description, a homepage and eight topics |
-> | B7 npm `bondwire-sdk@0.2.0` | **open** | still ships pre-redeploy addresses; needs an npm login the CI does not have |
+> | B7 npm `bondwire-sdk@0.2.0` | fixed | 0.3.0 published and 0.2.0 deprecated 2026-08-09; a plain `npm i bondwire-sdk` resolves to 0.3.0, verified from an empty npm cache |
 > | B8 ethers on a CDN | fixed | vendored; with esm.sh aborted at the network layer every page still reads the chain |
 > | B9 empty wallet dead end | fixed | every wallet page links the faucet and states the chain id |
 > | B10 x402 link, deck URLs | fixed | the CTA goes to /x402-demo/; no github.io left in deck.html |
@@ -291,6 +291,7 @@ Also add `<meta name="theme-color" content="#060912">` to every page. On a near-
 Verified just now:
 - `ls LICENSE*` in the repo root → no match. GitHub API reports `"license": null`. `README.md:458` claims "MIT licensed." Several hackathons, Encode included, require an OSI-approved license **file** as a submission condition, and an eligibility check looks at the sidebar badge, not at a sentence in a 35 KB README.
 - GitHub API: `"description": null`, `"topics": []`, `"homepage": "https://mnorbert87.github.io/bondwire/"`. The single `GitHub ↗` link in the footer is the whole developer funnel and it lands on a repo with a blank sidebar, still advertising the pre-rebrand URL.
+- **Resolved 2026-08-09:** `bondwire-sdk@0.3.0` is published and `0.2.0` is deprecated. `latest` → 0.3.0, confirmed from the registry `dist-tags` with a cache-busted request, and an install into an empty npm cache pulls 0.3.0 and reads `status: 'Released'` off the live chain. The paragraph below is the finding as it stood before that.
 - `bondwire-sdk` on npm: latest is **0.2.0**, published 2026-07-22, and it hardcodes the **pre-redeploy** trio (`0xB9b4…f8e0`, `0x5057…2450`, `0x1f1C…8CA9`). The contracts were redeployed 2026-07-31. Anyone who runs `npm i bondwire-sdk` gets a client wired to dead contracts, and the failure is silent because the old contracts still exist and still accept calls. This is the one path a developer takes without reading the README first.
 
 **Fix, three commands:**

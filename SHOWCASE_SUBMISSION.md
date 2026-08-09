@@ -74,9 +74,10 @@ inside the SDK and documented.
 
 The main repo is the standalone: no backend, no build step for the dApps, one
 `npm i` at the root for the SDK and the demos, one more inside `mcp/` for the
-MCP server. The SDK is a single file you vendor from `sdk/bondwire.js`, not a
-registry install: the `bondwire-sdk` package on npm is still 0.2.0 and carries
-the superseded addresses. Fork, point at the baked in testnet addresses, go.
+MCP server. The SDK installs either way: `npm i bondwire-sdk` resolves to 0.3.0,
+published 2026-08-09 and matching this repo, or you vendor the single file from
+`sdk/bondwire.js`. The older 0.2.0 carries the superseded addresses and is
+deprecated on the registry. Fork, point at the baked in testnet addresses, go.
 
 ## Open source commitment
 

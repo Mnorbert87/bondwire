@@ -11,18 +11,25 @@ Addresses, chain id, and USDC's 6 decimals are baked in. You pass human USDC amo
 (`"10"` = 10 USDC); the SDK handles six decimal unit conversion and approvals.
 
 ```bash
+npm i bondwire-sdk ethers
+```
+
+Or vendor it, which stays supported either way: the SDK is one dependency free file.
+
+```bash
 npm i ethers
-# then copy sdk/bondwire.js from this repo next to your code
 git clone https://github.com/Mnorbert87/bondwire.git
 cp bondwire/sdk/bondwire.js .
 ```
 
-> **On npm, `bondwire-sdk@0.2.0` is stale and wrong.** It was published 2026-07-22 and carries the
-> pre-redeploy addresses, superseded on 2026-07-31, and an `AgentBond.getObligation` tuple missing
-> the `allowanceEpoch` field the deployed contract returns. That second one does not throw: decoded
-> with the published ABI, obligation 1 reads `status = 1` (Active) when the chain says `2`
-> (Released). Until 0.3.0 is published, copy `bondwire.js` from this repository. The file here is
-> correct, single file, zero dependency, and vendoring it is the supported install either way.
+> **Use 0.3.0 or the file in this repo. Not `bondwire-sdk@0.2.0`.** 0.2.0 was published
+> 2026-07-22 and carries the pre-redeploy addresses, superseded on 2026-07-31, plus an
+> `AgentBond.getObligation` tuple missing the `allowanceEpoch` field the deployed contract
+> returns. That second one does not throw: decoded with the published ABI, obligation 1 reads
+> `status = 1` (Active) when the chain says `2` (Released). 0.3.0 was published 2026-08-09 and
+> 0.2.0 is deprecated on the registry, so a plain `npm i bondwire-sdk` now resolves to 0.3.0 and
+> asking for 0.2.0 prints a warning. Verified the same day against a tarball pulled from the
+> registry into an empty npm cache: `getObligation(1)` → `status: 'Released'`, 1.5 USDC.
 
 ## 10-line integration
 
