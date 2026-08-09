@@ -934,7 +934,19 @@ async function loadV2() {
     $("v2Burned").textContent = usd(burnedSum);
     $("v2Bond").textContent = usd(slashedSum);
   } catch (e) {
-    $("v2tbody").innerHTML = `<tr><td colspan="5" class="empty" style="padding:22px;">Live read failed: ${(e.shortMessage||e.message)}</td></tr>`;
+    // Same rule as toast() above: a revert string is untrusted text, so it goes
+    // in as textContent. This row used to build the message with innerHTML,
+    // which contradicted the policy written a few hundred lines up.
+    const tb = $("v2tbody");
+    tb.textContent = "";
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 5;
+    td.className = "empty";
+    td.style.padding = "22px";
+    td.textContent = "Live read failed: " + (e.shortMessage || e.message);
+    tr.appendChild(td);
+    tb.appendChild(tr);
   }
 }
 $("v2Refresh").onclick = loadV2;

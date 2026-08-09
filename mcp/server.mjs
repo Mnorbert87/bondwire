@@ -239,5 +239,30 @@ server.tool(
   }
 );
 
+// ARC_RPC is overridable so an operator behind a locked-down network can point at
+// their own endpoint. Writes cannot be redirected by it — the provider pins
+// chainId 5042002 and EIP-155 binds every signature to that chain, so another
+// chain's node rejects the transaction. Reads have no such protection: a typo'd
+// or swapped endpoint would answer from the wrong chain and look fine. So probe
+// once, and only refuse on a real mismatch. A probe that cannot complete is a
+// network problem, not a wrong chain, and must not stop a judge from starting up.
+// getNetwork() is the wrong call here: the provider is built with staticNetwork,
+// so it answers 5042002 from its own config without ever asking the endpoint —
+// the check would compare the constant to itself and always pass. Measured: with
+// ARC_RPC pointed at Polygon it started clean. eth_chainId goes to the wire.
+try {
+  const seen = Number(await Bondwire.provider().send("eth_chainId", []));
+  if (seen !== BONDWIRE.chainId) {
+    throw new Error(
+      `ARC_RPC points at chain ${seen}, but this server only speaks Arc testnet ` +
+      `(${BONDWIRE.chainId}). Reads from the wrong chain would be silently wrong. ` +
+      `Unset ARC_RPC or point it at an Arc testnet endpoint.`
+    );
+  }
+} catch (e) {
+  if (/only speaks Arc testnet/.test(e.message)) throw e;
+  console.error(`[bondwire] chain id not confirmed (${e.shortMessage || e.message}); continuing.`);
+}
+
 const transport = new StdioServerTransport();
 await server.connect(transport);
