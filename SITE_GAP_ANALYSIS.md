@@ -124,7 +124,7 @@ Everything below is on the server, returns 200, and is linked from nowhere on th
 
 | Asset | State |
 |---|---|
-| Demo video (`youtube.com/watch?v=QI-dMcepg-g`, 200) | linked **once**, in a footer contact column |
+| Demo video (`youtube.com/watch?v=UZBeXoBPlIs`, 200) | linked **once**, in a footer contact column |
 | `JUDGES.md` (10 KB, 200) | zero inbound links |
 | `deck.html` and `BONDWIRE_DECK.pdf` (200) | zero inbound links |
 | `architecture.png` (1.7 MB, 200) | zero inbound links, page has **zero `<img>` elements** |
@@ -137,14 +137,14 @@ Correction to one lens: the demo video **does** exist and **is** linked, in the 
 
 1. **Header actions** (`index.html:242-245`), put the two time-boxed entry points first:
    ```html
-   <a class="back-link" href="https://www.youtube.com/watch?v=QI-dMcepg-g" target="_blank" rel="noopener" style="font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:9px 15px;background:var(--glass);">▶ Demo, 2 min</a>
+   <a class="back-link" href="https://www.youtube.com/watch?v=UZBeXoBPlIs" target="_blank" rel="noopener" style="font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:9px 15px;background:var(--glass);">▶ Demo, 2 min</a>
    <a class="back-link" href="https://github.com/Mnorbert87/bondwire/blob/main/JUDGES.md" target="_blank" rel="noopener" style="font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:9px 15px;background:var(--glass);">For judges, 2 min</a>
    <a class="nav-cta" href="./app/">Open the app</a>
    ```
    (Point `JUDGES.md` at the GitHub blob URL, not at `bondwire.dev/JUDGES.md`. GitHub renders the markdown, your own domain serves it raw.)
 
 2. **A band directly under the hero stat row**, ready to paste:
-   > **Short on time?** [JUDGES.md](https://github.com/Mnorbert87/bondwire/blob/main/JUDGES.md) is four things you can click and verify yourself in two minutes: the two onchain burn transactions, the CCTP bridge legs, the ERC-8004 identities, and one command that runs the full test suite. Or [watch the two minute walkthrough](https://www.youtube.com/watch?v=QI-dMcepg-g).
+   > **Short on time?** [JUDGES.md](https://github.com/Mnorbert87/bondwire/blob/main/JUDGES.md) is four things you can click and verify yourself in two minutes: the two onchain burn transactions, the CCTP bridge legs, the ERC-8004 identities, and one command that runs the full test suite. Or [watch the two minute walkthrough](https://www.youtube.com/watch?v=UZBeXoBPlIs).
 
 3. **The architecture diagram**, inside the "How an autonomous agent uses both" section. Compress it first, 1.7 MB is a slow first paint on conference wifi, target under 250 KB:
    ```html
