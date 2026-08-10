@@ -22,7 +22,15 @@ git clone https://github.com/Mnorbert87/bondwire.git
 cp bondwire/sdk/bondwire.js .
 ```
 
-> **Use 0.3.0 or the file in this repo. Not `bondwire-sdk@0.2.0`.** 0.2.0 was published
+> **Use the file in this repo. `bondwire-sdk@0.3.0` on the registry is now behind it.**
+> 0.3.0 carries the CommitStakeV2 address that was live between 2026-07-31 and 2026-08-10,
+> `0xf3457ABf…af1474`. That contract is still on chain and still verified, but it is the one
+> with the unbounded `arbiterFee` leverage described in THREAT_MODEL §12, and it is not what
+> this repo points at any more. The version here is 0.4.0: new address, plus `commit()` now
+> names `DEADLINE_TOO_SOON` and `ARBITER_FEE_TOO_LARGE` before signing instead of letting Arc
+> return a reasonless revert. 0.4.0 is not on the registry yet.
+>
+> **Not `bondwire-sdk@0.2.0` either.** 0.2.0 was published
 > 2026-07-22 and carries the pre-redeploy addresses, superseded on 2026-07-31, plus an
 > `AgentBond.getObligation` tuple missing the `allowanceEpoch` field the deployed contract
 > returns. That second one does not throw: decoded with the published ABI, obligation 1 reads
@@ -135,7 +143,7 @@ Explorer  https://testnet.arcscan.app
 USDC      0x3600000000000000000000000000000000000000  (native gas token + 6-dec ERC-20)
 AgentBond      0x4383Ea48837eF7e60fC22BD67945BCBf0551702c
 StreamPay      0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262
-CommitStakeV2  0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474
+CommitStakeV2  0x548532aa4B59598188D49b3e74Fdf27aaE127bb6
 ```
 
 The RPC is a default, not a requirement. Set `ARC_RPC` to use your own Arc endpoint, which is

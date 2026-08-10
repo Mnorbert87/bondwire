@@ -5,7 +5,7 @@
   "explorer": "https://testnet.arcscan.app"
  },
  "contract": {
-  "CommitStakeV2": "0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474",
+  "CommitStakeV2": "0x548532aa4B59598188D49b3e74Fdf27aaE127bb6",
   "agentBond": "0x4383Ea48837eF7e60fC22BD67945BCBf0551702c",
   "streamPay": "0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262",
   "usdc": "0x3600000000000000000000000000000000000000"
@@ -19,81 +19,92 @@
  },
  "prestep": {
   "funding": {
-   "staker": "0x6851454ae4d6720bf73a87eb6488c985d2620b6cf8c0d48bbdf8c0cb2f6445a8",
-   "verifier": "0x0bbc32acd1162d34407d33c116ee83feaeddbd63c53026eaa3df2f41aa30e158",
-   "beneficiary": "0x00e362136b9a7eac97fcab0ceb2b1dbc620c81d57febf620c736a28a79a59b97",
-   "arbiter": "0xff227304c5c55863b27f3ebf42df904644730604685e819df66fbbb9ce9e795b",
-   "staker_topup": "0xb0ea48ff827bd95d3b360df558ec64e2712cdf5c462d425401ebb8c4e9e0d4a3"
+   "verifier": "0xc049e158253334c6df7238145ebdc91ddd1d09c41446ea48aeaa6ade5be4130b"
   },
-  "approve_agentbond": "0xffd88acc4db017678d3d82674a5de6ae7b1c0ffcc2ad478ea89c77427a6c113c",
-  "deposit_bond": "0xf3af0e03325f03841866bdca92e48234fff66351c06f22fbc22fda552f0c5917",
-  "set_slash_allowance": "0xbeea4158c9fccbf14f560a11e5c9185fa746ce8261fc84945826b437355f3613",
-  "approve_arbiter": "0xec959b9715d26a9c5347950801675e94df80ce0f3a74ef367b93ea43322bea76"
+  "set_slash_allowance": "0xd29a0f3ef1afa5211e77f089f629d14cf1760fb9fc46001d72446aeb5dadb9fc",
+  "approve_arbiter": "0x347b1610cd2e7b8850789ef45e0e0e2caf62c978bf81b24223c1ac9b538d5baa"
  },
  "branches": {
   "A_cleanPass": {
    "id": 1,
-   "approve": "0x55619d5bf595ca49f299b8dc9085cac209ef8a8b707192c5dc28c588a1c447e0",
-   "create": "0x9507cc6a62ce3f3f554971e2f7c6001a9ff2d78949bdb9752e060e21f7769f45",
-   "resolve_true": "0xc217c1d5beb12e97cb3e73dac1cb3f5a581dcdf66b6cb70ce237402f72624731",
-   "finalize": "0x7e0e1ed99d1793cef7dd9940982ba0b4966e0bf91ce39a42ddd6a07550966891",
+   "approve": "0xe84f7c1851efc5485d68100c600b7c9e0e327d0fceceddf99a5c02ad4b55263d",
+   "create": "0x31a9a380af509d42e7ad4012a7b91e82be49700abfa369407ceb7fdf1db806eb",
+   "resolve_true": "0x1fb089c1cb6b966efe820a4fbefc228a231f4e280ed88d4d76fe3c6f204f64c0",
+   "finalize": "0x69ef78661d0c0d1a49b265e08c8907a70acfc7ac76a61d6709de3aae01193cf7",
    "status": "Finalized",
-   "outcome": "CleanPass"
+   "outcome_code": 1,
+   "outcome": "CleanPass",
+   "status_code": 4
   },
   "B_liveness": {
    "id": 2,
-   "approve": "0x35efc07617b9518fe4cbe70167f0077a534a1974c3f54d2a5e49508b5a59e690",
-   "create": "0x824a9baa6156f912d7263704c240534a2bbb963db275e9d0dd9e598235aec649",
-   "slashVerifierExpired": "0xae25f95183bd6af798cf1f6a82222aeca35eae73553575449a403c8b03b5a364",
+   "approve": "0xbe391bd11ca26ed91b4ccd1d3da5e225ce70664bf3d5571b88ed9a4172c4b23a",
+   "create": "0x56c9d947dfe2382c2a7970b2757873656aa18dbb0d847b360b505b571c95a31d",
+   "slashVerifierExpired": "0x11c0fdeccc621d135ed9cce99a66628391b3ad08e9ef785c8b0cddc6cb052bd2",
    "status": "Expired",
-   "outcome": "LivenessSlash"
+   "outcome_code": 9,
+   "outcome": "LivenessSlash",
+   "status_code": 5
   },
   "C_overturn": {
    "id": 3,
-   "approve": "0x2a973ed3f4610f25991d5263b6aaacf95f974a55921a1811f96a5db6dbf78db1",
-   "create": "0xcb3b4a7a59d87acdba4557010cbfccdf56e91b35cf267cba26a56c19a5ddbe99",
-   "resolve_false": "0xbc78ab3c822a8a475f6ac9308be55bf63282ae7cd18961d250b8b309dfdddafb",
-   "challenge": "0x6f8205cb60d525bc5dfc601d7bcdb82dfd7eee133b9e16bae04695237e8d3bd1",
-   "arbitrate_overturn": "0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d",
+   "approve": "0x96f750741ad605ef2331346e0f4670e42b6816b542ecb5f85af880cae08bd5ad",
+   "create": "0x60ded757698e30b4575e07fcde715fc3fb5e7b96019b79c712186b22bb0876d0",
+   "resolve_false": "0x2f4b56f1dcafb103694f04c8cee5dd9e26b8ba39a842efd7510e3207250ee998",
+   "challenge": "0x98246eac961df15f3e9f49b2583b1164bf1ab64c9562d453999e489cb1c9a168",
+   "arbitrate_overturn": "0xb99637aed6e76fe6fbd83484a1e24bed9d43bc9b4fea5b9cdb99c9e3415799d7",
    "status": "Finalized",
-   "outcome": "OverturnedToPass"
+   "outcome_code": 5,
+   "outcome": "OverturnedToPass",
+   "status_code": 4
   },
   "D_silenceFail": {
    "id": 4,
-   "approve": "0xf8a669135ab4a8d98281ac4ef01cfd23fa6524f2a5afda0c3a20a8b29bda5652",
-   "create": "0xf695f8fa620a3a0ce8098fc0f7c8a59fb48745a3ad54b919eb320f6b15e07901",
-   "resolve_false": "0x771ec5d664502954a2299ec765ecd4a1fbe15aeef49890536f6559e1abc8b75e",
-   "challenge": "0xdbbef0e9bb03d8289e0eb8b1974265a2c7375e93239c44f7f9c09e9695c87175",
-   "finalize": "0x316c63db10e7b9996f9d9bcbbf5456e98da22510b4047349760c87388fe7f704",
+   "approve": "0x33a35606527594bf781c429dedc8a5c84bcd5029ba89b7fc20effcf93b2e8fc7",
+   "create": "0xc150ed24bd5e3fa45d3b2104512d0a3f6a9386d027222b4dd4ee999c42048686",
+   "resolve_false": "0x55e2c3099ae6a510c8563a0a05aeb076a39c858c1659eb8bac5d3956fab29be5",
+   "challenge": "0xc01eab88c3927927a9b6c00ba775685e3395bdb98ea47111d6060849fff4fa38",
+   "finalize": "0x68d7f720971e000fe4eef3e17fb164d92e2c0c3cc938f69adffa43ed3417f5f2",
    "status": "Finalized",
-   "outcome": "SilenceFail"
+   "outcome_code": 8,
+   "outcome": "SilenceFail",
+   "status_code": 4
   }
  },
  "bookkeeping": {
-  "deployer_nonce": 635,
+  "deployer_nonce": 768,
   "params": "amount=1.0, slice=1.5, arbiterFee=0.05, challengeBond=0.3, window=arbiterDeadline=60s",
-  "note": "Branches A and B were created in the first run; the staker ran out of USDC before C, so this continuation topped it up and completed all four."
+  "note": "Branch B, the liveness slash, could not be opened for a full hour: MIN_RESOLVE_WINDOW now floors the resolve deadline at 1h and the branch needs that deadline to pass. The run waited on the chain clock, not on a fixed sleep."
  },
+ "_note": "Regenerated 2026-08-10 from a real run against CommitStakeV2 0x548532aa4B59598188D49b3e74Fdf27aaE127bb6, the deployment that bounds the arbiter fee and floors the resolve window (THREAT_MODEL \u00a712). It supersedes the 2026-07-31 run against 0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474, whose commitment ids and tx hashes are no longer the live ones. Every branch was re-earned, not relabelled: same four outcomes, same 1.45 and 1.50 USDC burns, new transactions. AgentBond and StreamPay did not change and were not redeployed, so the composition still binds to their live, history-bearing addresses. The demo video was cut against the 2026-07-31 run and still shows its hashes.",
  "BURN_TX_PRIMARY_ARTIFACT": [
   {
    "branch": "C_overturn",
-   "tx": "0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d",
+   "tx": "0xb99637aed6e76fe6fbd83484a1e24bed9d43bc9b4fea5b9cdb99c9e3415799d7",
    "burned_usdc": "1.45",
    "note": "false fail overturned; damage to the harmed staker, surplus burned to 0x\u2026dEaD"
   },
   {
    "branch": "B_liveness",
-   "tx": "0xae25f95183bd6af798cf1f6a82222aeca35eae73553575449a403c8b03b5a364",
+   "tx": "0x11c0fdeccc621d135ed9cce99a66628391b3ad08e9ef785c8b0cddc6cb052bd2",
    "burned_usdc": "1.50",
    "note": "verifier never resolved; stake returned to staker, whole slice burned"
   }
  ],
- "_note": "Regenerated 2026-07-31 from a real run against the redeployed, hardened contracts. It supersedes the seed against CommitStakeV2 0x1f1CA31bC36a95a3909628F1bA97970E20698CA9, whose commitment ids and tx hashes are no longer the live ones. Branch ids are unchanged (A=1, B=2, C=3) and a fourth branch, D SilenceFail, was added.",
  "superseded_run": {
-  "CommitStakeV2": "0x1f1CA31bC36a95a3909628F1bA97970E20698CA9",
-  "burn_txs": [
-   "0x97f31e7a590af4ecc2f88c8f34943fe95be41391c9c3a4e3895d9a3d13c45435",
-   "0x7bf59845abadf3847061b5997e96e303a959d722c8a7283b160b3c82b14aa6bd"
-  ]
+  "2026-07-31": {
+   "CommitStakeV2": "0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474",
+   "burn_txs": [
+    "0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d",
+    "0xae25f95183bd6af798cf1f6a82222aeca35eae73553575449a403c8b03b5a364"
+   ]
+  },
+  "2026-06-11": {
+   "CommitStakeV2": "0x1f1CA31bC36a95a3909628F1bA97970E20698CA9",
+   "burn_txs": [
+    "0x97f31e7a590af4ecc2f88c8f34943fe95be41391c9c3a4e3895d9a3d13c45435",
+    "0x7bf59845abadf3847061b5997e96e303a959d722c8a7283b160b3c82b14aa6bd"
+   ]
+  }
  }
 }

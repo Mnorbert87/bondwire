@@ -1,10 +1,15 @@
 # Shipped this week draft (Discord #user-made-things + X)
 
-> **Correction, 2026-07-31 (supersedes the note below):** the three contracts were redeployed
+> **Correction, 2026-08-10 (supersedes both notes below):** CommitStakeV2 was redeployed again on
+> this date to bound the arbiter fee and floor the resolve window. The live addresses are AgentBond
+> `0x4383Ea48837eF7e60fC22BD67945BCBf0551702c`, StreamPay `0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262`
+> (neither changed, neither redeployed), CommitStakeV2 `0x548532aa4B59598188D49b3e74Fdf27aaE127bb6`.
+>
+> **Correction, 2026-07-31:** the three contracts were redeployed
 > hardened on this date and the addresses in the post below are the OLD ones, kept as published.
-> The live addresses are AgentBond `0x4383Ea48837eF7e60fC22BD67945BCBf0551702c`, StreamPay
-> `0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262`, CommitStakeV2 `0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474`,
-> and all three are now fully verified and exact-match, which the note below said was true only
+> The addresses live between 2026-07-31 and 2026-08-10 were AgentBond `0x4383Ea48837eF7e60fC22BD67945BCBf0551702c`,
+> StreamPay `0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262`, CommitStakeV2 `0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474`,
+> and all three were fully verified and exact-match, which the note below said was true only
 > of CommitStakeV2. The post itself is unedited.
 >
 > **Correction, 2026-07-29:** exact match verification holds for CommitStakeV2; AgentBond and StreamPay are source-verified, runtime body identical, metadata trailer from an earlier compilation. The post below is kept as published.

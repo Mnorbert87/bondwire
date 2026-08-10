@@ -3,7 +3,7 @@
 What we checked, what we found, what we fixed, and what is still open. Written for a reviewer who
 wants the short version and the ability to re-run any of it.
 
-Last updated: 2026-08-05, when the external review's §12 finding was reproduced and written up.
+Last updated: 2026-08-10, when the §12 finding was fixed on chain and the stack redeployed.
 (The hardened redeploy this document was first written for was 2026-07-31.)
 
 ---
@@ -24,7 +24,7 @@ tests that catch each defect ship in the repo.
 
 | Layer | Method |
 |---|---|
-| Unit + adversarial | 229 tests across four Foundry projects, 0 failed |
+| Unit + adversarial | 234 tests across four Foundry projects, 0 failed |
 | Fuzz | 23 properties, 10,000 runs each |
 | Invariants | 16 campaigns, 10,000 runs × depth 15 = 150,000 calls, `fail_on_revert = true` |
 | Symbolic | 5 Halmos proofs over the money paths (solvency, surplus-positivity on both slash branches, split conservation, fee residue). No-double-pay is stateful and belongs to the invariant campaign, not to these |
@@ -76,6 +76,27 @@ because we stopped trusting the badge and diffed the bytecode ourselves. After t
 three are `is_fully_verified = true`, `is_partially_verified = false`, and a local recompile matches
 the deployed runtime byte for byte with only the constructor-set immutables differing.
 
+**6. `arbiterFee` was free, and it sat inside the cap that was supposed to bound the leverage.**
+The only finding here that came from outside. Reported on 2026-08-05 and reproduced before being
+believed: a 1 USDC stake with a 9,000 USDC `arbiterFee` (never escrowed, at any point) passed both
+sizing gates, locked a verifier's entire bond, and burned it through the permissionless liveness
+branch with the stake refunded in full. Cost to the attacker: gas. With `arbiterFee = 0` the same
+parameters revert, so the leverage cap worked and was simply walked around by a parameter that cost
+nothing. Not theft, the slice burns; destruction of a verifier's bookable capacity.
+
+Fixed and deployed 2026-08-10 in `0x548532aa4B59598188D49b3e74Fdf27aaE127bb6`: `MIN_RESOLVE_WINDOW`
+(1 hour) floors the resolve deadline, `MAX_ARBITER_FEE_LEVERAGE` (10) bounds the fee by the value
+actually escrowed. The fix bounds the amplification at 33x rather than removing the burn, and a test
+asserts that number and that one micro-USDC past it reverts. The standing operator advice is
+unchanged and independent of it: grant a minimal per-job slash allowance, never an open one.
+Details in [THREAT_MODEL.md](./THREAT_MODEL.md) §12.
+
+The gap between the report and the deployment is itself worth stating: the fix sat on a branch for
+five days because deploying it meant moving every address again and re-earning every cited
+transaction, and the demo video had already been cut against the previous deployment. That was a
+judgement call about a submission, not a technical constraint, and the video still shows the old
+address. See CHANGELOG.md.
+
 ---
 
 ## Still open, by choice
@@ -88,19 +109,6 @@ this is counterparty-selection risk, not an attacker-reachable griefing vector, 
 self-release backstop bounds every bond lock. A correct fix is a `pendingWithdrawal` + `claim()`
 fallback across every payout path in all three contracts. We are not shipping that as a rushed
 pre-submission change. Details in [THREAT_MODEL.md](./THREAT_MODEL.md) §9.
-
-**`arbiterFee` is free, and it sits inside the cap that was supposed to bound the leverage.**
-Reported externally on 2026-08-05 and reproduced here before being believed: a 1 USDC stake with a
-9,000 USDC `arbiterFee` (never escrowed, at any point) passes both sizing gates, locks a verifier's
-entire bond, and burns it through the permissionless liveness branch with the stake refunded in
-full. Cost to the attacker: gas. With `arbiterFee = 0` the same parameters revert, so the leverage
-cap works and is simply walked around. Not theft, the slice burns; destruction of a verifier's
-bookable capacity. Fixed on `fix/commitstake-grief-bounds` (a deadline floor plus a bound on
-`arbiterFee` relative to escrowed value, main's 125 tests plus 5 new regression cases, all green), deliberately not deployed: shipping it
-costs the exact-match verification and moves every address again. The fix bounds the amplification
-at 33x rather than removing the burn, and a test asserts that number. Until then the mitigation is
-the one the contract already supports: grant a minimal per-job slash allowance, never an open one.
-Details in [THREAT_MODEL.md](./THREAT_MODEL.md) §12.
 
 **Aggregate leverage is not bounded, only per-commitment leverage is.** The time and leverage
 ceilings bound one commitment. N commitments stack, so an attacker with a third of a verifier's
@@ -126,7 +134,7 @@ For the verification claim, recompile and compare against the chain rather than 
 
 ```bash
 forge build
-cast code 0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474 --rpc-url https://rpc.testnet.arc.network
+cast code 0x548532aa4B59598188D49b3e74Fdf27aaE127bb6 --rpc-url https://rpc.testnet.arc.network
 # diff against out/CommitStakeV2.sol/CommitStakeV2.json .deployedBytecode.object
 # only the constructor-set immutable addresses should differ
 ```

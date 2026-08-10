@@ -439,7 +439,7 @@
     </div>
 
     <div class="settings-bar" style="margin-bottom:18px;">
-      <span class="chip">V2 contract <code id="v2Chip">0xf345…1474</code></span>
+      <span class="chip">V2 contract <code id="v2Chip">0x5485…7bb6</code></span>
       <a id="v2Explorer" class="chip" target="_blank" rel="noopener" style="text-decoration:none;color:var(--c2)">arcscan ↗</a>
       <a id="v2AbLink" class="chip" target="_blank" rel="noopener" style="text-decoration:none;color:var(--c2)">AgentBond ↗</a>
       <a id="v2SpLink" class="chip" target="_blank" rel="noopener" style="text-decoration:none;color:var(--c2)">StreamPay ↗</a>
@@ -804,7 +804,7 @@ import { ethers } from "../vendor/ethers-6.13.4.min.js";
 const RPC = "https://rpc.testnet.arc.network";
 const CHAIN_ID = 5042002;
 const EXPLORER = "https://testnet.arcscan.app";
-const V2_ADDR   = "0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474";
+const V2_ADDR   = "0x548532aa4B59598188D49b3e74Fdf27aaE127bb6";
 const AB_ADDR   = "0x4383Ea48837eF7e60fC22BD67945BCBf0551702c";
 const SP_ADDR   = "0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262";
 const BURN_ADDR = "0x000000000000000000000000000000000000dEaD";
@@ -822,10 +822,10 @@ const OUTCOME2 = ["None","CleanPass","CleanFail","UpheldPass","UpheldFail","Over
 
 // Proof transactions for the current seed (historical artifacts; the on-chain STATE below is read live).
 const SEED = [
-  { id:1, name:"A · Positive",  txs:[["create","0x9507cc6a62ce3f3f554971e2f7c6001a9ff2d78949bdb9752e060e21f7769f45"],["resolve(true)","0xc217c1d5beb12e97cb3e73dac1cb3f5a581dcdf66b6cb70ce237402f72624731"],["finalize","0x7e0e1ed99d1793cef7dd9940982ba0b4966e0bf91ce39a42ddd6a07550966891"]] },
-  { id:2, name:"B · Liveness",  burn:"0xae25f95183bd6af798cf1f6a82222aeca35eae73553575449a403c8b03b5a364", txs:[["create","0x824a9baa6156f912d7263704c240534a2bbb963db275e9d0dd9e598235aec649"],["slashVerifierExpired 🔥","0xae25f95183bd6af798cf1f6a82222aeca35eae73553575449a403c8b03b5a364"]] },
-  { id:3, name:"C · Overturn",  burn:"0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d", txs:[["create","0xcb3b4a7a59d87acdba4557010cbfccdf56e91b35cf267cba26a56c19a5ddbe99"],["resolve(false)","0xbc78ab3c822a8a475f6ac9308be55bf63282ae7cd18961d250b8b309dfdddafb"],["challenge","0x6f8205cb60d525bc5dfc601d7bcdb82dfd7eee133b9e16bae04695237e8d3bd1"],["arbitrate(overturn) 🔥","0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d"]] },
-  { id:4, name:"D · Arbiter silence", txs:[["create","0xf695f8fa620a3a0ce8098fc0f7c8a59fb48745a3ad54b919eb320f6b15e07901"],["resolve(false)","0x771ec5d664502954a2299ec765ecd4a1fbe15aeef49890536f6559e1abc8b75e"],["challenge","0xdbbef0e9bb03d8289e0eb8b1974265a2c7375e93239c44f7f9c09e9695c87175"],["finalize","0x316c63db10e7b9996f9d9bcbbf5456e98da22510b4047349760c87388fe7f704"]] },
+  { id:1, name:"A · Positive",  txs:[["create","0x31a9a380af509d42e7ad4012a7b91e82be49700abfa369407ceb7fdf1db806eb"],["resolve(true)","0x1fb089c1cb6b966efe820a4fbefc228a231f4e280ed88d4d76fe3c6f204f64c0"],["finalize","0x69ef78661d0c0d1a49b265e08c8907a70acfc7ac76a61d6709de3aae01193cf7"]] },
+  { id:2, name:"B · Liveness",  burn:"0x11c0fdeccc621d135ed9cce99a66628391b3ad08e9ef785c8b0cddc6cb052bd2", txs:[["create","0x56c9d947dfe2382c2a7970b2757873656aa18dbb0d847b360b505b571c95a31d"],["slashVerifierExpired 🔥","0x11c0fdeccc621d135ed9cce99a66628391b3ad08e9ef785c8b0cddc6cb052bd2"]] },
+  { id:3, name:"C · Overturn",  burn:"0xb99637aed6e76fe6fbd83484a1e24bed9d43bc9b4fea5b9cdb99c9e3415799d7", txs:[["create","0x60ded757698e30b4575e07fcde715fc3fb5e7b96019b79c712186b22bb0876d0"],["resolve(false)","0x2f4b56f1dcafb103694f04c8cee5dd9e26b8ba39a842efd7510e3207250ee998"],["challenge","0x98246eac961df15f3e9f49b2583b1164bf1ab64c9562d453999e489cb1c9a168"],["arbitrate(overturn) 🔥","0xb99637aed6e76fe6fbd83484a1e24bed9d43bc9b4fea5b9cdb99c9e3415799d7"]] },
+  { id:4, name:"D · Arbiter silence", txs:[["create","0xc150ed24bd5e3fa45d3b2104512d0a3f6a9386d027222b4dd4ee999c42048686"],["resolve(false)","0x55e2c3099ae6a510c8563a0a05aeb076a39c858c1659eb8bac5d3956fab29be5"],["challenge","0xc01eab88c3927927a9b6c00ba775685e3395bdb98ea47111d6060849fff4fa38"],["finalize","0x68d7f720971e000fe4eef3e17fb164d92e2c0c3cc938f69adffa43ed3417f5f2"]] },
 ];
 
 const $ = (id) => document.getElementById(id);

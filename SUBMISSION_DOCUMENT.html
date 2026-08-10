@@ -79,7 +79,7 @@
 <p><strong>The proven, audited core.</strong> Three contracts, frozen and audited: CommitStakeV2, AgentBond, StreamPay. Everything in this block is about those three, and only those three.</p>
 <table>
   <tr><th>Contract</th><th>Address</th><th>Verified</th></tr>
-  <tr><td>CommitStakeV2</td><td class="mono">0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474</td><td>exact-match ✅</td></tr>
+  <tr><td>CommitStakeV2</td><td class="mono">0x548532aa4B59598188D49b3e74Fdf27aaE127bb6</td><td>exact-match ✅</td></tr>
   <tr><td>AgentBond</td><td class="mono">0x4383Ea48837eF7e60fC22BD67945BCBf0551702c</td><td>exact-match ✅</td></tr>
   <tr><td>StreamPay</td><td class="mono">0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262</td><td>exact-match ✅</td></tr>
 </table>
@@ -87,7 +87,7 @@
 <ul>
   <li>Browse the live hub, no wallet needed: <a href="https://bondwire.dev/">bondwire.dev</a>.</li>
   <li>Two on-chain burns show the surplus-burn firing: 1.45 USDC from an overturn and 1.50 USDC from a liveness fail-closed, each a real <span class="mono">Transfer</span> to <span class="mono">0x…dEaD</span> you can open on the explorer. The burn is an overturn-branch device, not a general anti-collusion guarantee: on an upheld verdict nothing burns, and THREAT_MODEL §11 states the path where that matters.</li>
-  <li>The 125-test suite (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants) is green and reproduces with one command; that is CommitStakeV2 alone, and all four Foundry projects together run 229 tests, 0 failed, which is the number the video shows. The 5 Halmos symbolic proofs run separately. Mutation testing kills 84.0% of the mutants and 100% of the revert-class ones, re-measured 2026-08-05 against the deployed source rather than quoted from an older run.</li>
+  <li>The 130-test suite (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants) is green and reproduces with one command; that is CommitStakeV2 alone, and all four Foundry projects together run 234 tests, 0 failed. The video shows 229, the count before the 2026-08-10 fix added five regression tests; the video was cut against the previous deployment and is not re-recorded. The 5 Halmos symbolic proofs run separately. Mutation testing kills 84.0% of the mutants and 100% of the revert-class ones, re-measured 2026-08-05 against the deployed source rather than quoted from an older run.</li>
   <li>Halmos proves the hard properties at the property level, for all inputs, not just the cases a fuzzer happens to hit: solvency, surplus-positivity, no-double-pay, and the fee-residue bound. The two burns above are those same properties firing on chain.</li>
 </ul>
 
@@ -114,21 +114,24 @@
   <li><strong>Design depth:</strong> README.md, VERIFIER_ECONOMICS.md, THREAT_MODEL.md, and COLD_ECONOMIC_REVIEW.md.</li>
 </ul>
 
-<h3>What is disclosed and not fixed</h3>
-<p class="small">Two findings are open and I would rather you read them from me than find them yourself.
-THREAT_MODEL §12 has the first: <span class="mono">arbiterFee</span> is never escrowed at create, yet it
-sits in the denominator of both the sizing rule and the leverage cap, so a dust stake can still lock a
-verifier's entire bond and an unmeetable deadline burns it. An outside review reported it on 2026-08-05
-and I reproduced it against the deployed source rather than taking it on trust; the test runs green
-today. On this liveness path the attacker gains nothing, the whole slice burns, so it is griefing at the
-cost of gas. The same parameter also carries a theft vector, the sockpuppet arbiter profit leg in §8,
-whose reimbursement out of the slice is tracked open, with no fix on the branch.</p>
-<p class="small">The fix is written and tested on <span class="mono">fix/commitstake-grief-bounds</span>,
-and it bounds the amplification to 33x rather than removing that leg. It is deliberately not merged:
-touching the source would break the exact match verification of the deployed bytecode that this
-submission asks you to check. It ships after judging, with a fresh deployment and a fresh verification.
-Until then §8 and two natspec lines still assert a bound that §12 refutes. I would rather you read both
-than only the flattering one.</p>
+<h3>What is disclosed, and what changed after submission</h3>
+<p class="small">THREAT_MODEL §12: <span class="mono">arbiterFee</span> is never escrowed at create, yet it
+sat in the denominator of both the sizing rule and the leverage cap, so a dust stake could lock a
+verifier's entire bond and an unmeetable deadline burned it. An outside review reported it on 2026-08-05
+and I reproduced it against the deployed source rather than taking it on trust. On that liveness path the
+attacker gains nothing, the whole slice burns, so it is griefing at the cost of gas.</p>
+<p class="small"><strong>Fixed and deployed 2026-08-10</strong>, in CommitStakeV2
+<span class="mono">0x548532aa4B59598188D49b3e74Fdf27aaE127bb6</span>: a one hour floor on the resolve
+window and an arbiter fee bounded by the value actually escrowed, which caps the amplification at 33x
+rather than removing that leg. The whole seed was re-run on the new contract and every transaction cited
+here was re-earned, not relabelled. The cost was the one I named when I held the fix back: the address
+moved again, and the demo video shows the previous deployment. AgentBond and StreamPay did not change and
+were not redeployed.</p>
+<p class="small">Still open, and I would rather you read it from me: the same parameter carries a theft
+vector, the sockpuppet arbiter profit leg in §8, whose reimbursement out of the slice has no fix on a
+branch. The USDC blacklist finding in §9 is also open by choice. Two natspec lines in the contract still
+assert the bound §12 said they could not keep; the deployed fix is what makes them true, and they were
+left unedited so the sentence you check is the sentence that was wrong.</p>
 
 <h2>10. Circle Product Feedback</h2>
 <ul>

@@ -1,6 +1,6 @@
 {
   "name": "bondwire-sdk",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Tiny ethers v6 SDK for Bondwire on Arc testnet: AgentBond (reputation backed trust), StreamPay (continuous USDC settlement), CommitStakeV2 (bonded verifier escrow, pay only on verified PASS) and the Agent Passport reputation score.",
   "type": "module",
   "main": "bondwire.js",

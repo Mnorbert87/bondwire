@@ -103,7 +103,7 @@ Note that two in-code NatSpec comments carry the same superseded reasoning (the 
 
 **What that fix does and does not close (corrected 2026-07-24).** The opt-in kills the sockpuppet precondition and the leverage cap kills the dust-stake amplification, so together they remove the practical attack. They do **not** remove the underlying profit leg: `damage` reimburses `arbiterFee` out of the slice regardless of whether the arbiter was genuinely independent, which is not provable on-chain. A complete fix needs `arbiterFee` bounded relative to the slice (or excluded from `damage`). Tracked as open, not claimed as solved.
 
-**Deployed 2026-07-31** (supersedes an earlier "why not deployed" note here). The fix ships in the live CommitStakeV2 (`0xf345…1474`), which is itself exact-match verified. The earlier note kept the fix on a branch to preserve the verification of the previous deployment; we took the other side of that trade and redeployed hardened, so **the deployed contract no longer carries the attack described above**. What remains open is the profit leg in the paragraph above: `arbiterFee` is still reimbursed out of the slice, and bounding it is not shipped.
+**Deployed 2026-07-31** (supersedes an earlier "why not deployed" note here). The fix ships in CommitStakeV2 (deployed then as `0xf345…1474`, since 2026-08-10 as `0x5485…7bb6`), which is itself exact-match verified. The earlier note kept the fix on a branch to preserve the verification of the previous deployment; we took the other side of that trade and redeployed hardened, so **the deployed contract no longer carries the attack described above**. What remains open is the profit leg in the paragraph above: `arbiterFee` is still reimbursed out of the slice. Since 2026-08-10 it is at least bounded — `MAX_ARBITER_FEE_LEVERAGE` caps it at ten times the value the staker actually escrows (§12) — so the leg is finite rather than arbitrary. Bounding it *relative to the slice*, or excluding it from `damage` altogether, is still not shipped.
 
 ### 9. USDC blacklist bricks terminal transitions (push-only payouts, all three contracts)
 
@@ -127,7 +127,7 @@ The repo already pinned "revert rather than silently lose funds" as intended beh
 
 Not covered by §3: that section reasons in the amount dimension ("the total griefable amount equals the cap the agent chose") and bounds *how much*, never *for how long*. The §8 fix branch does not close it either — a leverage cap is not a time bound. Worth stating plainly: the existing invariant campaign bounds deadlines to 30 days (`CommitStakeV2Invariant.t.sol:100`), so a green campaign was never evidence against this.
 
-**Fix, implemented and tested, deployed 2026-07-31:** branch [`fix/commitstake-param-bounds`](https://github.com/Mnorbert87/bondwire/tree/fix/commitstake-param-bounds) adds `MAX_DEADLINE_HORIZON` (90d), `MAX_CHALLENGE_WINDOW` (30d) and `MAX_ARBITER_DEADLINE` (30d), bounding the worst case at 90 + 30 + 30 + 7 days. The same branch fixes `recommendedSlice`, which still took `(amount, maxAccruableFee)` after the gate-4 fix folded `arbiterFee` into `SLICE_TOO_SMALL`: a direct caller passing only the fee deposit got a slice `create` then rejected (`amount = 100, feeDeposit = 0, arbiterFee = 60` returned 150 while `create` demands > 160 — fail-closed, and the SDK folded the legs by hand). 125 tests green on `commit-stake-v2` today, both fixes mutation-checked. This is why the fixes waited for a full redeploy instead of being patched into the previous deployment, a constraint we measured rather than assumed: changing a **single character in a comment** alters the solc metadata hash appended to the bytecode and breaks the exact-match verification.
+**Fix, implemented and tested, deployed 2026-07-31:** branch [`fix/commitstake-param-bounds`](https://github.com/Mnorbert87/bondwire/tree/fix/commitstake-param-bounds) adds `MAX_DEADLINE_HORIZON` (90d), `MAX_CHALLENGE_WINDOW` (30d) and `MAX_ARBITER_DEADLINE` (30d), bounding the worst case at 90 + 30 + 30 + 7 days. The same branch fixes `recommendedSlice`, which still took `(amount, maxAccruableFee)` after the gate-4 fix folded `arbiterFee` into `SLICE_TOO_SMALL`: a direct caller passing only the fee deposit got a slice `create` then rejected (`amount = 100, feeDeposit = 0, arbiterFee = 60` returned 150 while `create` demands > 160 — fail-closed, and the SDK folded the legs by hand). 130 tests green on `commit-stake-v2` today, both fixes mutation-checked. This is why the fixes waited for a full redeploy instead of being patched into the previous deployment, a constraint we measured rather than assumed: changing a **single character in a comment** alters the solc metadata hash appended to the bytecode and breaks the exact-match verification.
 
 ### 11. Deliberate decisions an audit is likely to re-flag
 
@@ -148,8 +148,12 @@ Listed so a reviewer need not rediscover that they were considered.
 ### 12. `arbiterFee` is a free parameter inside a cap that was supposed to bound it
 
 **Reported by an external review, 2026-08-05. Independently reproduced before being written down:
-the exploit below ran green against the source that is deployed today, and the regression tests are
-in `CommitStakeV2GriefBounds.t.sol` on branch `fix/commitstake-grief-bounds`.**
+the exploit below ran green against the source deployed at the time, and the regression tests are in
+`CommitStakeV2GriefBounds.t.sol`. Fixed and deployed 2026-08-10 — the section is kept in full,
+including the working exploit, because a threat model that deletes what it fixed cannot be audited.
+Everything below describes the 2026-07-31 deployment (`0xf3457ABf…af1474`), which is still on chain.
+The live contract is `0x548532aa4B59598188D49b3e74Fdf27aaE127bb6`, where the same parameters
+revert.**
 
 `arbiterFee` is never escrowed. No transfer moves it at `create`, and none moves it later unless a
 challenge is actually opened, in which case it is carved out of the *challenger's* bond. It
@@ -169,35 +173,38 @@ The control case is what pins it on the free parameter rather than on the cap: w
 `arbiterFee = 0`, the same parameters revert with `SLICE_ABOVE_LEVERAGE_CAP`. The cap works. It is
 simply not reachable while `arbiterFee` can inflate its own denominator.
 
-**Three written claims are false because of this, and one of them cannot be edited.**
+**Three written claims were false because of this, and two of them are natspec in the contract.**
 
-- §8 above: "a dust stake can no longer lock a verifier's whole bond." It can.
+- §8 above: "a dust stake can no longer lock a verifier's whole bond." Against the 2026-07-31
+  deployment it could.
 - The `MAX_SLICE_LEVERAGE` natspec in the contract: "so a dust stake can never lock a verifier's
   whole bond behind one job."
 - The challenge-bond band natspec: the cap means "an over-sized bond can never be used to price out
-  the (non-consenting) beneficiary either." The band caps the spam margin; `arbiterFee` is added on
+  the (non-consenting) beneficiary either." The band caps the spam margin; `arbiterFee` was added on
   top of it.
 
-The two natspec comments are in the source the deployed bytecode is exact-match verified against.
-Editing them would change the metadata hash and break the recompile check a judge may run, so they
-stay byte-for-byte as they are and are corrected here instead, the same policy §8 already applies to
-its own superseded comments. Read them against this section.
+The two natspec comments are unchanged, and the 2026-08-10 deployment is what makes them true: with
+`arbiterFee` bounded by escrowed value, the leverage cap is reachable again and a dust stake cannot
+buy an arbitrary slice. They were left byte-for-byte rather than reworded so that the sentence a
+reader checks is the same sentence that was wrong, and the change that fixed it is a `require`, not
+an edit to a comment.
 
 **Severity.** Not theft: nothing is transferred to the attacker, the slice burns. It is destruction
-of a verifier's bookable capacity at the price of gas, and it defeats the specific defense the repo
-advertises against exactly that. The contract-level bound that does still hold is the one §8 already
-names: the slash allowance the verifier grants AgentBond is spent per `lock`, so an operator running
-against the deployed contract must grant a minimal per-job allowance rather than an open one. That
-is a real mitigation and it is the only one available without a redeploy.
+of a verifier's bookable capacity at the price of gas, and it defeated the specific defense the repo
+advertises against exactly that. The bound that held even before the fix is the one §8 already
+names: the slash allowance the verifier grants AgentBond is spent per `lock`, so an operator must
+grant a minimal per-job allowance rather than an open one. That advice stands on its own and is not
+retired by the fix.
 
-**Status: fixed on a branch, not deployed.** `fix/commitstake-grief-bounds` adds a
-`MIN_RESOLVE_WINDOW` floor on the deadline and bounds `arbiterFee` by the value actually escrowed.
-The branch runs main's 125 tests plus 5 new regression cases, all green. Stated plainly because the number matters more than the reassurance: the fix
-does not remove the burn. A verifier that misses its window still loses the slice. What it bounds is
-the amplification, from unbounded to `MAX_SLICE_LEVERAGE x (MAX_ARBITER_FEE_LEVERAGE + 1)` = 33x the
-escrowed value, and a test asserts that ceiling rather than claiming it. Deploying it costs the
-exact-match verification and moves every address again, which is the same trade taken on 2026-07-31
-and is a human decision, not a technical one.
+**Status: fixed and deployed 2026-08-10**, in `0x548532aa4B59598188D49b3e74Fdf27aaE127bb6`.
+`MIN_RESOLVE_WINDOW` (1 hour) floors the resolve deadline and `MAX_ARBITER_FEE_LEVERAGE` (10) bounds
+`arbiterFee` by the value actually escrowed. 130 tests green on `commit-stake-v2`, 234 across the
+four projects. Stated plainly because the number matters more than the reassurance: the fix does not
+remove the burn. A verifier that misses its window still loses the slice. What it bounds is the
+amplification, from unbounded to `MAX_SLICE_LEVERAGE x (MAX_ARBITER_FEE_LEVERAGE + 1)` = 33x the
+escrowed value, and a test asserts that ceiling rather than claiming it. The cost of deploying it
+was the one named here all along: every address moved again, and the demo video still shows the
+previous deployment. See CHANGELOG.md.
 
 > **Reference style, 2026-08-05.** This document used to point at source *line numbers*.
 > An external review resolved them and found that every reference into a file edited since

@@ -7,7 +7,7 @@ trust the agent you are about to pay?**
 Backed by the live, ownerless, source-verified Bondwire contracts on Arc testnet:
 [AgentBond](https://testnet.arcscan.app/address/0x4383Ea48837eF7e60fC22BD67945BCBf0551702c)
 (slashable trust bonds) and
-[CommitStakeV2](https://testnet.arcscan.app/address/0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474)
+[CommitStakeV2](https://testnet.arcscan.app/address/0x548532aa4B59598188D49b3e74Fdf27aaE127bb6)
 (bonded verifier escrow, pay only on verified PASS).
 
 ## Tools

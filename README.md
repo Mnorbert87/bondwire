@@ -41,9 +41,9 @@ No backend. The frontends read live state straight from the public Arc RPC and w
 |---|---|
 | AgentBond | [`0x4383Ea48837eF7e60fC22BD67945BCBf0551702c`](https://testnet.arcscan.app/address/0x4383Ea48837eF7e60fC22BD67945BCBf0551702c) |
 | StreamPay | [`0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262`](https://testnet.arcscan.app/address/0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262) |
-| CommitStakeV2 | [`0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474`](https://testnet.arcscan.app/address/0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474) · exact-match verified |
+| CommitStakeV2 | [`0x548532aa4B59598188D49b3e74Fdf27aaE127bb6`](https://testnet.arcscan.app/address/0x548532aa4B59598188D49b3e74Fdf27aaE127bb6) · exact-match verified |
 
-> Verification status, precisely: All three contracts are **fully verified on the explorer and exact-match**: recompile this repo and the deployed runtime matches byte for byte, including the metadata trailer, with only the constructor-set immutable addresses differing. This is the redeploy of 2026-07-31; the earlier deployment had AgentBond and StreamPay served as partial matches out of Blockscout's bytecode database, which is exactly what the redeploy fixed.
+> Verification status, precisely: All three contracts are **fully verified on the explorer and exact-match**: recompile this repo and the deployed runtime matches byte for byte, including the metadata trailer, with only the constructor-set immutable addresses differing. AgentBond and StreamPay are the 2026-07-31 redeploy, which is what fixed them being served as partial matches out of Blockscout's bytecode database. CommitStakeV2 was redeployed again on 2026-08-10 to bound the arbiter fee and floor the resolve window ([THREAT_MODEL §12](./THREAT_MODEL.md)); its source did not touch the other two, so they kept their addresses and their transaction history. The demo video predates that deploy and shows the previous CommitStakeV2 address, `0xf3457ABf…af1474`, which is still on chain and still verified. See [CHANGELOG.md](./CHANGELOG.md).
 
 - **RPC:** `https://rpc.testnet.arc.network`
 - **Explorer:** `https://testnet.arcscan.app`
@@ -108,17 +108,17 @@ Three claims, each backed by something you can re-run:
    **strictly positive** by construction: on the overturn path a colluding arbiter can never recapture
    the slice. This one is in the deployed contract, not on a branch — it is `CommitStakeV2.sol:427`,
    and the deployment above is exact-match verified against this source. It is a *different* finding
-   from the `arbiterFee` leverage-cap one in [THREAT_MODEL §12](./THREAT_MODEL.md), which is still
-   open and whose fix is **not** deployed: same parameter, two separate holes. It closes the recapture hole;
+   from the `arbiterFee` leverage-cap one in [THREAT_MODEL §12](./THREAT_MODEL.md), which was found
+   by an outside review and is deployed as of 2026-08-10: same parameter, two separate holes. It closes the recapture hole;
    it does not close the uphold path, where nothing burns at all
    ([THREAT_MODEL §11](./THREAT_MODEL.md)). Found by counting it through,
    closed by counting it through. ([TEST_AUDIT.md](./contracts/commit-stake-v2/TEST_AUDIT.md))
 3. **Symbolically-verified surplus-burn, proven live.** Halmos proves solvency, surplus-positivity,
    split conservation and the fee-residue bound **for all inputs**; two on-chain artifacts show the burn
    actually happening: an overturn burn of **1.45 USDC**
-   ([tx](https://testnet.arcscan.app/tx/0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d))
+   ([tx](https://testnet.arcscan.app/tx/0xb99637aed6e76fe6fbd83484a1e24bed9d43bc9b4fea5b9cdb99c9e3415799d7))
    and a liveness burn of the **whole 1.50 USDC slice**
-   ([tx](https://testnet.arcscan.app/tx/0xae25f95183bd6af798cf1f6a82222aeca35eae73553575449a403c8b03b5a364))
+   ([tx](https://testnet.arcscan.app/tx/0x11c0fdeccc621d135ed9cce99a66628391b3ad08e9ef785c8b0cddc6cb052bd2))
    to `0x…dEaD`.
 
 **Trust boundary, what the burn buys, stated up front.** Closing the recapture path means a
@@ -144,7 +144,7 @@ opt-in to the named arbiter (or an AgentBond arbiter allowlist), plus a stake-pr
 `verifierSlice ≤ k·(amount + feeDeposit + arbiterFee)`. We state this because a careful reviewer
 reaches it: the symbolic spec proves the *accounting* of a slash, not the *justness* of the verdict
 ,  arbiter honesty is an assumption, exactly as the verifier's is. The fix is implemented, tested
-(88 tests green at the time, 125 today), and deployed in the hardened redeploy of 2026-07-31: see
+(88 tests green at the time, 130 today), and deployed in the hardened redeploy of 2026-07-31: see
 [THREAT_MODEL §8](./THREAT_MODEL.md) and Draft [PR #1](https://github.com/Mnorbert87/bondwire/pull/1).
 
 The spec ([VERIFIER_ECONOMICS.md](./VERIFIER_ECONOMICS.md)) was already public; with this the
@@ -157,7 +157,7 @@ The spec ([VERIFIER_ECONOMICS.md](./VERIFIER_ECONOMICS.md)) was already public; 
 | Mutation | [MUTATION_TESTING.md](./contracts/commit-stake-v2/MUTATION_TESTING.md) | 100% revert-class kill; survivors triaged equivalent / invariant-caught |
 | Gas | [GAS_PROFILE.md](./contracts/commit-stake-v2/GAS_PROFILE.md) | the full slash+burn path costs ~0.008 USDC over a plain finalize |
 
-`CommitStakeV2` `0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474`, Blockscout exact-match verified, 125-test
+`CommitStakeV2` `0x548532aa4B59598188D49b3e74Fdf27aaE127bb6`, Blockscout exact-match verified, 130-test
 suite (unit + adversarial + cold-audit + edge + fuzz + 10k-run invariants + symbolic spec) green.
 
 ---
@@ -235,7 +235,7 @@ Every contract in the stack ships with a unit + adversarial + fuzz + **invariant
 | [`contracts/agent-bond`](contracts/agent-bond/README.md) | 51 | 5 × 10,000 runs | 4 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 | [`contracts/stream-pay`](contracts/stream-pay/README.md) | 25 | 5 × 10,000 runs | 3 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 | [`contracts/commit-stake`](contracts/commit-stake/README.md) | 28 | 6 × 10,000 runs | 4 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
-| [`contracts/commit-stake-v2`](contracts/commit-stake-v2/TEST_AUDIT.md) | 125 | 8 × 10,000 runs | 5 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
+| [`contracts/commit-stake-v2`](contracts/commit-stake-v2/TEST_AUDIT.md) | 130 | 8 × 10,000 runs | 5 | each 10,000 runs × depth 15 = 150,000 calls | ✅ 0 failed, 0 violations |
 
 `commit-stake-v2` carries three layers the others don't: **5 Halmos symbolic proofs** (all-inputs
 solvency / surplus-positivity / split conservation), a **Slither + Aderyn** pass with by-design findings

@@ -194,7 +194,7 @@
       <div class="role">Mechanism</div>
       <h3>CommitStakeV2</h3>
       <p>Pay only on verified PASS. The verifier posts its verdict with its own bond slice locked behind it. A challenge window and an optional arbiter give recourse. Lying costs real money.</p>
-      <p style="margin-top:12px;"><code>0xf3457ABf…af1474</code></p>
+      <p style="margin-top:12px;"><code>0x548532aa…127bb6</code></p>
     </div>
   </div>
   <div class="note">
@@ -211,8 +211,8 @@
   <p class="sub" style="margin-top:12px;">Not a Live badge over a mock. The burn has fired on chain, twice: once on an overturned verdict, once when the verifier never ruled by the deadline.</p>
   <table>
     <tr><th style="width:36%">What</th><th style="width:14%">Amount</th><th>On chain</th></tr>
-    <tr><td>Overturn burn, the surplus left after the harmed party is paid</td><td class="m">1.45 USDC</td><td class="m">0xf46f062d…3e9d1d · Transfer to 0x…dEaD</td></tr>
-    <tr><td>Liveness burn, the whole slice when the verifier never rules by the deadline</td><td class="m">1.50 USDC</td><td class="m">0xae25f951…b5a364 · Transfer to 0x…dEaD</td></tr>
+    <tr><td>Overturn burn, the surplus left after the harmed party is paid</td><td class="m">1.45 USDC</td><td class="m">0xb99637ae…5799d7 · Transfer to 0x…dEaD</td></tr>
+    <tr><td>Liveness burn, the whole slice when the verifier never rules by the deadline</td><td class="m">1.50 USDC</td><td class="m">0x11c0fdec…052bd2 · Transfer to 0x…dEaD</td></tr>
     <tr><td>Cross chain capital onboarding, Base Sepolia to Arc via CCTP V2</td><td class="m">1 USDC</td><td class="m">3 transactions, all status 1, bond 3 to 4</td></tr>
     <tr><td>Source on arcscan, byte for byte with this repo</td><td class="m">exact match, all three</td><td class="m">fully verified, not matched from a bytecode database</td></tr>
   </table>
@@ -288,7 +288,7 @@
   <h2>Not a prototype. A deployed, tested, documented stack.</h2>
   <div class="grid g4" style="margin-top:22px;">
     <div class="stat"><b>4</b><span>contracts live on Arc testnet, ownerless, source verified</span></div>
-    <div class="stat"><b>229</b><span>Solidity tests: unit, adversarial, cold audit, fuzz</span></div>
+    <div class="stat"><b>234</b><span>Solidity tests: unit, adversarial, cold audit, fuzz</span></div>
     <div class="stat"><b>5</b><span>Halmos symbolic proofs over the money paths</span></div>
     <div class="stat"><b>150k</b><span>calls per invariant campaign (10k runs × depth 15), zero solvency violations</span></div>
   </div>
@@ -308,25 +308,26 @@
 <!-- 8 ─────────────────────────────────────────── -->
 <section class="slide">
   <div class="eyebrow">Honesty as a feature</div>
-  <h2>What is still wrong with it, in our own words</h2>
-  <p class="sub" style="margin-top:12px;">Three findings were fixed on public branches and, on 2026-07-31, <b style="color:var(--ink)">deployed</b>. Holding them back would have preserved the old deployment's exact match verification, so we redeployed and re verified instead, at new addresses. Three are <b style="color:var(--ink)">still open</b>, and they belong on this slide: one called what is still wrong should contain something that still is.</p>
+  <h2>What is still wrong with it, in my own words</h2>
+  <p class="sub" style="margin-top:12px;">Four findings were fixed on public branches and <b style="color:var(--ink)">deployed</b>, three on 2026-07-31 and one on 2026-08-10. Each redeploy cost the previous deployment's exact match verification and moved every address, so I redeployed and re verified rather than hold a fix back. Two are <b style="color:var(--ink)">still open</b>, and they belong on this slide: one called what is still wrong should contain something that still is.</p>
   <table class="tight">
     <tr><th style="width:30%">Finding</th><th style="width:34%">Status</th><th>Branch</th></tr>
     <tr><td>Sockpuppet arbiter can reclaim the verifier's slice</td><td>Fixed and tested, opt in griefing guard</td><td class="m">fix/arbiter-griefing-optin</td></tr>
     <tr><td>AgentBond allowance race, revoke is not final</td><td>Fixed and tested, allowance epochs</td><td class="m">fix/agentbond-allowance-epoch</td></tr>
-    <tr><td>Staker chosen time parameters were unbounded</td><td>Fixed and tested, three ceilings, 125 tests</td><td class="m">fix/commitstake-param-bounds</td></tr>
+    <tr><td>Staker chosen time parameters were unbounded</td><td>Fixed and tested, three ceilings, 130 tests</td><td class="m">fix/commitstake-param-bounds</td></tr>
+    <tr><td>arbiterFee is a free parameter inside the cap meant to bound it</td><td>Found by an outside review, reproduced, then fixed and deployed 2026-08-10. Amplification bounded at 33x, not removed. The demo video predates this deploy</td><td class="m">fix/commitstake-grief-bounds</td></tr>
     <tr><td>USDC blacklist can strand a terminal transition</td><td><b style="color:var(--ink)">Open, by choice.</b> Payouts are pushes and USDC can blacklist. Medium: counterparties are pinned at create. The fix touches every payout path, not a rushed change</td><td class="m">THREAT_MODEL §9</td></tr>
     <tr><td>Aggregate leverage is unbounded, only per commitment leverage is capped</td><td><b style="color:var(--ink)">Open.</b> N commitments stack, so a third of a bond in capital can pin all of it. The revoke exit is real, which is what fix 2 bought</td><td class="m">AUDIT_SUMMARY</td></tr>
-    <tr><td>arbiterFee is a free parameter inside the cap meant to bound it</td><td><b style="color:var(--ink)">Open.</b> An outside review found it on 2026-08-05, we reproduced it before writing it down. A fee that is never escrowed sits in the cap's own denominator, so a one dollar stake can burn a verifier's whole bond for gas. A branch fix bounds it to 33x, not deployed. This is the leverage aspect and it is open; the separate surplus recapture aspect of the same parameter is fixed and deployed, at CommitStakeV2.sol:427</td><td class="m">THREAT_MODEL §12</td></tr>
+    
   </table>
   <div class="two tight">
     <div>
       <h3>Self correction, in public</h3>
-      <p class="sub" style="font-size:14px;">Section 8 of the security document claimed the sockpuppet arbiter did not profit. It was wrong. We corrected it in the repo and on the page people actually read, rather than quietly deleting the claim.</p>
+      <p class="sub" style="font-size:14px;">Section 8 of the security document claimed the sockpuppet arbiter did not profit. It was wrong. I corrected it in the repo and on the page people actually read, rather than quietly deleting the claim.</p>
     </div>
     <div class="note" style="margin-top:0;">
       <div class="h">The limit of our own evidence</div>
-      <p style="font-size:14px;">The invariant campaign bounds deadlines to thirty days, so a green campaign was never evidence against the unbounded lock finding. We wrote that into the public threat model as a limit of the thing we are otherwise proud of.</p>
+      <p style="font-size:14px;">The invariant campaign bounds deadlines to thirty days, so a green campaign was never evidence against the unbounded lock finding. I wrote that into the public threat model as a limit of the thing I am otherwise proud of.</p>
     </div>
   </div>
   <div class="num">08</div>

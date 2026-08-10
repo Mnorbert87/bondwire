@@ -33,7 +33,7 @@ export const BONDWIRE = Object.freeze({
   contracts: Object.freeze({
     AgentBond: "0x4383Ea48837eF7e60fC22BD67945BCBf0551702c",
     StreamPay: "0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262",
-    CommitStakeV2: "0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474",
+    CommitStakeV2: "0x548532aa4B59598188D49b3e74Fdf27aaE127bb6",
     USDC: "0x3600000000000000000000000000000000000000",
     Multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11",
   }),
@@ -93,6 +93,10 @@ export const COMMIT_STAKE_ABI = [
   "function recommendedSlice(uint256 amount, uint256 feeDeposit, uint256 arbiterFee) pure returns (uint256)",
   "function challengeBondFloor(uint256 verifierSlice, uint256 arbiterFee) pure returns (uint256)",
   "function challengeBondCap(uint256 verifierSlice, uint256 arbiterFee) pure returns (uint256)",
+  // Bounds added by the 2026-08-10 deploy. Read, never hardcoded, so a later change to the
+  // policy constants cannot leave this package rejecting values the contract accepts.
+  "function MIN_RESOLVE_WINDOW() view returns (uint64)",
+  "function MAX_ARBITER_FEE_LEVERAGE() view returns (uint256)",
   // Must match the contract emit exactly (CommitStakeV2.sol:270-278): 7 fields, not 6.
   // The previous 6-field ABI (…beneficiary,amount,deadline) never matched, so parseLog threw
   // and commit() silently returned id=undefined.
@@ -417,6 +421,29 @@ export class Bondwire {
     const challengeBond = p.challengeBond != null
       ? this.toUnits(p.challengeBond)
       : await this.commitStake.challengeBondFloor(verifierSlice, arbiterFee);
+    // The 2026-08-10 deploy floors the resolve window and caps the arbiter fee against the value
+    // actually escrowed. Both are checked here so the caller gets the allowed number rather than
+    // only the name of the rule it broke. The revert strings themselves do come back from eth_call
+    // (measured 2026-08-10), but DEADLINE_TOO_SOON does not tell you the floor is 3600 seconds.
+    if (p.deadline != null) {
+      const floor = await this.commitStake.MIN_RESOLVE_WINDOW();
+      if (BigInt(p.deadline) < BigInt(now) + floor) {
+        throw new Error(
+          `commit: 'deadline' must be at least ${floor} seconds from now (MIN_RESOLVE_WINDOW). ` +
+          `Got ${Number(p.deadline) - now}s. The liveness branch burns the verifier's slice, so the ` +
+          `contract will not accept a window no verifier could meet.`);
+      }
+    }
+    if (arbiterFee > 0n) {
+      const lev = await this.commitStake.MAX_ARBITER_FEE_LEVERAGE();
+      const cap = lev * (amount + feeDeposit);
+      if (arbiterFee > cap) {
+        throw new Error(
+          `commit: 'arbiterFee' ${this.fromUnits(arbiterFee)} is above the cap of ` +
+          `${this.fromUnits(cap)} (ARBITER_FEE_TOO_LARGE): ${lev}x the escrowed value. The fee is ` +
+          `never escrowed at create, so it is bounded by what is.`);
+      }
+    }
     const params = {
       verifier: p.verifier,
       beneficiary: p.beneficiary,

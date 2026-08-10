@@ -26,7 +26,7 @@ In scope, the four contracts deployed on Arc testnet:
 | --- | --- |
 | AgentBond | [`0x4383Ea48837eF7e60fC22BD67945BCBf0551702c`](https://testnet.arcscan.app/address/0x4383Ea48837eF7e60fC22BD67945BCBf0551702c) |
 | StreamPay | [`0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262`](https://testnet.arcscan.app/address/0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262) |
-| CommitStakeV2 | [`0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474`](https://testnet.arcscan.app/address/0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474) |
+| CommitStakeV2 | [`0x548532aa4B59598188D49b3e74Fdf27aaE127bb6`](https://testnet.arcscan.app/address/0x548532aa4B59598188D49b3e74Fdf27aaE127bb6) |
 | CommitStake (v1) | see [`README.md`](README.md) |
 
 Also in scope: the static frontend at [bondwire.dev](https://bondwire.dev) and the SDK and

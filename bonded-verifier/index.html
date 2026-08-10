@@ -125,7 +125,7 @@
     </div>
     <div class="fld" style="margin-top:6px"><label>Goal / deliverable</label><input id="goal" value="Deliver the research brief agreed off-chain" /></div>
     <div class="row" style="margin-top:12px"><button id="btnCreate">Approve stake + create commitment</button>
-      <span class="note">verifier deadline +1h, arbiter deadline +1h from challenge, fee stream off for this demo.</span></div>
+      <span class="note">verifier deadline +65 min (the contract floor is 1h), arbiter deadline +1h from challenge, fee stream off for this demo.</span></div>
   </div>
 
   <div class="card">
@@ -155,7 +155,7 @@ const CHAIN_ID = 5042002, CHAIN_HEX = "0x4cef52";
 const RPC = "https://rpc.testnet.arc.network";
 const EXPLORER = "https://testnet.arcscan.app";
 const ADDR = {
-  CommitStakeV2: "0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474",
+  CommitStakeV2: "0x548532aa4B59598188D49b3e74Fdf27aaE127bb6",
   AgentBond:     "0x4383Ea48837eF7e60fC22BD67945BCBf0551702c",
   USDC:          "0x3600000000000000000000000000000000000000",
 };
@@ -322,7 +322,10 @@ $("btnCreate").onclick = async ()=>{ if(!need())return;
     const p = {
       verifier: $("verifier").value.trim()||me, beneficiary: $("beneficiary").value.trim()||me, arbiter: arb,
       amount: toU($("amount").value), verifierSlice: toU($("slice").value.trim()||"0"),  // 0 = auto, filled below
-      deadline: BigInt(now+3600), challengeWindow: BigInt(parseInt($("chWin").value||"120")),
+      // CommitStakeV2 requires deadline >= block.timestamp + MIN_RESOLVE_WINDOW (1h). `now` is
+      // this browser's clock and the require reads the mined block's, which is always later,
+      // so +3600 exactly would revert. The extra 5 minutes absorbs clock skew and queue time.
+      deadline: BigInt(now+3900), challengeWindow: BigInt(parseInt($("chWin").value||"120")),
       challengeBond: toU($("chBond").value), arbiterDeadline: BigInt(3600),
       arbiterFee: toU($("arbFee").value), feeDeposit: 0n, feeStart: 0n, feeStop: 0n, goal: $("goal").value,
     };
@@ -331,6 +334,14 @@ $("btnCreate").onclick = async ()=>{ if(!need())return;
     if(eq(p.arbiter,p.verifier)) throw new Error("The arbiter cannot be the verifier (ARBITER_IS_VERIFIER).");
     if(eq(p.arbiter,p.beneficiary)) throw new Error("The arbiter cannot be the beneficiary (ARBITER_IS_BENEFICIARY).");
     const csRo = new ethers.Contract(ADDR.CommitStakeV2, CS_ABI, await readOnly());
+    // Since 2026-08-10 the arbiter fee is bounded by the value actually escrowed, because it is
+    // never transferred at create and it used to inflate the denominator of the leverage cap.
+    // Named here with the numbers rather than left to the revert string: the wallet shows a
+    // failed estimate, not "ten times the escrowed amount", and the fix is a number the user
+    // has to work out. Measured 2026-08-10: eth_call does return ARBITER_FEE_TOO_LARGE.
+    const feeCap = p.amount * 10n;   // MAX_ARBITER_FEE_LEVERAGE × (amount + feeDeposit), feeDeposit is 0 here
+    if (p.arbiterFee > feeCap)
+      throw new Error(`Arbiter fee ${ethers.formatUnits(p.arbiterFee,6)} USDC is above what this stake allows: at most ${ethers.formatUnits(feeCap,6)} USDC, ten times the escrowed amount (ARBITER_FEE_TOO_LARGE).`);
     const minSlice = await csRo.recommendedSlice(p.amount, p.feeDeposit, p.arbiterFee);
     // Empty field = let the contract size it. A hardcoded default cannot survive a param change,
     // which is exactly how the old 1.5 became unusable once the strict inequality landed.

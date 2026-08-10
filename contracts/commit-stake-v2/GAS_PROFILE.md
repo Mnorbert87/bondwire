@@ -3,7 +3,7 @@
 **Source:** `forge test --gas-report` (solc 0.8.24, optimizer 200). **Date:** 2026-06-11.
 **Arc gas:** USDC **is** the gas token. Live gas price observed at the real V2 deploy:
 **40.0 gwei**. Conversion: `USDC = gas × 40e9 / 1e18 = gas × 4e-8`.
-**On-chain anchor:** the **live** `CommitStakeV2` (`0xf3457ABf…af1474`, the redeploy of
+**On-chain anchor:** the **live** `CommitStakeV2` (`0x548532aa…127bb6`, the redeploy of
 2026-07-31) was created by [`0xd26d8942…9b6f973e`](https://testnet.arcscan.app/tx/0xd26d89427dd0d87171bd51afc9f793443a5cbeeddff9285f34771eae9b6f973e)
 using **3,279,071 gas**. That transaction landed at an effective gas price of **23.6 gwei**, so it
 actually cost **0.0774 USDC**; at the 40 gwei constant this table uses it would be 0.1312 USDC.

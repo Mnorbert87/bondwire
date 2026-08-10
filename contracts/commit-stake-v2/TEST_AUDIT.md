@@ -9,7 +9,7 @@ behaviour.
 Run everything: `forge test` inside `contracts/commit-stake-v2`
 (fuzz: 10,000 runs; invariants: 10,000 runs × depth 15, `fail_on_revert = true`).
 
-**Current result: 125 tests passed / 0 failed** (46 unit, 21 adversarial, 23 exploit-audit,
+**Current result: 130 tests passed / 0 failed** (46 unit, 21 adversarial, 23 exploit-audit,
 9 grief-fix, 7 hardened-audit, 6 fuzz, 5 invariant, 5 edge-mutation, 3 cold-audit guards).
 Counts taken from the `Ran N tests for` lines of a full `forge test` run, not carried over. See the 4th-gate audit section at
 the end for the HIGH/LOW fixes.

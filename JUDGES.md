@@ -5,11 +5,11 @@ Everything here is something you can click or run. I am not asking you to trust 
 ## If you have 30 seconds, look at four things
 
 1. **The burn is real.** Click the first transaction below. You will see a USDC `Transfer` of 1.45 USDC straight to `0x…dEaD`. That is the surplus burn on an **overturned** verdict: whatever is left of the slashed slice is destroyed, so there is nothing for a colluding pair to split. It actually happened on chain. It is an overturn-branch device, not a general anti-collusion guarantee — on an *uphold* nothing burns, and THREAT_MODEL §11 states the path where that matters.
-2. **The code is verified.** `CommitStakeV2` at [`0xf3457ABf…af1474`](https://testnet.arcscan.app/address/0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474) is Blockscout exact-match verified. The source in this repo is the deployed bytecode, byte for byte.
+2. **The code is verified.** `CommitStakeV2` at [`0x548532aa…127bb6`](https://testnet.arcscan.app/address/0x548532aa4B59598188D49b3e74Fdf27aaE127bb6) is Blockscout exact-match verified. The source in this repo is the deployed bytecode, byte for byte.
 3. **An agent can drive it without a UI.** [`mcp/`](./mcp/) is an MCP server: an LLM agent checks a
    counterparty's Agent Passport and opens a bonded escrow from its own tool loop. Every
    value-moving tool is quote-before-execute, so nothing signs without an explicit confirmation.
-4. **The tests pass.** One copy-paste command runs 125 tests (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants). They pass on your machine, not just mine.
+4. **The tests pass.** One copy-paste command runs 130 tests (unit, adversarial, cold-audit, edge-mutation, exploit-audit, fuzz, and 10k-run invariants). They pass on your machine, not just mine.
 
 The honest version of what we found in our own code, including what is still open, is in
 [AUDIT_SUMMARY.md](./AUDIT_SUMMARY.md).
@@ -22,8 +22,8 @@ I wanted to watch the overturn burn work, not claim it works. When a verifier's 
 
 | What | Burned | Transaction (open it, find the `Transfer` to `…dEaD`) |
 |---|---|---|
-| Overturn burn (surplus left after `damage` is paid) | 1.45 USDC | [`0xf46f062d…3e9d1d`](https://testnet.arcscan.app/tx/0xf46f062d8ff0be20cccc35bee1faf321f8418be7b7f02045efeac2fb0f3e9d1d) |
-| Liveness burn (`slashVerifierExpired`: the verifier never ruled by the deadline, so the whole slice burns) | 1.50 USDC | [`0xae25f951…b5a364`](https://testnet.arcscan.app/tx/0xae25f95183bd6af798cf1f6a82222aeca35eae73553575449a403c8b03b5a364) |
+| Overturn burn (surplus left after `damage` is paid) | 1.45 USDC | [`0xb99637ae…5799d7`](https://testnet.arcscan.app/tx/0xb99637aed6e76fe6fbd83484a1e24bed9d43bc9b4fea5b9cdb99c9e3415799d7) |
+| Liveness burn (`slashVerifierExpired`: the verifier never ruled by the deadline, so the whole slice burns) | 1.50 USDC | [`0x11c0fdec…052bd2`](https://testnet.arcscan.app/tx/0x11c0fdeccc621d135ed9cce99a66628391b3ad08e9ef785c8b0cddc6cb052bd2) |
 
 Open either one and look for the USDC `Transfer` (the 6-decimal ERC-20 at `0x3600…0000`) with recipient `0x000000000000000000000000000000000000dEaD`. Nobody owns that address. The profit is just gone, by construction, not sitting in some treasury.
 
@@ -61,7 +61,7 @@ On where this sits: ERC-8004 answers who an agent is and what job it took on. It
 
 ---
 
-## 4. Run the 125-test suite (~2 min)
+## 4. Run the 130-test suite (~2 min)
 
 This is exactly what CI runs ([the green run is here](https://github.com/Mnorbert87/bondwire/actions/workflows/test.yml)). You need [Foundry](https://getfoundry.sh) and nothing else.
 
@@ -75,7 +75,7 @@ forge test -vv
 The last line should read:
 
 ```
-Ran 9 test suites: 125 tests passed, 0 failed, 0 skipped (125 total tests)
+Ran 10 test suites: 130 tests passed, 0 failed, 0 skipped (130 total tests)
 ```
 
 The suite compiles the real `agent-bond` and `stream-pay` from source, not vendored copies, so there is no drift between what is tested and what is deployed. Each of those two has its own green suite (51 and 25 tests). Run `forge test` in their folders the same way if you want them too.
@@ -86,7 +86,7 @@ The suite compiles the real `agent-bond` and `stream-pay` from source, not vendo
 
 | Contract | Address (opens the explorer) | Verified |
 |---|---|---|
-| CommitStakeV2, the mechanism | [`0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474`](https://testnet.arcscan.app/address/0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474) | exact-match ✅ |
+| CommitStakeV2, the mechanism | [`0x548532aa4B59598188D49b3e74Fdf27aaE127bb6`](https://testnet.arcscan.app/address/0x548532aa4B59598188D49b3e74Fdf27aaE127bb6) | exact-match ✅ |
 | AgentBond, the trust layer | [`0x4383Ea48837eF7e60fC22BD67945BCBf0551702c`](https://testnet.arcscan.app/address/0x4383Ea48837eF7e60fC22BD67945BCBf0551702c) | exact-match ✅ |
 | StreamPay, the settlement layer | [`0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262`](https://testnet.arcscan.app/address/0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262) | exact-match ✅ |
 

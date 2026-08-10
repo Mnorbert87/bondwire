@@ -6,16 +6,17 @@ authoritative mechanism specification the implementation must match.
 
 > **Read this first, 2026-08-08.** The line above is the status this document had when it was
 > written, before implementation. CommitStakeV2 has been deployed since, at
-> `0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474` on Arc testnet, exact-match verified. Where this
+> `0x548532aa4B59598188D49b3e74Fdf27aaE127bb6` on Arc testnet, exact-match verified. Where this
 > spec and the deployed source disagree, the source wins and the difference is a defect in this
 > file. Two things learned after deployment that a verifier operator needs before it reads the
 > economics below, neither of which is in §9:
 >
 > - **Grant a per-job slash allowance, never an open one.** `AgentBond` spends the allowance per
->   `lock`, and THREAT_MODEL §12 shows a 1 USDC stake can force a slice larger than a verifier's
->   whole bond while `arbiterFee` sits unescrowed in the sizing denominator. The bound that still
->   holds is the allowance itself, so a verifier offering this as a service caps its exposure per
->   job or it can lose its whole bond to a dust commitment for the price of gas.
+>   `lock`. THREAT_MODEL §12 showed a 1 USDC stake forcing a slice larger than a verifier's whole
+>   bond while `arbiterFee` sat unescrowed in the sizing denominator; that is bounded on chain as
+>   of the 2026-08-10 deploy, to 33x the escrowed value rather than to nothing. The advice does not
+>   change and does not depend on that fix: a verifier offering this as a service caps its exposure
+>   per job with the allowance, because the allowance is the bound it controls itself.
 > - **The burn is an overturn-branch device, not a general anti-collusion guarantee.** On an
 >   uphold nothing burns. Since `create` requires `arbiterApproved[verifier][arbiter]`, the
 >   verifier chooses which arbiters a staker may name, and `verifier == beneficiary` is allowed:

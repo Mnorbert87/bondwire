@@ -43,7 +43,7 @@ building block on its own and composable together:
    settlement. Open a stream, funds accrue per second, the recipient withdraws
    any time, either side cancels with a fair split. The x402 demo in the repo
    gates an HTTP API on a live stream.
-3. **CommitStakeV2** (0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474) — bonded
+3. **CommitStakeV2** (0x548532aa4B59598188D49b3e74Fdf27aaE127bb6) — bonded
    verifier escrow: pay only on verified PASS. The stake escrows, a bonded
    verifier posts the verdict with its own AgentBond slice locked behind it, a
    challenge window plus optional arbiter give recourse, and a lying verifier

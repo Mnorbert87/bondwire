@@ -31,13 +31,14 @@ bad()  { CHECKS=$((CHECKS+1)); FAILURES=$((FAILURES+1)); red "  FAIL  $*"; }
 # then run the script: everything that still points at an old address fails.
 LIVE_AGENTBOND=0x4383Ea48837eF7e60fC22BD67945BCBf0551702c
 LIVE_STREAMPAY=0x6C2Ae6f8Ba7c0259EABa8ef4048C8BFc68BAB262
-LIVE_COMMITSTAKEV2=0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474
+LIVE_COMMITSTAKEV2=0x548532aa4B59598188D49b3e74Fdf27aaE127bb6
 LIVE_COMMITSTAKE=0xc307d9287707Ba04c03Dd653b4457E949129A9a2
 
 # Addresses that exist on chain but nothing here should present as current.
 # A doc may still MENTION them, but only in a superseded/historical context,
 # which is why the check below is scoped to present-tense phrasing.
 SUPERSEDED=(
+  0xf3457ABfd042Ef41bC22Ab20714D4D49cAaf1474   # CommitStakeV2 before 2026-08-10
   0x1f1CA31bC36a95a3909628F1bA97970E20698CA9   # CommitStakeV2 before 2026-07-31
   0xB9b4d476bC383eE2951a3eC3A22779458cdBf8e0   # AgentBond before 2026-07-31
   0x505739d33D85AD85D0f9eeE64856309782382450   # StreamPay before 2026-07-31
@@ -82,7 +83,14 @@ else
     # the *last* number in a coordinated list sits next to the word "tests", so every
     # earlier one was invisible to the first three spellings. Each was found by someone
     # reading, after the checker had signed the file off.
-    grep -onE '\b[0-9]{2,4}( and [0-9]{2,4})?([ -]tests?\b|/[0-9]{2,4} green)' "$file" 2>/dev/null \
+    # "Ran 10 test suites" is a suite count, not a test count. It only became visible when the
+    # v2 suite crossed from 9 suites to 10, because the pattern needs two digits: the check had
+    # been blind to the same shape all along. Strip that phrase before matching, do not widen
+    # the pattern, so a real "10 tests" claim still fails.
+    # No \b here: macOS ships BSD sed, where \b is not a word boundary and the whole
+    # substitution silently does nothing. Same class of trap as the bash 3.2 note above.
+    sed -E 's/[0-9]+ (test suites)/\1/g' "$file" 2>/dev/null \
+    | grep -onE '\b[0-9]{2,4}( and [0-9]{2,4})?([ -]tests?\b|/[0-9]{2,4} green)' 2>/dev/null \
     | sed -E 's/^([0-9]+):([0-9]{2,4}) and ([0-9]{2,4})([ -]tests?|\/.*)$/\1:\2 tests\n\1:\3\4/' \
     | while IFS=: read -r ln hit; do
       num=${hit%%[ -/]*}
@@ -282,7 +290,20 @@ TRACKED | grep -E '\.(md|html)$' | xargs grep -ohE 'https://[a-zA-Z0-9./_?=&#:%-
   | grep -vE 'fonts\.(googleapis|gstatic)|shields\.io|rpc\.testnet\.arc\.network|example\.com' \
   > /tmp/vc_urls.txt
 while read -r u; do
-  code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' "$u")
+  # basescan bot-walls this script: 000 with the default UA, 403 with a browser one. Neither
+  # says anything about the transaction. So for that host the claim is checked where it is
+  # actually settled, against the Base Sepolia RPC, and the explorer URL is only the wrapper.
+  case "$u" in
+    *sepolia.basescan.org/tx/*)
+      txh=${u##*/tx/}
+      st=$(curl -s -m 20 -X POST https://sepolia.base.org -H 'Content-Type: application/json' \
+             -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_getTransactionReceipt\",\"params\":[\"$txh\"]}" \
+           | python3 -c 'import sys,json;r=json.load(sys.stdin).get("result");print((r or {}).get("status",""))' 2>/dev/null)
+      if [ "$st" = "0x1" ]; then ok "chain status 0x1 (explorer bot-walls this checker) $u"
+      else bad "Base Sepolia receipt is not status 0x1 for $u"; fi
+      continue ;;
+  esac
+  code=$(curl -s -m 20 -A 'Mozilla/5.0' -o /dev/null -w '%{http_code}' "$u")
   case "$code" in
     # 3xx is a working link, not a broken one. getfoundry.sh answers 307 and
     # the first version of this script called that a failure, which is exactly
