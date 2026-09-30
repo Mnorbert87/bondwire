@@ -71,8 +71,20 @@ jobs:
             ${{ matrix.project }}/aderyn-report.md
           if-no-files-found: ignore
 
-  # GATING Slither for commit-stake-v2: in-source slither-disable directives suppress exactly the
-  # by-design findings, so --fail-pedantic is green now and red on any NEW un-accepted finding.
+  # GATING Slither for commit-stake-v2. The by-design findings are suppressed by the per-instance
+  # triage DB (`slither.db.json`), NOT by in-source `slither-disable` directives —
+  # `src/CommitStakeV2.sol` contains zero of those, so it stays byte-identical to the
+  # exact-match-verified deployed source (see STATIC_ANALYSIS.md).
+  # The DB keys every accepted finding by a CONTENT-DERIVED hash, so it is coupled to the source:
+  # any edit under `src/` re-hashes the findings, detaches all 25 suppressions and turns this job
+  # red — which is exactly what happened between 2026-08-10 and 2026-09-30.
+  # RULE: regenerate the DB in the SAME commit that touches `src/`, and re-accept only the
+  # already-triaged detector classes. A finding from a NEW class must be fixed or explicitly
+  # reviewed, never silently appended to the DB.
+  # Regenerate (non-interactive):
+  #   slither . --exclude-dependencies --json results.json
+  #   then write the JSON's `.results.detectors` array (the 25 by-design entries) to slither.db.json
+  # --fail-pedantic auto-reads the DB: 0 results / exit 0 today, red on any NEW un-accepted finding.
   static-gate-commit-stake-v2:
     name: commit-stake-v2 (gating)
     runs-on: ubuntu-latest

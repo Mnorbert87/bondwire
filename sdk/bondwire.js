@@ -51,11 +51,30 @@ export const AGENT_BOND_ABI = [
   "function freeBondOf(address) view returns (uint256)",
   "function slashAllowance(address agent, address enforcer) view returns (uint256)",
   "function nextObligationId() view returns (uint256)",
-  // NOTE: 7 fields. `allowanceEpoch` (grant generation) sits BEFORE `status` in AgentBond as of
-  // the revoke-hardening change on this branch. Omitting it does NOT revert — ABI decoding of a
-  // static tuple is positional, so `status` would silently read back the epoch number. This ABI
-  // therefore tracks THIS BRANCH's contracts; the deployed AgentBond is still the 6-field build,
-  // and main's SDK stays 6-field until the redeploy lands.
+  // NOTE: 7 fields, and as of the last measurement (2026-08-10, see the evidence below) the
+  // deployed AgentBond was 7 fields too. `allowanceEpoch` (grant generation)
+  // sits BEFORE `status`. Getting the count wrong is silent in one direction and fatal in the
+  // other: a 6-field ABI reading this contract decodes positionally and reports the epoch number
+  // as `status`, so a settled obligation reads back as Active; a 7-field consumer reading a
+  // 6-field contract reverts instead, because the decode wants 224 bytes of return data and only
+  // 192 arrive.
+  //
+  // Evidence that the deployed build is the 7-field one — both items live in this repo, so the
+  // next reader does not have to re-investigate this:
+  //   1. Commit e1c098c (2026-08-08) records it as a MEASUREMENT against the live contract, not
+  //      an inference: "the deployed contract returns 7, with allowanceEpoch before status".
+  //   2. contracts/commit-stake-v2/src/CommitStakeV2.sol declares the same 7-field `Obligation`
+  //      in its own `IAgentBond` (lines 22-33) and calls `getObligation` on every terminal path
+  //      (finalize 662/672, arbitrate 605/625, slashVerifierExpired 703, through the helpers at
+  //      842/852). contracts/commit-stake-v2/SEED_RESULT.json records all FOUR terminal branches
+  //      with real tx hashes from 2026-08-10 against the live CommitStakeV2 + AgentBond pair.
+  //      Against a 6-field AgentBond those calls would have reverted in the decode. They did not.
+  //
+  // Corrected 2026-09-30. The note that stood here claimed "the deployed AgentBond is still the
+  // 6-field build, and main's SDK stays 6-field until the redeploy lands". Both halves are false,
+  // and the second contradicted itself: this file IS main's SDK, and the line below has declared
+  // 7 fields the whole time. The text was written on a feature branch on 2026-07-29 and went
+  // stale when that branch was merged into main.
   "function getObligation(uint256 id) view returns (tuple(address agent, address enforcer, address creditor, uint256 amount, uint64 deadline, uint64 allowanceEpoch, uint8 status))",
   "function usdc() view returns (address)",
   "event Locked(uint256 indexed id, address indexed agent, address indexed enforcer, address creditor, uint256 amount, uint64 deadline)",

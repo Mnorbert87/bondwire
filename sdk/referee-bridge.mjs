@@ -1,7 +1,7 @@
 // referee-bridge — the machine verifier for CommitStakeV2 on Arc testnet.
 //
 // This is what turns the bonded verifier from a human button into verified delivery:
-//   1. reads an OPEN commitment from the live CommitStakeV2,
+//   1. reads an ACTIVE commitment from the live CommitStakeV2,
 //   2. runs the Referee verification engine on the deliverable (sandboxed forge
 //      compile + optional acceptance tests + adversarial rule gate),
 //   3. posts resolve(id, passed) on chain AS the bonded verifier — whose own
@@ -27,7 +27,10 @@ if (!idArg || !fileArg || !specArg) {
 }
 const id = Number(idArg);
 
-// 1) The commitment must exist and be Open — read the live chain first.
+// 1) The commitment must exist and be Active — read the live chain first.
+// "Active" is the SDK label for enum index 1 (None,Active,Resolved,Challenged,Finalized,Expired).
+// This gate used to compare against "Open", a label the SDK no longer emits (bondwire.js, `COMMITMENT_STATUS`),
+// so it was true for every status and the bridge exited 1 on every commitment.
 const ro = Bondwire.readOnly();
 let c;
 for (let i = 0; ; i++) {
@@ -39,7 +42,7 @@ for (let i = 0; ; i++) {
   }
 }
 console.log(`commitment #${id}: ${c.status} | ${c.amount.usdc} USDC escrowed | verifier ${c.verifier}`);
-if (c.status !== "Open") { console.error(`not Open (${c.status}) — nothing to resolve`); process.exit(1); }
+if (c.status !== "Active") { console.error(`not Active (${c.status}) — nothing to resolve`); process.exit(1); }
 
 // 2) Run the Referee engine (same CLI the paid ASP wraps — exit 0 = PASS, 2 = FAIL).
 const cliDir = process.env.REFEREE_CLI || rpath(import.meta.dirname, "../../referee/verifier-service");

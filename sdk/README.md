@@ -28,7 +28,14 @@ cp bondwire/sdk/bondwire.js .
 > with the unbounded `arbiterFee` leverage described in THREAT_MODEL §12, and it is not what
 > this repo points at any more. The version here is 0.4.0: new address, plus `commit()` now
 > names `DEADLINE_TOO_SOON` and `ARBITER_FEE_TOO_LARGE` before signing instead of letting Arc
-> return a reasonless revert. 0.4.0 is not on the registry yet.
+> return a reasonless revert.
+>
+> *Registry status is a dated reading, not a standing fact.* On **2026-09-03**,
+> `npm view bondwire-sdk version` reported `0.4.0`. That has not been re-checked since, so run
+> `npm view bondwire-sdk version` yourself before depending on the published package. The
+> instruction above does not hinge on the answer either way: the file in this repo is the
+> reference copy. (This spot previously read "0.4.0 is not on the registry yet" — true on
+> 2026-08-10, stale by 09-03, removed 2026-09-30.)
 >
 > **Not `bondwire-sdk@0.2.0` either.** 0.2.0 was published
 > 2026-07-22 and carries the pre-redeploy addresses, superseded on 2026-07-31, plus an
