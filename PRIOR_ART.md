@@ -4,7 +4,8 @@ Circle publishes sample apps that sit next to each of the three Bondwire primiti
 has seen them will otherwise read Bondwire as the same idea arriving late, so the comparison is
 stated here in terms of **what each design trusts**, read from the source rather than from READMEs.
 
-Read 2026-10-13 against shallow clones at that date.
+Read 2026-10-13 against shallow clones taken that day. Every statement below is from the
+clone or from the GitHub API, not from a blog post.
 
 | Circle sample | Adjacent to | License / activity |
 |---|---|---|
@@ -49,10 +50,16 @@ honest statement of the difference is narrower:
 
 ## `arc-nanopayments` and `StreamPay`
 
-Both move small amounts of USDC cheaply. Neither that sample nor `arc-x402-circle-wallets` puts
-anything at stake that the paying or the performing agent can **lose**. That is the gap `AgentBond`
-fills, and it is the one claim in this document that does not depend on reading anybody's contract
-closely: a slashable deposit is either present in a design or it is not.
+Both move small amounts of USDC cheaply, and the measurement that separates them from `StreamPay`
+is blunt: **neither repo ships a contract at all.** `find -name '*.sol'` returns nothing in either
+clone. `arc-nanopayments` is a LangChain buyer agent plus a Next.js seller over Circle Gateway,
+which batches signed offchain authorizations into one onchain settlement; `arc-x402-circle-wallets`
+pays over x402 from a developer controlled wallet. Both are app-layer demos on custodial rails.
+
+So nothing in either design can put the paying or performing agent's own capital at stake, because
+there is no contract to hold it. That is the gap `AgentBond` fills, and it is the one claim here
+that needs no interpretation of anybody's source: a slashable deposit is either present in a design
+or it is not.
 
 ## What we are not claiming
 
