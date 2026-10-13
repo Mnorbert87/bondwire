@@ -30,7 +30,7 @@ that validates the deliverable. Its one contract is
 
 So the release condition is **the recipient's own pull**, reversible by a privileged address until
 the payment is marked refunded. In the sample app the deliverable is judged by an OpenAI call, and
-the route that runs after that verdict submits `withdraw(uint256[])` for the beneficiary. That is a
+the same route, on a pass, submits `withdraw(uint256[])` from the beneficiary's own wallet. That is a
 reasonable design for freelance work: "was the deliverable good" is not a question a chain can
 answer.
 
@@ -67,7 +67,7 @@ one claim here that needs no interpretation of anybody's source: a slashable dep
 present in a design or it is not.
 
 Scope of that measurement, stated: both clones are shallow and see `master`. `arc-x402-circle-wallets`
-has only that branch; `arc-nanopayments` also carries nine dependabot branches, which are package
+has only that branch; `arc-nanopayments` also carries eight dependabot branches, which are package
 version bumps and were not cloned separately.
 
 ## What we are not claiming
@@ -75,5 +75,5 @@ version bumps and were not cloned separately.
 We read `RefundProtocol.sol` to place our own work, not to audit it. Nothing here is a security
 claim about Circle's code, and the few lines quoted above are the ones that define its trust model,
 not an exhaustive review. Star and fork counts are from the GitHub API on 2026-10-13 and will
-drift. Every claim here was re-checked against independent clones by a second reader before
-publication.
+drift. Every claim about the Circle repositories was re-checked against independent clones by a
+second reader.
