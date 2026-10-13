@@ -17,6 +17,9 @@ Every "agentic" demo quietly assumes two things that don't actually exist on-cha
 The two primitives each work standalone. `CommitStakeV2` composes both into a complete, ownerless
 trust-and-pay rail for autonomous agents.
 
+Circle publishes its own escrow, nanopayment and x402 samples on Arc. What each design trusts, and
+where Bondwire differs, is set out in [PRIOR_ART.md](./PRIOR_ART.md).
+
 ---
 
 ## Live demo
